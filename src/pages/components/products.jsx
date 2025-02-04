@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useRouter } from "next/router";
+import { useFilter } from "@/context/filterContext";
 import {
   Box,
   Grid,
@@ -9,46 +11,52 @@ import {
   Button,
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
-import axios from "axios";
-import { useRouter } from "next/router";
+import { Chip } from "@mui/material";
 
-const Products = () => {
-  const [products, setProducts] = useState([]);
+const Products = ({ products }) => {
   const router = useRouter();
+  const { filterState } = useFilter();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get("http://localhost:9090/api/products/get");
-        console.log(response.data);
-
-        // Transform the API response into the format needed for rendering
-        const transformedProducts = response.data.map((product) => {
-          // Extracting the first variant and its first size
-          const variant = product.variants[0];
-          const firstSize = variant.sizes[0]; // Assuming there's always at least one size
-
-          return {
-            id: product._id,
-            image: variant.mainImage, // Using the main image for the product card
-            title: product.name.slice(0,50), // Product name
-            description: product.description, // Product description
-            rating: product.ratings || 0, // Using the product's rating
-            price: `$${firstSize.discountPrice || firstSize.price}`, // Show discount price if available
-            variantsCount: product.variants.length, // Number of variants available
-            color: variant.color, // Variant color (using the first variant's color)
-            isDeleted: product.isDeleted,
-          };
-        });
-
-        setProducts(transformedProducts);
-      } catch (error) {
-        console.error("Error fetching products:", error);
+  const filterProducts = (products) => {
+    return products.filter((product) => {
+      const price = product.price;
+      if (
+        price < filterState.priceRange[0] ||
+        price > filterState.priceRange[1]
+      ) {
+        return false;
       }
-    };
+      if (
+        filterState.categories.length > 0 &&
+        !filterState.categories.includes(product.category)
+      ) {
+        return false;
+      }
+      if (
+        filterState.selectedGenders.length > 0 &&
+        !filterState.selectedGenders.includes(product.gender)
+      ) {
+        return false;
+      }
+      if (
+        filterState.selectedRatings.length > 0 &&
+        !filterState.selectedRatings.includes(Math.floor(product.rating))
+      ) {
+        return false;
+      }
+      if (filterState.selectedDiscounts.length > 0) {
+        const discount =
+          ((product.originalPrice - product.price) / product.originalPrice) *
+          100;
+        return filterState.selectedDiscounts.some(
+          (d) => discount >= parseInt(d)
+        );
+      }
+      return true;
+    });
+  };
 
-    fetchProducts();
-  }, []);
+  const filteredProducts = filterProducts(products);
 
   const handleProductDetail = (id) => {
     router.push(`/product/${id}`);
@@ -59,129 +67,91 @@ const Products = () => {
       sx={{
         width: "90%",
         backgroundColor: "#f9f9f9",
-        padding: "20px 0",
+        padding: "20px",
         minHeight: "100vh",
-        backgroundColor:"#f8f8f8",
-        padding:"20px 10px"
       }}
     >
-      <Box>
-        <Typography variant="h4" align="center" gutterBottom>
-          Products
-        </Typography>
-        <Grid container spacing={1}>
-          {products
-            .filter((product) => !product.isDeleted) // Exclude deleted products
-            .map((product) => (
-              <Grid
-                item
-                key={product.id}
-                xs={12}
-                sm={6}
-                md={4}
-                lg={3}
+      <Typography variant="h4" align="center" gutterBottom>
+        Products ({filteredProducts.length})
+      </Typography>
+
+      <Grid container spacing={2}>
+        {filteredProducts.map((product) => (
+          <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+            <Card
+              sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0",
+                border: "0.5px solid lightgray",
+                "&:hover": {
+                  boxShadow: 3,
+                },
+              }}
+            >
+              <CardMedia
+                component="img"
+                image={product.image}
+                alt={product.title}
                 sx={{
-                  display: "flex",
-                  justifyContent: "center",
+                  height: 320,
+                  padding: "10px",
+                  objectFit: "contain",
+                  cursor: "pointer",
+                  transition: "transform 0.3s",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                  },
                 }}
-              >
-                <Card
+                onClick={() => handleProductDetail(product.id)}
+              />
+
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  {product.title.slice(0, 30)}...
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
                   sx={{
-                    borderRadius: "5px",
+                    height: "40px",
                     overflow: "hidden",
-                    border: "1px solid #e0e0e0",
-                    cursor: "pointer",
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
+                    marginBottom: 2,
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    image={product.image}
-                    alt={product.title}
-                    sx={{
-                      padding: "10px",
-                      height: 250,
-                      objectFit: "contain",
-                      transition: "transform 0.3s ease",
-                      "&:hover": {
-                        transform: "scale(1.1)",
-                      },
-                    }}
-                    onClick={() => handleProductDetail(product.id)}
-                  />
-
-                  <CardContent
-                    sx={{
-                      padding: 2,
-                      flexGrow: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 600, fontSize: "17px" }}
-                    >
-                      {product.title}...
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        margin: "8px 0",
-                        height: "40px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {product.description}
-                    </Typography>
-                    <Button
-                      startIcon={<StarIcon />}
-                      variant="contained"
-                      size="small"
-                      disableElevation
-                      sx={{
-                        backgroundColor: "green",
-                        color: "white",
-                        textTransform: "capitalize",
-                        marginBottom: 1,
-                        "&:hover": {
-                          backgroundColor: "darkgreen",
-                        },
-                      }}
-                    >
-                      {product.rating || "No"} Rating
-                    </Button>
-                  </CardContent>
-
-                  <Box
-                    sx={{
-                      padding: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        color: "primary.main",
-                      }}
-                    >
-                      {product.price}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Variants: {product.variantsCount}
-                    </Typography>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
-        </Grid>
-      </Box>
+                  {product.description}
+                </Typography>
+                <Chip
+                  label={`${product.rating || "No"} Rating`}
+                  size="small"
+                  sx={{
+                    backgroundColor: "green",
+                    color: "white",
+                    fontSize: "0.65rem",
+                    margin:"5px 0px",
+                    borderRadius:"2px"
+                  }}
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    ₹{product.price}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Variants: {product.variantsCount}
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

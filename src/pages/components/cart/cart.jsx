@@ -357,7 +357,7 @@ function Cart() {
                           </Grid>
                           <Grid item>
                             <Typography variant="body1">
-                              {item.product.name}
+                              {item.product.name.slice(0,20)}...
                             </Typography>
                             <Typography variant="body2" color="textSecondary">
                               Size: {item.sizeVariant.size}, Color:{" "}
@@ -367,7 +367,7 @@ function Cart() {
                         </Grid>
                       </TableCell>
                       <TableCell>
-                        <FormControl variant="outlined" size="small">
+                        <FormControl variant="outlined" sx={{width:"100px"}} size="small">
                           <Select
                             value={item.quantity}
                             onChange={(e) =>
@@ -384,9 +384,9 @@ function Cart() {
                         </FormControl>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body1">{`$${item.price}`}</Typography>
+                        <Typography variant="body1">{`₹${item.price}`}</Typography>
                         <Typography variant="body2" color="textSecondary">
-                          {`$${item.price} each`}
+                          {`₹${item.price} each`}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
@@ -489,16 +489,16 @@ function Cart() {
                 <List>
                   <ListItem>
                     <ListItemText primary="Total price:" />
-                    <Typography variant="body1">{`USD ${cart.totalPrice}`}</Typography>
+                    <Typography variant="body1">{`INR ${cart.totalPrice}`}</Typography>
                   </ListItem>
                   <ListItem>
                     <ListItemText primary="Discount:" />
-                    <Typography variant="body1">{`USD ${cart.discountAmount}`}</Typography>
+                    <Typography variant="body1">{`INR ${cart.discountAmount}`}</Typography>
                   </ListItem>
                   <Divider />
                   <ListItem>
                     <ListItemText primary="Total:" />
-                    <Typography variant="h6">{`USD ${
+                    <Typography variant="h6">{`INR ${
                       cart.totalPrice - cart.discountAmount
                     }`}</Typography>
                   </ListItem>
