@@ -18,6 +18,7 @@
     "connect-mongo": "^5.1.0",
     "cropperjs": "^1.6.2",
     "express-session": "^1.18.1",
+    "lucide-react": "^0.474.0",
     "mongoose": "^8.9.5",
     "next": "15.1.4",
     "next-auth": "^4.24.11",

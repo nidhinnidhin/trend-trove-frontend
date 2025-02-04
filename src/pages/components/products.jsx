@@ -31,7 +31,7 @@ const Products = () => {
           return {
             id: product._id,
             image: variant.mainImage, // Using the main image for the product card
-            title: product.name, // Product name
+            title: product.name.slice(0,50), // Product name
             description: product.description, // Product description
             rating: product.ratings || 0, // Using the product's rating
             price: `$${firstSize.discountPrice || firstSize.price}`, // Show discount price if available
@@ -61,6 +61,8 @@ const Products = () => {
         backgroundColor: "#f9f9f9",
         padding: "20px 0",
         minHeight: "100vh",
+        backgroundColor:"#f8f8f8",
+        padding:"20px 10px"
       }}
     >
       <Box>
@@ -119,9 +121,9 @@ const Products = () => {
                   >
                     <Typography
                       variant="h6"
-                      sx={{ fontWeight: 600, fontSize: "16px" }}
+                      sx={{ fontWeight: 600, fontSize: "17px" }}
                     >
-                      {product.title}
+                      {product.title}...
                     </Typography>
                     <Typography
                       variant="body2"

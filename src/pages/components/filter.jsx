@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Typography,
@@ -15,6 +16,22 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 const Filter = () => {
   const [priceRange, setPriceRange] = useState([10, 500]);
   const [expanded, setExpanded] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+
+  // Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("http://localhost:9090/api/categories");
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handlePriceChange = (event, newValue) => {
     setPriceRange(newValue);
@@ -24,7 +41,6 @@ const Filter = () => {
     setExpanded(expanded === dropdown ? "" : dropdown);
   };
 
-  const categories = ["Men's Wear", "Women's Wear", "Kids' Wear", "Accessories"];
   const genders = ["Men", "Women", "Unisex"];
   const ratings = [1, 2, 3, 4, 5];
   const discounts = ["10% and above", "20% and above", "30% and above"];
@@ -61,7 +77,7 @@ const Filter = () => {
 
       {/* Dropdowns */}
       {[
-        { title: "Categories", items: categories, type: "checkbox" },
+        { title: "Categories", items: categories.map((cat) => cat.name), type: "checkbox" },
         { title: "Gender", items: genders, type: "button" },
         { title: "Rating", items: ratings, type: "checkbox" },
         { title: "Discount", items: discounts, type: "button" },
@@ -78,14 +94,9 @@ const Filter = () => {
           >
             <Typography variant="body1">{filter.title}</Typography>
             <IconButton size="small">
-              {expanded === filter.title ? (
-                <ExpandLessIcon />
-              ) : (
-                <ExpandMoreIcon />
-              )}
+              {expanded === filter.title ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </IconButton>
           </Box>
-          {/* Smooth Animation */}
           <Collapse in={expanded === filter.title} timeout="auto" unmountOnExit>
             <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
               {filter.items.map((item, index) =>

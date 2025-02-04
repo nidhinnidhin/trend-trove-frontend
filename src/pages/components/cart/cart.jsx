@@ -26,6 +26,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  Tooltip,
   Divider,
   Dialog,
   DialogActions,
@@ -38,13 +39,33 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   LocalShipping as LocalShippingIcon,
+  DeleteForever,
+  DeleteForeverRounded,
 } from "@mui/icons-material";
 import Header from "../header";
 import Footer from "../footer";
 import axios from "axios";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AddAddressModal from "@/components/modals/addAddressModal";
+import EditIcon from "@mui/icons-material/Edit";
+import { styled } from "@mui/material/styles";
+import EditAddressModal from "@/components/modals/editAddressModal";
+import { Delete } from "lucide-react";
+
+const EditButton = styled(Button)(({ theme }) => ({
+  backgroundColor: theme.palette.grey[100],
+  color: theme.palette.grey[800],
+  "&:hover": {
+    backgroundColor: theme.palette.grey[200],
+  },
+  border: `1px solid ${theme.palette.grey[300]}`,
+  textTransform: "none",
+  padding: "8px 16px",
+  "&:focus": {
+    boxShadow: `0 0 0 2px ${theme.palette.grey[200]}`,
+  },
+}));
 
 function Cart() {
   const [cart, setCart] = useState(null);
@@ -54,6 +75,33 @@ function Cart() {
   const [quantityError, setQuantityError] = useState("");
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
   const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [isEditAddressModalOpen, setIsEditAddressModalOpen] = useState(false);
+  const [selectedEditAddress, setSelectedEditAddress] = useState(null);
+  const [selectedAddressToDelete, setSelectedAddressToDelete] = useState(null);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("usertoken");
+
+    const fetchAddresses = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:9090/api/address/get-address", // API to fetch addresses
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setAddresses(response.data.addresses); // Set fetched addresses in state
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("usertoken");
@@ -170,6 +218,10 @@ function Cart() {
     }
   };
 
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address); // Set the selected address
+  };
+
   // Address
   const handleOpenAddAddressModal = () => {
     setIsAddAddressModalOpen(true);
@@ -180,7 +232,70 @@ function Cart() {
   };
 
   const handleAddressAdded = (newAddress) => {
-    setAddresses(prevAddresses => [...prevAddresses, newAddress]);
+    setAddresses((prevAddresses) => [...prevAddresses, newAddress]);
+  };
+
+  // Edit address
+  const handleEditAddress = (address) => {
+    return (e) => {
+      e.stopPropagation();
+      setSelectedEditAddress(address);
+      setIsEditAddressModalOpen(true);
+    };
+  };
+
+  // const handleDeleteAddress = (addresId) => {
+  //   return (e) => {
+  //     e.stopPropagation();
+  //   };
+  // };
+
+  const handleAddressUpdate = (updatedAddress) => {
+    setAddresses((prevAddresses) =>
+      prevAddresses.map((address) =>
+        address._id === updatedAddress._id ? updatedAddress : address
+      )
+    );
+  };
+
+  // Delete address:
+
+  const handleDeleteAddressClick = (e, addressId) => {
+    e.stopPropagation();
+    setSelectedAddressToDelete(addressId);
+    setOpenDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setOpenDeleteModal(false);
+    setSelectedAddressToDelete(null);
+  };
+
+  const handleDeleteAddress = async () => {
+    const token = localStorage.getItem("usertoken");
+
+    try {
+      await axios.delete(
+        `http://localhost:9090/api/address/delete-address/${selectedAddressToDelete}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update the addresses state by filtering out the deleted address
+      setAddresses((prevAddresses) =>
+        prevAddresses.filter(
+          (address) => address._id !== selectedAddressToDelete
+        )
+      );
+
+      handleCloseDeleteModal();
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   if (loading) {
@@ -294,12 +409,38 @@ function Cart() {
                 </TableBody>
               </Table>
             </CardContent>
-            <CardActions>
-              <Button startIcon={<ChevronLeftIcon />}>Continue Shopping</Button>
+            <CardActions
+              sx={{ display: "flex", justifyContent: "space-between" }}
+            >
+              <Button
+                startIcon={<ChevronLeftIcon />}
+                sx={{
+                  backgroundColor: "#333",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#555",
+                  },
+                  textTransform: "none",
+                  padding: "6px 20px",
+                }}
+              >
+                Continue Shopping
+              </Button>
+
               <Button
                 endIcon={<ChevronRightIcon />}
                 color="primary"
-                variant="contained"
+                variant="outlined"
+                sx={{
+                  color: "#333",
+                  borderColor: "#333",
+                  textTransform: "none",
+                  padding: "6px 20px",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    borderColor: "#333",
+                  },
+                }}
               >
                 Make Purchase
               </Button>
@@ -372,30 +513,118 @@ function Cart() {
               </CardContent>
             </Card>
           </Box>
-          <Grid sx={{display:"flex", alignItems:"center", justifyContent:"center", margin:"10px 0px"}}>
-
-          <Button
-            variant="outlined"
-            startIcon={<LocationOnIcon />}
+          <Grid
             sx={{
-              color: "gray",
-              borderColor: "black",
-              textTransform: "none",
-              "&:hover": {
-                backgroundColor: "rgba(0,0,0,0.05)",
-                borderColor: "black",
-                color: "black",
-              },
-              padding: "8px 16px",
-              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "10px 0px",
             }}
-            onClick={handleOpenAddAddressModal}
           >
-            + Addresses
-          </Button>
+            <Button
+              variant="outlined"
+              startIcon={<LocationOnIcon />}
+              sx={{
+                color: "gray",
+                borderColor: "black",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(0,0,0,0.05)",
+                  borderColor: "black",
+                  color: "black",
+                },
+                padding: "8px 16px",
+                borderRadius: "8px",
+              }}
+              onClick={handleOpenAddAddressModal}
+            >
+              + Addresses
+            </Button>
           </Grid>
         </Grid>
       </Grid>
+      {addresses.length > 0 ? (
+        <>
+          <Typography variant="h6">Choose Address</Typography>
+          <Grid container spacing={3} my={2}>
+            {addresses.map((address) => (
+              <Grid item xs={12} sm={6} md={4} key={address._id}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    border:
+                      selectedAddress && selectedAddress._id === address._id
+                        ? "1px solid orange"
+                        : "1px solid #ddd",
+                    cursor: "pointer",
+                    transition: "transform 0.3s",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                  onClick={() => handleAddressSelect(address)}
+                >
+                  <CardContent>
+                    <Grid
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography variant="h6">{address.fullName}</Typography>
+                      <Grid>
+                        <EditButton
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          onClick={handleEditAddress(address)}
+                          disableElevation
+                        >
+                          Edit Address
+                        </EditButton>
+                        <Tooltip title="Delete Address" arrow>
+                          <IconButton
+                            onClick={(e) =>
+                              handleDeleteAddressClick(e, address._id)
+                            }
+                            sx={{ color: "brown", marginLeft: "5px" }}
+                          >
+                            <DeleteForeverRounded />
+                          </IconButton>
+                        </Tooltip>
+                      </Grid>
+                    </Grid>
+                    <Typography variant="h6" color="textSecondary">
+                      Type: {address.addressType}
+                    </Typography>
+                    <Divider sx={{ margin: "10px 0px" }} />
+                    <Typography variant="body2" color="textSecondary">
+                      {address.address}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {address.locality}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {address.city}, {address.state}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Pincode: {address.pincode}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Phone: {address.mobileNumber}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Alternate Phone: {address.alternatePhone || ""}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </>
+      ) : (
+        <Typography>No Address Created</Typography>
+      )}
 
       <Box my={4}>
         <Typography variant="h6" gutterBottom>
@@ -416,6 +645,43 @@ function Cart() {
         <Footer />
       </Box>
 
+      {/* Delete Confirmation Modal */}
+      <Dialog
+        open={openDeleteModal}
+        onClose={handleCloseDeleteModal}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#212121", // dark background
+            color: "white", // white text for contrast
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "white" }}>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ color: "white" }}>
+            Are you sure you want to delete this address?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDeleteModal}
+            color="primary"
+            variant="outlined"
+            sx={{ color: "white" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAddress}
+            color="secondary"
+            variant="contained"
+            sx={{ backgroundColor: "#FF3D00", color: "white" }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Confirmation Modal */}
       <Dialog open={openModal} onClose={handleCloseModal}>
         <DialogTitle>Confirm Deletion</DialogTitle>
@@ -434,10 +700,21 @@ function Cart() {
         </DialogActions>
       </Dialog>
       {/* Add the AddAddressModal component */}
-      <AddAddressModal 
+      <AddAddressModal
         open={isAddAddressModalOpen}
         onClose={handleCloseAddAddressModal}
         onAddressAdded={handleAddressAdded}
+      />
+
+      {/* Edit address modal */}
+      <EditAddressModal
+        open={isEditAddressModalOpen}
+        onClose={() => {
+          setIsEditAddressModalOpen(false);
+          setSelectedEditAddress(null);
+        }}
+        address={selectedEditAddress}
+        onAddressUpdated={handleAddressUpdate}
       />
     </Container>
   );

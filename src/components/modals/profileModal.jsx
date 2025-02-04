@@ -16,7 +16,13 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import axiosInstance from "@/utils/axiosInstance";
 
-const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }) => {
+const ProfileModal = ({
+  open,
+  handleClose,
+  user,
+  profileImage,
+  onProfileUpdate,
+}) => {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -53,7 +59,7 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
     }
   };
   const handleSnackbarClose = () => {
-    setSnackbarOpen(false); 
+    setSnackbarOpen(false);
   };
 
   const handleSave = async () => {
@@ -78,30 +84,35 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
           },
         }
       );
-      setSnackbarMessage(response.data.message );
+      setSnackbarMessage(response.data.message);
       setSnackbarSeverity("success");
 
       onProfileUpdate(response.data.user);
-      setSnackbarOpen(true)
-      handleClose(); 
+      setSnackbarOpen(true);
+      handleClose();
     } catch (error) {
-      setSnackbarMessage(response.data.message );
+      setSnackbarMessage(
+        response?.response?.data?.message || "Error updating profile"
+      );
       setSnackbarSeverity("error");
-      setSnackbarOpen(true)
+      setSnackbarOpen(true);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
-
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       {editMode ? (
-        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#1e1e1e", color: "white" }}>
+          Edit Profile
+        </DialogTitle>
       ) : (
-        <DialogTitle>User Profile</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#1e1e1e", color: "white" }}>
+          User Profile
+        </DialogTitle>
       )}
-      <DialogContent>
+      <DialogContent sx={{ backgroundColor: "#f8f8f8", color: "black" }}>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           <Box position="relative">
             <Avatar
@@ -120,7 +131,7 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
                   bgcolor: "white",
                 }}
               >
-                <PhotoCamera />
+                <PhotoCamera sx={{color:"#1e1e1e"}}/>
                 <input
                   type="file"
                   hidden
@@ -137,6 +148,10 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: "4px",
+            }}
           />
           <TextField
             label="Last Name"
@@ -145,6 +160,10 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: "4px",
+            }}
           />
           <TextField
             label="User Name"
@@ -153,6 +172,10 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: "4px",
+            }}
           />
           <TextField
             label="Email"
@@ -161,12 +184,28 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: "4px",
+            }}
           />
         </Box>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ backgroundColor: "#f8f8f8", color: "black" }}>
         {editMode ? (
-          <Button onClick={handleSave} color="primary" variant="contained">
+          <Button
+            onClick={handleSave}
+            color="primary"
+            variant="contained"
+            fullWidth
+            sx={{
+              backgroundColor: "#1e1e1e",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "#333333", 
+              },
+            }}
+          >
             {loading ? (
               <CircularProgress size={24} sx={{ color: "white" }} />
             ) : (
@@ -176,13 +215,31 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
         ) : (
           <Button
             onClick={() => setEditMode(true)}
-            color="secondary"
+            color="#1e1e1e"
             variant="contained"
+            fullWidth
+            sx={{
+              backgroundColor: "#1e1e1e", 
+              color: "white",
+              "&:hover": {
+                backgroundColor: "black", 
+              },
+            }}
           >
             Edit
           </Button>
         )}
-        <Button onClick={handleClose} color="primary">
+        <Button
+          onClick={handleClose}
+          color="#1e1e1e"
+          fullWidth
+          sx={{
+            backgroundColor: "#eeeeee", 
+            "&:hover": {
+              backgroundColor: "#cccccc", 
+            },
+          }}
+        >
           Close
         </Button>
       </DialogActions>
@@ -193,7 +250,11 @@ const ProfileModal = ({ open, handleClose, user, profileImage, onProfileUpdate }
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

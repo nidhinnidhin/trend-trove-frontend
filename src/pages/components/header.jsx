@@ -47,12 +47,23 @@ const Header = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  // Use useEffect to check for window availability and get token from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("usertoken");
+      setToken(storedToken);
+      if (storedToken) {
+        setIsLoggedIn(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("usertoken");
-        if (token) {
+      if (token) {
+        try {
           const response = await axiosInstance.get("users/profile", {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,20 +72,18 @@ const Header = () => {
           console.log("User Profile:", response.data.user);
           setUserProfile(response.data.user.image);
           setUser(response.data.user);
-        } else {
-          console.log("No token found.");
+        } catch (error) {
+          console.error("Error fetching profile:", error);
           setIsLoading(false);
+          setSnackbarOpen(true); // Show an error snackbar to the user
         }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
+      } else {
         setIsLoading(false);
-        setSnackbarOpen(true); // Show an error snackbar to the user
       }
     };
-  
+
     fetchProfile();
-  }, []);
-  
+  }, [token]); // Trigger fetchProfile when the token changes
 
   const handleProfileClick = () => {
     setIsProfileModalOpen(true);
@@ -99,13 +108,14 @@ const Header = () => {
 
   const handleLogoutConfirm = () => {
     localStorage.removeItem("usertoken");
+    setToken(null); // Clear token state
+    setIsLoggedIn(false);
 
     setTimeout(() => {
       router.push("/authentication/loginSignup");
     }, 1000);
 
     setSnackbarOpen(true);
-
     setOpenLogoutDialog(false);
   };
 
@@ -117,21 +127,9 @@ const Header = () => {
     setSnackbarOpen(false);
   };
 
-  const handleAddressClick = () => {
-    
-  }
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("usertoken");
-      if (token) {
-        setIsLoggedIn(true);
-      }
-    }
-  }, []);
   const handleProfileUpdate = (updatedUser) => {
-    setUserProfile(updatedUser.image);  // Update the user profile image
-    setUser(updatedUser);  // Update the user details if necessary
+    setUserProfile(updatedUser.image);
+    setUser(updatedUser);
   };
 
   return (
@@ -204,13 +202,13 @@ const Header = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {isLoggedIn ? (
               <>
-              <Link href="/cart/cartpage">
-                <IconButton size="large" color="black">
-                  <Badge badgeContent={4} color="error">
-                    <ShoppingCartIcon />
-                  </Badge>
-                </IconButton>
-              </Link>
+                <Link href="/cart/cartpage">
+                  <IconButton size="large" color="black">
+                    <Badge badgeContent={4} color="error">
+                      <ShoppingCartIcon />
+                    </Badge>
+                  </IconButton>
+                </Link>
                 <IconButton size="large" color="inherit">
                   <Badge badgeContent={2} color="error">
                     <FavoriteIcon />
@@ -221,7 +219,10 @@ const Header = () => {
                   color="inherit"
                   onClick={handleMenuClick}
                 >
-                  <Avatar alt="Remy Sharp" src={userProfile || "/default-avatar.png"} />
+                  <Avatar
+                    alt="Remy Sharp"
+                    src={userProfile || "/default-avatar.png"}
+                  />
                 </IconButton>
 
                 <Menu
@@ -229,14 +230,8 @@ const Header = () => {
                   open={Boolean(anchorEl)}
                   onClose={handleMenuClose}
                 >
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem onClick={handleProfileClick}>My Profile</MenuItem>
-                    <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
-                  </Menu>
+                  <MenuItem onClick={handleProfileClick}>My Profile</MenuItem>
+                  <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
                 </Menu>
               </>
             ) : (
@@ -335,7 +330,7 @@ const Header = () => {
         open={isProfileModalOpen}
         handleClose={() => setIsProfileModalOpen(false)}
         user={user}
-        profileImage = {userProfile}
+        profileImage={userProfile}
         onProfileUpdate={handleProfileUpdate}
       />
     </Box>
