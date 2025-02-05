@@ -13,7 +13,7 @@ import {
 import StarIcon from "@mui/icons-material/Star";
 import { Chip } from "@mui/material";
 
-const Products = ({ products }) => {
+const ListProducts = ({ products }) => {
   const router = useRouter();
   const { filterState } = useFilter();
 
@@ -76,7 +76,7 @@ const Products = ({ products }) => {
       </Typography>
 
       <Grid container spacing={2}>
-        {filteredProducts.slice(0,8).map((product) => (
+        {filteredProducts.map((product) => (
           <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
             <Card
               sx={{
@@ -156,4 +156,4 @@ const Products = ({ products }) => {
   );
 };
 
-export default Products;
+export default ListProducts;

@@ -27,6 +27,9 @@ import {
   Button,
   Snackbar,
   Grid,
+  Slide,
+  TextField,
+  Tooltip,
 } from "@mui/material";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -34,6 +37,8 @@ import logo from "../../media/logo.png";
 import Link from "next/link";
 import axiosInstance from "@/utils/axiosInstance";
 import ProfileModal from "@/components/modals/profileModal";
+import SearchIcon from "@mui/icons-material/Search";
+import axios from "axios";
 
 const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -48,6 +53,9 @@ const Header = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
   // Use useEffect to check for window availability and get token from localStorage
   useEffect(() => {
@@ -70,10 +78,14 @@ const Header = () => {
             },
           });
           console.log("User Profile:", response.data.user);
-          setUserProfile(response.data.user.image);
+          setUserProfile(response.data.user.image || "");
           setUser(response.data.user);
         } catch (error) {
-          console.error("Error fetching profile:", error);
+          if (error.response?.status === 404) {
+            setUserProfile(response.data.user.image || "");
+          } else {
+            console.error("Error fetching Profile:", error);
+          }
           setIsLoading(false);
           setSnackbarOpen(true); // Show an error snackbar to the user
         }
@@ -131,6 +143,35 @@ const Header = () => {
     setUserProfile(updatedUser.image);
     setUser(updatedUser);
   };
+  const handleSearchToggle = () => {
+    setIsSearchOpen((prev) => !prev);
+  };
+
+  const handleSearchChange = async (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+  
+    if (query.length > 2) {
+      try {
+        const response = await axios.get(
+          `http://localhost:9090/api/products/product/search`, {
+            params: { query } 
+          }
+        );
+        setSearchResults(response.data.products);
+      } catch (error) {
+        console.error("Error searching products:", error);
+        setSearchResults([]);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSearchItemClick = () => {
+    router.push(`/productListing/searchResults?search=${searchQuery}`);
+    setIsSearchOpen(false); 
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -181,8 +222,13 @@ const Header = () => {
                 alignItems: "center",
               }}
             >
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Products
+              <Typography variant="body1">
+                <Link
+                  href="/productListing/explore"
+                  style={{ textDecoration: "none", color: "gray" }}
+                >
+                  Explore
+                </Link>
               </Typography>
               <Typography variant="body1" sx={{ cursor: "pointer" }}>
                 Category
@@ -200,6 +246,11 @@ const Header = () => {
           )}
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <IconButton color="inherit" onClick={handleSearchToggle}>
+              <Tooltip title="Search products">
+                <SearchIcon sx={{ fontSize: "30px" }} />
+              </Tooltip>
+            </IconButton>
             {isLoggedIn ? (
               <>
                 <Link href="/cart/cartpage">
@@ -247,6 +298,73 @@ const Header = () => {
           </Box>
         </Toolbar>
       </AppBar>
+      {/* Search Bar */}
+      <Box sx={{display:"flex", justifyContent:"center"}}>
+      <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit >
+        <Box
+          sx={{
+            width: "70%",
+            p: 2,
+            backgroundColor: "#1F1F1F",
+            position: "fixed",
+            top: 64,
+            zIndex: 1100,
+            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <TextField
+            fullWidth
+            placeholder="Search products..."
+            variant="outlined"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{
+              backgroundColor: "#ffffff",
+              borderRadius: "8px",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "#bdbdbd",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#757575",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#000",
+                },
+              },
+              "& input": {
+                color: "#333",
+              },
+              "&::placeholder": {
+                color: "#757575",
+              },
+            }}
+          />
+          {searchResults.length > 0 && (
+            <List
+              sx={{
+                backgroundColor: "#f8f8f8",
+                mt: 1,
+                borderRadius: "8px",
+                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              {searchResults.map((product) => (
+                <ListItem
+                  key={product._id}
+                  button
+                  sx={{border:"0.5px solid lightgray", cursor:"pointer"}}
+                  onClick={handleSearchItemClick}
+                >
+                  <SearchIcon sx={{color:"gray", marginRight:"10px"}}/>
+                  <ListItemText primary={product.name} />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Box>
+      </Slide>
+      </Box>
 
       <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerToggle}>
         <Box

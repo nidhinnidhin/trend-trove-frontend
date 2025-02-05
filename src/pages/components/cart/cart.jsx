@@ -32,6 +32,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   ShoppingCart as ShoppingCartIcon,
@@ -52,6 +54,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { styled } from "@mui/material/styles";
 import EditAddressModal from "@/components/modals/editAddressModal";
 import { Delete } from "lucide-react";
+import { Router, useRouter } from "next/router";
 
 const EditButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
@@ -80,6 +83,10 @@ function Cart() {
   const [selectedEditAddress, setSelectedEditAddress] = useState(null);
   const [selectedAddressToDelete, setSelectedAddressToDelete] = useState(null);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const router = useRouter();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("info");
 
   useEffect(() => {
     const token = localStorage.getItem("usertoken");
@@ -87,16 +94,20 @@ function Cart() {
     const fetchAddresses = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:9090/api/address/get-address", // API to fetch addresses
+          "http://localhost:9090/api/address/get-address",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setAddresses(response.data.addresses); // Set fetched addresses in state
+        setAddresses(response.data.addresses || []);
       } catch (error) {
-        console.error("Error fetching addresses:", error);
+        if (error.response?.status === 404) {
+          setAddresses([]);
+        } else {
+          console.error("Error fetching addresses:", error);
+        }
       }
     };
 
@@ -105,7 +116,6 @@ function Cart() {
 
   useEffect(() => {
     const token = localStorage.getItem("usertoken");
-    console.log("TOKENNNNNNNNNNNN", token);
 
     const fetchCartData = async () => {
       try {
@@ -119,8 +129,12 @@ function Cart() {
         );
         setCart(response.data.cart);
       } catch (error) {
-        console.error("Error fetching cart data:", error);
-        setCart(null);
+        if (error.response?.status === 404) {
+          setCart(null);
+        } else {
+          setCartError("Error fetching cart data");
+          console.error("Error fetching cart data:", error);
+        }
       } finally {
         setLoading(false);
       }
@@ -146,6 +160,7 @@ function Cart() {
     const { product, variant, sizeVariant } = itemToDelete;
 
     try {
+      // Call the API to delete the product
       const response = await axios.delete(
         "http://localhost:9090/api/cart/delete-product",
         {
@@ -160,7 +175,24 @@ function Cart() {
         }
       );
 
-      setCart(response.data.cart);
+      // Update the cart state immediately
+      setCart((prevCart) => {
+        const updatedItems = prevCart.items.filter(
+          (item) =>
+            item.product._id !== product._id ||
+            item.variant._id !== variant._id ||
+            item.sizeVariant._id !== sizeVariant._id
+        );
+
+        return {
+          ...prevCart,
+          items: updatedItems,
+          totalPrice: response.data.cart.totalPrice, // Update total price if needed
+          discountAmount: response.data.cart.discountAmount, // Update discount if needed
+        };
+      });
+
+      // Close the modal
       handleCloseModal();
     } catch (error) {
       console.error("Error removing product from cart:", error);
@@ -184,20 +216,27 @@ function Cart() {
     const token = localStorage.getItem("usertoken");
     const { product, variant, sizeVariant } = item;
 
-    const updatedCart = { ...cart };
-    const itemIndex = updatedCart.items.findIndex(
-      (i) =>
-        i.product._id === product._id &&
-        i.variant._id === variant._id &&
-        i.sizeVariant._id === sizeVariant._id
+    // Create a new cart object to trigger a re-render
+    const updatedItems = cart.items.map((cartItem) =>
+      cartItem.product._id === product._id &&
+      cartItem.variant._id === variant._id &&
+      cartItem.sizeVariant._id === sizeVariant._id
+        ? { ...cartItem, quantity: newQuantity }
+        : cartItem
     );
 
-    if (itemIndex > -1) {
-      updatedCart.items[itemIndex].quantity = newQuantity;
-    }
+    const newTotalPrice = updatedItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
 
-    setCart(updatedCart);
+    setCart({
+      ...cart,
+      items: updatedItems,
+      totalPrice: newTotalPrice, // Ensure the total price updates in real-time
+    });
 
+    // API call to update quantity in backend
     try {
       await axios.put(
         "http://localhost:9090/api/cart/update-quantity",
@@ -271,6 +310,10 @@ function Cart() {
     setSelectedAddressToDelete(null);
   };
 
+  const navigateToHome = () => {
+    router.push("/");
+  };
+
   const handleDeleteAddress = async () => {
     const token = localStorage.getItem("usertoken");
 
@@ -298,12 +341,38 @@ function Cart() {
     }
   };
 
+  const handleCheckout = async () => {
+    if (!selectedAddress) {
+      setSnackbarMessage("Please select a delivery address");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+    const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
+    const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
+    // Prepare data to pass to the checkout page
+    const checkoutData = {
+      cartId: cart._id, // Ensure cartId is included
+      cartItems: cart.items,
+      totalPrice: cart.totalPrice,
+      finalTotal: finalTotal,
+      deliveryCharge: shippingCost,
+      discountAmount: cart.discountAmount,
+      selectedAddress: selectedAddress,
+    };
+
+    router.push({
+      pathname: "/checkout/checkout",
+      query: { data: JSON.stringify(checkoutData) },
+    });
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   if (loading) {
     return <Typography>Loading...</Typography>;
-  }
-
-  if (!cart || cart.items.length === 0) {
-    return <Typography>Your cart is empty.</Typography>;
   }
 
   return (
@@ -320,229 +389,290 @@ function Cart() {
           </Alert>
         )}
       </Box>
-
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={9}>
-          <Card>
-            <CardContent>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Product</TableCell>
-                    <TableCell>
-                      Quantity
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        color="textSecondary"
-                      >
-                        Max 4 items per product
-                      </Typography>
-                    </TableCell>
-                    <TableCell>Price</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cart.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Grid container spacing={2} alignItems="center">
-                          <Grid item>
-                            <img
-                              src={item.variant.mainImage}
-                              alt={item.product.name}
-                              style={{ width: 50, height: 50 }}
-                            />
-                          </Grid>
-                          <Grid item>
-                            <Typography variant="body1">
-                              {item.product.name.slice(0,20)}...
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              Size: {item.sizeVariant.size}, Color:{" "}
-                              {item.variant.color}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      </TableCell>
-                      <TableCell>
-                        <FormControl variant="outlined" sx={{width:"100px"}} size="small">
-                          <Select
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(item, e.target.value)
-                            }
-                            error={item.quantity > 4}
-                          >
-                            {[1, 2, 3, 4].map((num) => (
-                              <MenuItem key={num} value={num}>
-                                {num}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1">{`₹${item.price}`}</Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {`₹${item.price} each`}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          color="error"
-                          onClick={() => handleOpenModal(item)}
-                        >
-                          <IconButton
-                            color="error"
-                            onClick={() => handleOpenModal(item)}
-                            aria-label="delete"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardActions
-              sx={{ display: "flex", justifyContent: "space-between" }}
-            >
-              <Button
-                startIcon={<ChevronLeftIcon />}
-                sx={{
-                  backgroundColor: "#333",
-                  color: "#fff",
-                  "&:hover": {
-                    backgroundColor: "#555",
-                  },
-                  textTransform: "none",
-                  padding: "6px 20px",
-                }}
-              >
-                Continue Shopping
-              </Button>
-
-              <Button
-                endIcon={<ChevronRightIcon />}
-                color="primary"
-                variant="outlined"
-                sx={{
-                  color: "#333",
-                  borderColor: "#333",
-                  textTransform: "none",
-                  padding: "6px 20px",
-                  "&:hover": {
-                    backgroundColor: "#f5f5f5",
-                    borderColor: "#333",
-                  },
-                }}
-              >
-                Make Purchase
-              </Button>
-            </CardActions>
-          </Card>
-
-          <Box mt={3}>
-            <Paper elevation={1}>
-              <Box p={2}>
-                <Typography variant="body1">
-                  <LocalShippingIcon color="success" /> Free Delivery within 1-2
-                  weeks
-                </Typography>
-              </Box>
-            </Paper>
-          </Box>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Have coupon?
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    placeholder="Coupon code"
-                  />
-                </Grid>
-                <Grid item>
-                  <Button variant="contained" color="primary">
-                    Apply
-                  </Button>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-
-          <Box mt={3}>
+      {!cart || cart.items.length === 0 ? (
+        <>
+          <Typography variant="h5" gutterBottom>
+            Your cart is empty
+          </Typography>
+          <Typography variant="body1" color="textSecondary" paragraph>
+            Looks like you haven't added anything to your cart yet
+          </Typography>
+          <Button
+            startIcon={<ChevronLeftIcon />}
+            sx={{
+              backgroundColor: "#333",
+              color: "#fff",
+              margin: "10px 0px",
+              "&:hover": {
+                backgroundColor: "#555",
+              },
+              textTransform: "none",
+              padding: "6px 20px",
+            }}
+            onClick={navigateToHome}
+          >
+            Continue Shopping
+          </Button>
+        </>
+      ) : (
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={9}>
             <Card>
               <CardContent>
-                <List>
-                  <ListItem>
-                    <ListItemText primary="Total price:" />
-                    <Typography variant="body1">{`INR ${cart.totalPrice}`}</Typography>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary="Discount:" />
-                    <Typography variant="body1">{`INR ${cart.discountAmount}`}</Typography>
-                  </ListItem>
-                  <Divider />
-                  <ListItem>
-                    <ListItemText primary="Total:" />
-                    <Typography variant="h6">{`INR ${
-                      cart.totalPrice - cart.discountAmount
-                    }`}</Typography>
-                  </ListItem>
-                </List>
-                <Box textAlign="center" mt={2}>
-                  <img
-                    src="https://t3.ftcdn.net/jpg/09/21/55/16/240_F_921551609_o84jc48ToVS69IZesWxn4F30svtbpepf.jpg"
-                    alt="payments"
-                    height="60"
-                  />
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product</TableCell>
+                      <TableCell>
+                        Quantity
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          color="textSecondary"
+                        >
+                          Max 4 items per product
+                        </Typography>
+                      </TableCell>
+                      <TableCell>Price</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {cart.items.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Grid container spacing={2} alignItems="center">
+                            <Grid item>
+                              <img
+                                src={item.variant.mainImage}
+                                alt={item.product.name}
+                                style={{
+                                  width: 60,
+                                  height: 60,
+                                  objectFit: "contain",
+                                }}
+                              />
+                            </Grid>
+                            <Grid item>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  height: "20px",
+                                  width: "170px",
+                                  overflowY: "hidden",
+                                }}
+                              >
+                                {item.product.name}...
+                              </Typography>
+                              <Typography variant="body2" color="textSecondary">
+                                Size: {item.sizeVariant.size}, Color:{" "}
+                                {item.variant.color}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                        </TableCell>
+                        <TableCell>
+                          <FormControl
+                            variant="outlined"
+                            sx={{ width: "100px" }}
+                            size="small"
+                          >
+                            <Select
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(item, e.target.value)
+                              }
+                              error={item.quantity > 4}
+                            >
+                              {[1, 2, 3, 4].map((num) => (
+                                <MenuItem key={num} value={num}>
+                                  {num}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body1">{`₹${
+                            item.price * item.quantity
+                          }`}</Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            {`₹${item.price} each`}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            color="error"
+                            onClick={() => handleOpenModal(item)}
+                          >
+                            <IconButton
+                              color="error"
+                              onClick={() => handleOpenModal(item)}
+                              aria-label="delete"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                            Remove
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <CardActions
+                sx={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <Button
+                  startIcon={<ChevronLeftIcon />}
+                  onClick={navigateToHome}
+                  sx={{
+                    backgroundColor: "#333",
+                    color: "#fff",
+                    "&:hover": {
+                      backgroundColor: "#555",
+                    },
+                    textTransform: "none",
+                    padding: "6px 20px",
+                  }}
+                >
+                  Continue Shopping
+                </Button>
+
+                <Button
+                  endIcon={<ChevronRightIcon />}
+                  color="primary"
+                  variant="outlined"
+                  sx={{
+                    color: "#333",
+                    borderColor: "#333",
+                    textTransform: "none",
+                    padding: "6px 20px",
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#333",
+                    },
+                  }}
+                  onClick={handleCheckout}
+                >
+                  Checkout Cart
+                </Button>
+              </CardActions>
+            </Card>
+
+            <Box mt={3}>
+              <Paper elevation={1}>
+                <Box p={2}>
+                  <Typography
+                    variant="body1"
+                    sx={{ display: "flex", alignItems: "center" }}
+                  >
+                    <LocalShippingIcon
+                      color="success"
+                      sx={{ marginRight: "10px" }}
+                    />{" "}
+                    Free Delivery within 1-2 weeks on purchases above ₹1000!
+                  </Typography>
                 </Box>
+              </Paper>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Have coupon?
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      placeholder="Coupon code"
+                    />
+                  </Grid>
+                  <Grid item>
+                    <Button variant="contained" color="primary">
+                      Apply
+                    </Button>
+                  </Grid>
+                </Grid>
               </CardContent>
             </Card>
-          </Box>
-          <Grid
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "10px 0px",
-            }}
-          >
-            <Button
-              variant="outlined"
-              startIcon={<LocationOnIcon />}
+
+            <Box mt={3}>
+              <Card>
+                <CardContent>
+                  <List>
+                    <ListItem>
+                      <ListItemText primary="Total price:" />
+                      <Typography variant="body1">{`₹ ${cart.totalPrice}`}</Typography>
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Discount:" />
+                      <Typography variant="body1">{`₹ ${cart.discountAmount}`}</Typography>
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Shiping:" />
+                      {cart.totalPrice > 1000 ? (
+                        <Typography variant="body1"> Free shiping</Typography>
+                      ) : (
+                        <Typography variant="body1">₹ 40</Typography>
+                      )}
+                    </ListItem>
+                    <Divider />
+                    <ListItem>
+                      <ListItemText primary="Total:" />
+                      <Typography variant="h6">{`₹ ${
+                        cart.totalPrice -
+                        cart.discountAmount +
+                        (cart.totalPrice > 1000 ? 0 : 40)
+                      }`}</Typography>
+                    </ListItem>
+                  </List>
+                  <Box textAlign="center" mt={2}>
+                    <img
+                      src="https://t3.ftcdn.net/jpg/09/21/55/16/240_F_921551609_o84jc48ToVS69IZesWxn4F30svtbpepf.jpg"
+                      alt="payments"
+                      height="60"
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+            <Grid
               sx={{
-                color: "gray",
-                borderColor: "black",
-                textTransform: "none",
-                "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                  borderColor: "black",
-                  color: "black",
-                },
-                padding: "8px 16px",
-                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "10px 0px",
               }}
-              onClick={handleOpenAddAddressModal}
             >
-              + Addresses
-            </Button>
+              <Button
+                variant="outlined"
+                startIcon={<LocationOnIcon />}
+                sx={{
+                  color: "gray",
+                  borderColor: "black",
+                  textTransform: "none",
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.05)",
+                    borderColor: "black",
+                    color: "black",
+                  },
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                }}
+                onClick={handleOpenAddAddressModal}
+              >
+                + Addresses
+              </Button>
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
+      )}
       {addresses.length > 0 ? (
         <>
           <Typography variant="h6">Choose Address</Typography>
@@ -628,16 +758,95 @@ function Cart() {
 
       <Box my={4}>
         <Typography variant="h6" gutterBottom>
-          Payment and refund policy
+          Payment and Refund Policy
         </Typography>
         <Typography variant="body1" paragraph>
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum.
+          At TREND TROVE, we strive to provide a smooth and secure shopping
+          experience for all our customers. Please read the following payment
+          and refund policy carefully before making a purchase on our site.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          <strong>Payment Policy</strong>
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          1. <strong>Accepted Payment Methods:</strong> We accept payments via
+          major credit and debit cards, including Visa, MasterCard, American
+          Express, and Discover. PayPal, Apple Pay, and Google Pay are also
+          available for your convenience. For local customers, we may accept COD
+          (Cash on Delivery) as a payment option, depending on your location.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          2. <strong>Payment Security:</strong> All transactions are processed
+          securely through an encrypted payment gateway. Your payment
+          information is never stored on our servers. We utilize SSL encryption
+          technology to ensure the confidentiality and security of your payment
+          details.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          3. <strong>Order Confirmation:</strong> Once your payment is
+          processed, you will receive an order confirmation email with your
+          purchase details and order number. If the payment fails for any
+          reason, your order will not be processed. Please check with your
+          payment provider or try an alternative payment method.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          4. <strong>Currency:</strong> All prices displayed on our website are
+          in [Your Currency]. If you are shopping from outside [Your Country],
+          please note that currency conversion may apply based on your payment
+          provider's exchange rates.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          5. <strong>Fraud Prevention:</strong> To protect both our customers
+          and ourselves from fraudulent transactions, we reserve the right to
+          request additional information or verification for large or suspicious
+          orders. Failure to provide requested details may result in order
+          cancellation.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          <strong>Refund and Return Policy</strong>
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          1. <strong>Returns:</strong> We accept returns on unworn, unwashed,
+          and unused items within 30 days from the date of purchase. Items must
+          be returned in their original condition, including all tags and
+          packaging. Items that are damaged or altered cannot be accepted for
+          returns. To initiate a return, please contact our customer support
+          team at [Customer Support Email] to receive return instructions and
+          authorization. Return shipping costs are the responsibility of the
+          customer unless the return is due to a mistake on our part (such as a
+          defective product or incorrect item).
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          2. <strong>Refunds:</strong> Once we receive your returned item(s) and
+          verify the condition, your refund will be processed. Refunds will be
+          credited back to the original payment method used for the purchase.
+          Please allow up to 7-10 business days for your refund to be reflected
+          in your account, depending on your payment provider. If your order was
+          paid via COD, we will issue a refund to the account details you
+          provide during the return process.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          3. <strong>Exchanges:</strong> We currently do not offer direct
+          exchanges. However, you may return your item for a refund and place a
+          new order for the desired item. Please follow our return process and
+          then place a new order for the correct size or style.
+        </Typography>
+
+        <Typography variant="body1" paragraph>
+          4. <strong>Defective or Incorrect Items:</strong> If you receive a
+          defective or incorrect item, please contact our customer support team
+          immediately. We will provide you with a prepaid return label for the
+          return and issue a full refund or replacement, as per your preference.
         </Typography>
       </Box>
 
@@ -716,6 +925,20 @@ function Cart() {
         address={selectedEditAddress}
         onAddressUpdated={handleAddressUpdate}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

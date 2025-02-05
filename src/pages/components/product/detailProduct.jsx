@@ -35,10 +35,13 @@ const DetailProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(null)
 
-  const isLoggedIn = localStorage.getItem("usertoken") !== null;
-
+  
   useEffect(() => {
+    if(localStorage.getItem("usertoken") !== null){
+      setIsLoggedIn(localStorage.getItem("usertoken"));
+    }
     if (id) {
       const fetchProduct = async () => {
         try {
@@ -173,7 +176,7 @@ const DetailProduct = () => {
         productData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("usertoken")}`,
+            Authorization: `Bearer ${isLoggedIn}`,
           },
         }
       );
