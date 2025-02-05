@@ -23,6 +23,8 @@ import Link from "next/link";
 import StarIcon from "@mui/icons-material/Star";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import LocalMallIcon from "@mui/icons-material/LocalMall";
+import { useDispatch, useSelector } from "react-redux";
+import { setCartLength } from "@/redux/features/cartSlice";
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -33,6 +35,7 @@ const DetailProduct = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const router = useRouter();
   const { id } = router.query;
+  const dispatch = useDispatch();
 
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
@@ -179,6 +182,19 @@ const DetailProduct = () => {
       alert("Product added to cart");
       if (response.status === 201) {
         alert("Product added to cart successfully!");
+
+        // Fetch the updated cart length
+        const cartResponse = await axios.get(
+          "http://localhost:9090/api/cart/get-cart",
+          {
+            headers: {
+              Authorization: `Bearer ${isLoggedIn}`,
+            },
+          }
+        );
+
+        // Dispatch the updated cart length to Redux
+        dispatch(setCartLength(cartResponse.data.cart.items.length));
       }
     } catch (error) {
       console.error("Error adding product to cart", error);
@@ -532,7 +548,7 @@ const DetailProduct = () => {
                 px: 3,
                 py: 1.5,
                 fontWeight: 600,
-                backgroundColor:"#333333",
+                backgroundColor: "#333333",
                 fontSize: "16px",
                 display: "flex",
                 alignItems: "center",

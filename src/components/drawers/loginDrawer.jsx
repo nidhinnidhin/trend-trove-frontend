@@ -31,12 +31,12 @@ const LoginDrawer = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
-  
+
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
-  
+
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -45,9 +45,10 @@ const LoginDrawer = ({ onClose }) => {
       setOpenSnackbar(true);
       return;
     }
-  
+
     // Validate password
-    const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
     if (!passwordRegex.test(password)) {
       setSnackbarMessage(
         "Password must be at least 8 characters long and include at least one special character!"
@@ -56,14 +57,14 @@ const LoginDrawer = ({ onClose }) => {
       setOpenSnackbar(true);
       return;
     }
-  
+
     const datas = {
       email: email,
       password: password,
     };
-  
+
     setLoading(true);
-  
+
     setTimeout(async () => {
       try {
         const response = await axios.post(
@@ -84,9 +85,8 @@ const LoginDrawer = ({ onClose }) => {
       } finally {
         setLoading(false);
       }
-    }, 1000); 
+    }, 1000);
   };
-  
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
@@ -224,6 +224,19 @@ const LoginDrawer = ({ onClose }) => {
                   "Login"
                 )}
               </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography
+                variant="body2"
+                sx={{
+                  textAlign: "right",
+                  cursor: "pointer",
+                  color: "#FFA500",
+                }}
+                onClick={() => router.push("/forgotPassword/forgotpassword")}
+              >
+                Forgot Password?
+              </Typography>
             </Grid>
 
             {/* Google Login Button */}

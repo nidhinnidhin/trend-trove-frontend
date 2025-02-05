@@ -39,6 +39,8 @@ import axiosInstance from "@/utils/axiosInstance";
 import ProfileModal from "@/components/modals/profileModal";
 import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { setCartLength } from "@/redux/features/cartSlice";
 
 const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -56,6 +58,32 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+
+  const dispatch = useDispatch();
+  const cartLength = useSelector((state) => state.cart.cartLength);
+
+  useEffect(() => {
+    const fetchCartLength = async () => {
+      const token = localStorage.getItem("usertoken");
+      if (token) {
+        try {
+          const response = await axios.get(
+            "http://localhost:9090/api/cart/get-cart",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          dispatch(setCartLength(response.data.cart.items.length));
+        } catch (error) {
+          console.error("Error fetching cart length:", error);
+        }
+      }
+    };
+
+    fetchCartLength();
+  }, [dispatch]);
 
   // Use useEffect to check for window availability and get token from localStorage
   useEffect(() => {
@@ -98,8 +126,9 @@ const Header = () => {
   }, [token]); // Trigger fetchProfile when the token changes
 
   const handleProfileClick = () => {
-    setIsProfileModalOpen(true);
-    handleMenuClose();
+    router.push("/profile/userprofile");
+    // setIsProfileModalOpen(true);
+    // handleMenuClose();
   };
 
   const handleDrawerToggle = () => {
@@ -150,12 +179,13 @@ const Header = () => {
   const handleSearchChange = async (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-  
+
     if (query.length > 2) {
       try {
         const response = await axios.get(
-          `http://localhost:9090/api/products/product/search`, {
-            params: { query } 
+          `http://localhost:9090/api/products/product/search`,
+          {
+            params: { query },
           }
         );
         setSearchResults(response.data.products);
@@ -170,7 +200,7 @@ const Header = () => {
 
   const handleSearchItemClick = () => {
     router.push(`/productListing/searchResults?search=${searchQuery}`);
-    setIsSearchOpen(false); 
+    setIsSearchOpen(false);
   };
 
   return (
@@ -255,7 +285,7 @@ const Header = () => {
               <>
                 <Link href="/cart/cartpage">
                   <IconButton size="large" color="black">
-                    <Badge badgeContent={4} color="error">
+                    <Badge badgeContent={cartLength} color="error">
                       <ShoppingCartIcon />
                     </Badge>
                   </IconButton>
@@ -299,72 +329,72 @@ const Header = () => {
         </Toolbar>
       </AppBar>
       {/* Search Bar */}
-      <Box sx={{display:"flex", justifyContent:"center"}}>
-      <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit >
-        <Box
-          sx={{
-            width: "70%",
-            p: 2,
-            backgroundColor: "#f8f8f9",
-            borderRadius:"10px",
-            position: "fixed",
-            top: 64,
-            zIndex: 1100,
-            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <TextField
-            fullWidth
-            placeholder="Search products..."
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchChange}
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit>
+          <Box
             sx={{
-              backgroundColor: "#ffffff",
-              borderRadius: "8px",
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "#bdbdbd",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#757575",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#000",
-                },
-              },
-              "& input": {
-                color: "#333",
-              },
-              "&::placeholder": {
-                color: "#757575",
-              },
+              width: "70%",
+              p: 2,
+              backgroundColor: "#f8f8f9",
+              borderRadius: "10px",
+              position: "fixed",
+              top: 64,
+              zIndex: 1100,
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
             }}
-          />
-          {searchResults.length > 0 && (
-            <List
+          >
+            <TextField
+              fullWidth
+              placeholder="Search products..."
+              variant="outlined"
+              value={searchQuery}
+              onChange={handleSearchChange}
               sx={{
-                backgroundColor: "#f8f8f8",
-                mt: 1,
+                backgroundColor: "#ffffff",
                 borderRadius: "8px",
-                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "#bdbdbd",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#757575",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#000",
+                  },
+                },
+                "& input": {
+                  color: "#333",
+                },
+                "&::placeholder": {
+                  color: "#757575",
+                },
               }}
-            >
-              {searchResults.map((product) => (
-                <ListItem
-                  key={product._id}
-                  button
-                  sx={{border:"0.5px solid lightgray", cursor:"pointer"}}
-                  onClick={handleSearchItemClick}
-                >
-                  <SearchIcon sx={{color:"gray", marginRight:"10px"}}/>
-                  <ListItemText primary={product.name} />
-                </ListItem>
-              ))}
-            </List>
-          )}
-        </Box>
-      </Slide>
+            />
+            {searchResults.length > 0 && (
+              <List
+                sx={{
+                  backgroundColor: "#f8f8f8",
+                  mt: 1,
+                  borderRadius: "8px",
+                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                {searchResults.map((product) => (
+                  <ListItem
+                    key={product._id}
+                    button
+                    sx={{ border: "0.5px solid lightgray", cursor: "pointer" }}
+                    onClick={handleSearchItemClick}
+                  >
+                    <SearchIcon sx={{ color: "gray", marginRight: "10px" }} />
+                    <ListItemText primary={product.name} />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Box>
+        </Slide>
       </Box>
 
       <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerToggle}>

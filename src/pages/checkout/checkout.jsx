@@ -82,7 +82,7 @@ const CheckoutPage = () => {
       cartId: checkoutData.cartId, // Use the correct cartId
       addressId: selectedAddress._id,
       shippingMethod: "Standard",
-      paymentMethod: "Credit Card",
+      paymentMethod: "Cash On Delivery",
       transactionId: "txn_1234567890",
       paymentStatus: "completed",
     };

@@ -55,6 +55,8 @@ import { styled } from "@mui/material/styles";
 import EditAddressModal from "@/components/modals/editAddressModal";
 import { Delete } from "lucide-react";
 import { Router, useRouter } from "next/router";
+import { useDispatch } from "react-redux";
+import { setCartLength } from "@/redux/features/cartSlice";
 
 const EditButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
@@ -87,6 +89,8 @@ function Cart() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const token = localStorage.getItem("usertoken");
@@ -175,6 +179,18 @@ function Cart() {
         }
       );
 
+      const cartResponse = await axios.get(
+        "http://localhost:9090/api/cart/get-cart",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Dispatch the updated cart length to Redux
+      dispatch(setCartLength(cartResponse.data.cart.items.length));
+
       // Update the cart state immediately
       setCart((prevCart) => {
         const updatedItems = prevCart.items.filter(
@@ -252,6 +268,18 @@ function Cart() {
           },
         }
       );
+
+      const cartResponse = await axios.get(
+        "http://localhost:9090/api/cart/get-cart",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Dispatch the updated cart length to Redux
+      dispatch(setCartLength(cartResponse.data.cart.items.length));
     } catch (error) {
       console.error("Error updating quantity:", error);
     }
@@ -343,7 +371,7 @@ function Cart() {
 
   const handleCheckout = async () => {
     console.log("Clicked");
-    
+
     if (!selectedAddress) {
       setSnackbarMessage("Please select a delivery address");
       setSnackbarSeverity("error");
@@ -364,7 +392,7 @@ function Cart() {
     };
 
     router.push({
-      pathname: "/checkout/checkoutlist",
+      pathname: "/checkout/checkout",
       query: { data: JSON.stringify(checkoutData) },
     });
   };
@@ -677,8 +705,11 @@ function Cart() {
       )}
       {addresses.length > 0 ? (
         <>
-          <Typography variant="h6">Choose Address</Typography>
-          <Grid container spacing={3} my={2}>
+          <Divider />
+          <Typography variant="h6" my={2}>
+            Choose Address
+          </Typography>
+          <Grid container spacing={3}>
             {addresses.map((address) => (
               <Grid item xs={12} sm={6} md={4} key={address._id}>
                 <Card
@@ -757,7 +788,7 @@ function Cart() {
       ) : (
         <Typography>No Address Created</Typography>
       )}
-
+      <Divider />
       <Box my={4}>
         <Typography variant="h6" gutterBottom>
           Payment and Refund Policy
