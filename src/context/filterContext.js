@@ -1,8 +1,14 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 const FilterContext = createContext();
 
-export const useFilter = () => useContext(FilterContext);
+export const useFilter = () => {
+  const context = useContext(FilterContext);
+  if (!context) {
+    throw new Error("useFilter must be used within a FilterProvider");
+  }
+  return context;
+};
 
 export const FilterProvider = ({ children }) => {
   const [filterState, setFilterState] = useState({
@@ -10,13 +16,14 @@ export const FilterProvider = ({ children }) => {
     categories: [],
     selectedGenders: [],
     selectedRatings: [],
-    selectedDiscounts: []
+    selectedDiscounts: [],
+    sortBy: "default",
   });
 
   const updateFilters = (newFilters) => {
-    setFilterState(prev => ({
+    setFilterState((prev) => ({
       ...prev,
-      ...newFilters
+      ...newFilters,
     }));
   };
 

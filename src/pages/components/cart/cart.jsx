@@ -342,6 +342,8 @@ function Cart() {
   };
 
   const handleCheckout = async () => {
+    console.log("Clicked");
+    
     if (!selectedAddress) {
       setSnackbarMessage("Please select a delivery address");
       setSnackbarSeverity("error");
@@ -362,7 +364,7 @@ function Cart() {
     };
 
     router.push({
-      pathname: "/checkout/checkout",
+      pathname: "/checkout/checkoutlist",
       query: { data: JSON.stringify(checkoutData) },
     });
   };

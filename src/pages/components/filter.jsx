@@ -10,6 +10,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   FormGroup,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import axios from "axios";
@@ -18,6 +20,10 @@ const Filter = () => {
   const { filterState, updateFilters } = useFilter();
   const [expanded, setExpanded] = useState(false);
   const [categories, setCategories] = useState([]);
+
+  const handleSortChange = (event) => {
+    updateFilters({ sortBy: event.target.value });
+  };
 
   const handlePriceChange = (event, newValue) => {
     updateFilters({ priceRange: newValue });
@@ -89,7 +95,7 @@ const Filter = () => {
           valueLabelDisplay="auto"
           min={0}
           max={10000}
-          sx={{ marginTop: 2, color:"black" }}
+          sx={{ marginTop: 2, color: "black" }}
         />
         <Box
           sx={{
@@ -103,6 +109,7 @@ const Filter = () => {
         </Box>
       </Box>
 
+      {/* Categories, Gender, Rating, Discount sections */}
       {[
         {
           title: "Categories",
@@ -112,19 +119,19 @@ const Filter = () => {
         },
         {
           title: "Gender",
-          items: genders,
+          items: ["Men", "Women", "Unisex"],
           handler: handleGenderChange,
           state: filterState.selectedGenders,
         },
         {
           title: "Rating",
-          items: ratings,
+          items: [5, 4, 3, 2, 1],
           handler: handleRatingChange,
           state: filterState.selectedRatings,
         },
         {
           title: "Discount",
-          items: discounts,
+          items: ["10", "20", "30", "40", "50"],
           handler: handleDiscountChange,
           state: filterState.selectedDiscounts,
         },
@@ -157,6 +164,25 @@ const Filter = () => {
           </AccordionDetails>
         </Accordion>
       ))}
+
+      <Box sx={{ width: "100%", bgcolor: "background.paper", marginTop:"20px" }}>
+        <Typography variant="h6" gutterBottom>
+          Sort By
+        </Typography>
+        <Select
+          value={filterState.sortBy}
+          onChange={handleSortChange}
+          fullWidth
+          
+          size="small"
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="default">Default</MenuItem>
+          <MenuItem value="asc">Name (A-Z)</MenuItem>
+          <MenuItem value="desc">Name (Z-A)</MenuItem>
+          <MenuItem value="popularity">Popularity</MenuItem>
+        </Select>
+      </Box>
     </Box>
   );
 };

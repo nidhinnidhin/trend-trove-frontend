@@ -21,6 +21,8 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import Link from "next/link";
 import StarIcon from "@mui/icons-material/Star";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import LocalMallIcon from "@mui/icons-material/LocalMall";
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -35,11 +37,10 @@ const DetailProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
 
-  
   useEffect(() => {
-    if(localStorage.getItem("usertoken") !== null){
+    if (localStorage.getItem("usertoken") !== null) {
       setIsLoggedIn(localStorage.getItem("usertoken"));
     }
     if (id) {
@@ -51,13 +52,11 @@ const DetailProduct = () => {
           const productData = response.data.product;
           setVariants(productData.variants);
 
-          // Set initial color variant (0th index)
           const initialVariant = productData.variants[0];
           setVariantIndex(0);
           setMainImage(initialVariant.mainImage);
           setSelectedColor(initialVariant.color);
 
-          // Set initial size variant (0th index)
           const initialSize = initialVariant.sizes[0]?.size || "";
           setSelectedSize(initialSize);
 
@@ -105,7 +104,6 @@ const DetailProduct = () => {
     setMainImage(variants[index].mainImage);
     setSelectedColor(variants[index].color);
 
-    // When color changes, reset to first size of new variant
     const initialSize = variants[index].sizes[0]?.size || "";
     setSelectedSize(initialSize);
 
@@ -127,13 +125,11 @@ const DetailProduct = () => {
   const handleSizeChange = (size) => {
     setSelectedSize(size);
 
-    // Find the size details based on the selected size
     const selectedSizeDetails = variants[variantIndex].sizes.find(
       (item) => item.size === size
     );
 
     if (selectedSizeDetails) {
-      // Update the product state with the new details for the selected size
       setProduct((prevProduct) => ({
         ...prevProduct,
         price: selectedSizeDetails.price,
@@ -487,7 +483,14 @@ const DetailProduct = () => {
             <Button
               onClick={() => handleQuantityChange("decrement")}
               variant="outlined"
-              sx={{ padding: "5px 10px", cursor: "pointer" }}
+              sx={{
+                padding: "5px 10px",
+                cursor: "pointer",
+                minWidth: "35px",
+                borderRadius: "4px",
+                borderColor: "#1976d2",
+                "&:hover": { borderColor: "#1565c0" },
+              }}
             >
               -
             </Button>
@@ -495,7 +498,14 @@ const DetailProduct = () => {
             <Button
               onClick={() => handleQuantityChange("increment")}
               variant="outlined"
-              sx={{ padding: "5px 10px", cursor: "pointer" }}
+              sx={{
+                padding: "5px 10px",
+                cursor: "pointer",
+                minWidth: "35px",
+                borderRadius: "4px",
+                borderColor: "#1976d2",
+                "&:hover": { borderColor: "#1565c0" },
+              }}
             >
               +
             </Button>
@@ -516,41 +526,61 @@ const DetailProduct = () => {
           >
             <Button
               variant="contained"
-              color="success"
+              // color="success"
               sx={{
-                marginTop: "10px",
-                padding: "10px 20px",
+                mt: 2,
+                px: 3,
+                py: 1.5,
+                fontWeight: 600,
+                backgroundColor:"#333333",
+                fontSize: "16px",
                 display: "flex",
                 alignItems: "center",
-                fontWeight: 600,
+                gap: 1.5,
+                transition: "all 0.3s",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  backgroundColor: "#1F1F1F",
+                },
+                "&:disabled": {
+                  backgroundColor: "#9e9e9e",
+                  color: "#e0e0e0",
+                },
               }}
               onClick={handleAddToCart}
               disabled={!isLoggedIn}
             >
-              {isLoggedIn ? (
-                <Typography sx={{ marginRight: "10px" }}>
-                  <FaCartPlus style={{ marginRight: "10px" }} />
-                  Add to Cart
-                </Typography>
-              ) : (
-                <Typography sx={{ marginRight: "10px" }}>
-                  Don't have an account
-                </Typography>
-              )}
+              <ShoppingCartIcon />
+              {isLoggedIn ? "Add to Cart" : "Login to Add"}
             </Button>
 
             <Button
               variant="contained"
               color="warning"
               sx={{
-                marginTop: "10px",
-                padding: "10px 20px",
+                mt: 2,
+                px: 3,
+                py: 1.5,
                 fontWeight: 600,
+                fontSize: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                transition: "all 0.3s",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  backgroundColor: "#ed6c02",
+                },
+                "&:disabled": {
+                  backgroundColor: "#9e9e9e",
+                  color: "#e0e0e0",
+                },
               }}
               onClick={() => handleButtonClick("Buy Now")}
               disabled={!isLoggedIn}
             >
-              Buy Now
+              <LocalMallIcon />
+              {isLoggedIn ? "Buy Now" : "Login to Buy"}
             </Button>
           </Grid>
         )}

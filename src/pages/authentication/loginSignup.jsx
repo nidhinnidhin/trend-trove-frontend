@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import styles from "@/styles/LoginSignup.module.css";
 import Drawer from "@mui/material/Drawer";
 import SignupDrawer from "@/components/drawers/signupDrawer";
-import LoginDrawer from "@/components/drawers/loginDrawer"; // Import LoginDrawer
+import LoginDrawer from "@/components/drawers/loginDrawer"; 
+import logo from '../../media/logo.png'
+import Image from "next/image";
 
 const LoginSignup = () => {
   const [state, setState] = useState({
@@ -61,10 +63,10 @@ const LoginSignup = () => {
         <div className={styles.left}>
           <div className={styles.header}>
             <div className={styles.logo}>
-              <img
-                src="https://cdn.4imprint.com/qtz/logos/svg/brands/nobkgd/ogio.svg"
-                height={100}
-                width={100}
+              <Image
+                src={logo}
+                height={90}
+                width={220}
                 alt=""
               />
             </div>

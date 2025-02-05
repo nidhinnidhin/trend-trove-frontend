@@ -305,7 +305,8 @@ const Header = () => {
           sx={{
             width: "70%",
             p: 2,
-            backgroundColor: "#1F1F1F",
+            backgroundColor: "#f8f8f9",
+            borderRadius:"10px",
             position: "fixed",
             top: 64,
             zIndex: 1100,

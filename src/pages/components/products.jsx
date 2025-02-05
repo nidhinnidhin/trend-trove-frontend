@@ -56,7 +56,21 @@ const Products = ({ products }) => {
     });
   };
 
-  const filteredProducts = filterProducts(products);
+  const sortProducts = (products) => {
+    const sorted = [...products];
+    switch (filterState.sortBy) {
+      case "asc":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case "desc":
+        return sorted.sort((a, b) => b.title.localeCompare(a.title));
+      case "popularity":
+        return sorted.sort((a, b) => b.rating - a.rating);
+      default:
+        return sorted;
+    }
+  };
+
+  const filteredProducts = sortProducts(filterProducts(products));
 
   const handleProductDetail = (id) => {
     router.push(`/product/${id}`);

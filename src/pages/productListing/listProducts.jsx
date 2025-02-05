@@ -23,27 +23,23 @@ const ListProducts = ({ products }) => {
       if (
         price < filterState.priceRange[0] ||
         price > filterState.priceRange[1]
-      ) {
+      )
         return false;
-      }
       if (
         filterState.categories.length > 0 &&
         !filterState.categories.includes(product.category)
-      ) {
+      )
         return false;
-      }
       if (
         filterState.selectedGenders.length > 0 &&
         !filterState.selectedGenders.includes(product.gender)
-      ) {
+      )
         return false;
-      }
       if (
         filterState.selectedRatings.length > 0 &&
         !filterState.selectedRatings.includes(Math.floor(product.rating))
-      ) {
+      )
         return false;
-      }
       if (filterState.selectedDiscounts.length > 0) {
         const discount =
           ((product.originalPrice - product.price) / product.originalPrice) *
@@ -56,7 +52,21 @@ const ListProducts = ({ products }) => {
     });
   };
 
-  const filteredProducts = filterProducts(products);
+  const sortProducts = (products) => {
+    const sorted = [...products];
+    switch (filterState.sortBy) {
+      case "asc":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case "desc":
+        return sorted.sort((a, b) => b.title.localeCompare(a.title));
+      case "popularity":
+        return sorted.sort((a, b) => b.rating - a.rating);
+      default:
+        return sorted;
+    }
+  };
+
+  const filteredProducts = sortProducts(filterProducts(products));
 
   const handleProductDetail = (id) => {
     router.push(`/product/${id}`);
@@ -72,7 +82,7 @@ const ListProducts = ({ products }) => {
       }}
     >
       <Typography variant="h4" align="center" gutterBottom>
-        Products 
+        Products
       </Typography>
 
       <Grid container spacing={2}>
@@ -129,8 +139,8 @@ const ListProducts = ({ products }) => {
                     backgroundColor: "green",
                     color: "white",
                     fontSize: "0.65rem",
-                    margin:"5px 0px",
-                    borderRadius:"2px"
+                    margin: "5px 0px",
+                    borderRadius: "2px",
                   }}
                 />
                 <Box
