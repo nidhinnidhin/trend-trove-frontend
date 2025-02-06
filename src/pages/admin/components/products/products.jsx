@@ -776,7 +776,6 @@ const Product = () => {
                                 </TableBody>
                               </Table>
                             ) : (
-                              // If no size variants available for the variant, show message
                               <TableRow>
                                 <TableCell
                                   colSpan={6}

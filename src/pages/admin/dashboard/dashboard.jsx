@@ -29,6 +29,7 @@ import Category from "../components/category/category";
 import Brand from "../components/brand/brand";
 import { useRouter } from "next/router";
 import Products from "../components/products/products";
+import Orders from "../components/orders/orders";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -277,6 +278,7 @@ const Dashboard = () => {
           {selectedTopic === "Users" && <Users />}
           {selectedTopic === "Categories" && <Category />}
           {selectedTopic === "Brands" && <Brand />}
+          {selectedTopic === "Orders" && <Orders />}
         </Box>
       </Box>
 

@@ -13,10 +13,17 @@ export default function App({ Component, pageProps }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("usertoken");
+
+    const googleToken = router.query.token;
+    
+    if (googleToken) {
+      localStorage.setItem("usertoken", googleToken);
+      router.push(router.pathname); 
+    }
     if (storedToken && (router.pathname === "/authentication/loginSignup" || router.pathname === "/authentication/login")) {
       router.push("/");
     }
-  }, [router.pathname]);
+  }, [router.pathname, router.query.token]);
 
   return (
     <Provider store={store}>

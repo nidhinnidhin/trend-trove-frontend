@@ -11,16 +11,21 @@ import {
   Paper,
   Box,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
   Tooltip,
   Divider,
 } from "@mui/material";
-import { 
-  LocalShipping, 
-  Cancel, 
-  AccessTime, 
-  LocationOn, 
+import {
+  LocalShipping,
+  Cancel,
+  AccessTime,
+  LocationOn,
   Payment,
-  ShoppingBag 
+  ShoppingBag,
 } from "@mui/icons-material";
 import axios from "axios";
 import Header from "../components/header";
@@ -29,6 +34,9 @@ import Footer from "../components/footer";
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -52,38 +60,53 @@ const OrdersPage = () => {
 
     fetchOrders();
   }, []);
+  console.log("Ordersssssssss", orders);
 
-  const handleCancelOrder = async (orderId) => {
+  const handleOpenModal = (orderId) => {
+    setSelectedOrder(orderId);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setCancelReason("");
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert("Please enter a cancellation reason.");
+      return;
+    }
+
     const token = localStorage.getItem("usertoken");
     try {
       await axios.put(
-        `http://localhost:9090/api/orders/cancel-order/${orderId}`,
-        {},
+        `http://localhost:9090/api/checkout/cancel-order/${selectedOrder}`,
+        { reason: cancelReason }, // Send reason to backend
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.orderId === orderId
+          order.orderId === selectedOrder
             ? { ...order, orderStatus: "Cancelled" }
             : order
         )
       );
+      handleCloseModal();
     } catch (error) {
       console.error("Error canceling order:", error);
     }
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -98,7 +121,10 @@ const OrdersPage = () => {
         My Orders
       </Typography>
 
-      <Paper elevation={3} sx={{ p: 2, bgcolor: "#fafafa", margin: "30px 0px" }}>
+      <Paper
+        elevation={3}
+        sx={{ p: 2, bgcolor: "#fafafa", margin: "30px 0px" }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <ShoppingBag sx={{ mr: 1, color: "#333" }} />
           <Typography variant="h6">Order History</Typography>
@@ -108,66 +134,85 @@ const OrdersPage = () => {
             <TableRow>
               <TableCell>Order Details</TableCell>
               <TableCell>Product</TableCell>
-              <TableCell>Delivery Address</TableCell>
+              {/* <TableCell>Delivery Address</TableCell> */}
               <TableCell>Payment Info</TableCell>
               <TableCell>Order Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {orders.map((order) =>
-              order.items.map((item, index) => (
-                <TableRow key={`${order.orderId}-${index}`}>
-                  {/* Order Details Column */}
-                  <TableCell>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                      <Typography variant="subtitle2">
-                        <strong>Order ID:</strong> {order.orderId}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        <AccessTime sx={{ fontSize: 16, mr: 0.5, verticalAlign: "text-bottom" }}/>
-                        {formatDate(order.orderDate)}
-                      </Typography>
-                      <Typography variant="body2">
-                        <LocalShipping sx={{ fontSize: 16, mr: 0.5, verticalAlign: "text-bottom" }}/>
-                        {order.shippingMethod}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-
-                  {/* Product Details Column */}
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <img
-                        src={item.image}
-                        alt={item.productName}
-                        style={{
-                          width: 100,
-                          height: 100,
-                          objectFit: "cover",
-                          marginRight: 10,
+            {orders.length !== 0 &&
+              orders.map((order) =>
+                order.items.map((item, index) => (
+                  <TableRow key={`${order.orderId}-${index}`}>
+                    {/* Order Details Column */}
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
                         }}
-                      />
-                      <Box>
+                      >
                         <Typography variant="subtitle2">
-                          {item.productName}
+                          <strong>Order ID:</strong> {order.orderId}
                         </Typography>
                         <Typography variant="body2" color="textSecondary">
-                          Color: {item.color}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          Size: {item.size}
+                          <AccessTime
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "text-bottom",
+                            }}
+                          />
+                          {formatDate(order.orderDate)}
                         </Typography>
                         <Typography variant="body2">
-                          Quantity: {item.quantity} × ₹{item.price}
+                          <LocalShipping
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "text-bottom",
+                            }}
+                          />
+                          {order.shippingMethod}
                         </Typography>
                       </Box>
-                    </Box>
-                  </TableCell>
+                    </TableCell>
 
-                  {/* Delivery Address Column */}
-                  <TableCell>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    {/* Product Details Column */}
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <img
+                          src={item.image}
+                          alt={item.productName}
+                          style={{
+                            width: 100,
+                            height: 100,
+                            objectFit: "cover",
+                            marginRight: 10,
+                          }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2">
+                            {item.productName}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            Color: {item.color}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            Size: {item.size}
+                          </Typography>
+                          <Typography variant="body2">
+                            Quantity: {item.quantity} × ₹{item.price}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+
+                    {/* Delivery Address Column */}
+                    <TableCell>
+                      {/* <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                       <Typography variant="subtitle2">
                         {order.shippingAddress.fullName}
                       </Typography>
@@ -179,65 +224,108 @@ const OrdersPage = () => {
                       <Typography variant="body2">
                         Mobile: {order.shippingAddress.mobileNumber}
                       </Typography>
-                    </Box>
-                  </TableCell>
+                    </Box> */}
+                    </TableCell>
 
-                  {/* Payment Info Column */}
-                  <TableCell>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                      <Typography variant="subtitle2">
-                        <Payment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "text-bottom" }}/>
-                        {order.payment.method}
-                      </Typography>
-                      <Typography variant="body2" color="primary">
-                        ₹{item.price * item.quantity}
-                      </Typography>
-                      <Chip 
-                        size="small"
-                        label={order.payment.status}
-                        color={order.payment.status === "success" ? "success" : "error"}
-                      />
-                    </Box>
-                  </TableCell>
-
-                  {/* Order Status Column */}
-                  <TableCell>
-                    <Chip
-                      label={order.orderStatus}
-                      color={
-                        order.orderStatus === "Delivered"
-                          ? "success"
-                          : order.orderStatus === "Cancelled"
-                          ? "error"
-                          : "primary"
-                      }
-                    />
-                  </TableCell>
-
-                  {/* Actions Column */}
-                  <TableCell>
-                    {order.orderStatus === "pending" ||
-                    order.orderStatus === "Processing" ? (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<Cancel />}
-                        onClick={() => handleCancelOrder(order.orderId)}
+                    {/* Payment Info Column */}
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                        }}
                       >
-                        Cancel
-                      </Button>
-                    ) : (
-                      <Typography variant="body2" color="textSecondary">
-                        No actions available
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+                        <Typography variant="subtitle2">
+                          <Payment
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "text-bottom",
+                            }}
+                          />
+                          {order.payment.method}
+                        </Typography>
+                        <Typography variant="body2" color="primary">
+                          ₹{item.price * item.quantity}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={order.payment.status}
+                          color={
+                            order.payment.status === "success"
+                              ? "success"
+                              : "error"
+                          }
+                        />
+                      </Box>
+                    </TableCell>
+
+                    {/* Order Status Column */}
+                    <TableCell>
+                      <Chip
+                        label={order.orderStatus}
+                        color={
+                          order.orderStatus === "Delivered"
+                            ? "success"
+                            : order.orderStatus === "Cancelled"
+                            ? "error"
+                            : "primary"
+                        }
+                      />
+                    </TableCell>
+
+                    {/* Actions Column */}
+                    <TableCell>
+                      {order.orderStatus === "pending" ||
+                      order.orderStatus === "Processing" ? (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          startIcon={<Cancel />}
+                          onClick={() => handleOpenModal(order.orderId)}
+                        >
+                          Cancel
+                        </Button>
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">
+                          No actions available
+                        </Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
           </TableBody>
         </Table>
       </Paper>
+
+      <Dialog open={openModal} onClose={handleCloseModal}>
+        <DialogTitle>Cancel Order</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            Please enter the reason for cancellation:
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            margin="normal"
+            placeholder="Enter your reason..."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal} color="primary">
+            Close
+          </Button>
+          <Button onClick={handleCancelOrder} color="error" variant="contained">
+            Confirm Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Footer />
     </Container>
   );
