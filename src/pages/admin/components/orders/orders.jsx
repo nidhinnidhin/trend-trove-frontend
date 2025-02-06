@@ -82,6 +82,9 @@ const Orders = () => {
     setIsEditModalOpen(false);
   };
 
+  console.log(orders);
+  
+
   const handleEditClick = (order) => {
     setSelectedOrder(order);
     setNewStatus(order.orderStatus);
@@ -114,6 +117,7 @@ const Orders = () => {
               <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Customer</TableCell>
               <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Items</TableCell>
               <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Total Amount</TableCell>
+              <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Created At</TableCell>
               <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Status</TableCell>
               <TableCell sx={{ backgroundColor: '#212121', color: '#FF9800' }}>Actions</TableCell>
             </TableRow>
@@ -131,11 +135,12 @@ const Orders = () => {
                   <TableCell sx={{ color: '#ffffff' }}>
                     {order.items.map((item, idx) => (
                       <Box key={idx} sx={{ mb: 1 }}>
-                        {item.productName} - {item.color} ({item.size}) x{item.quantity}
+                        {item.productName.slice(0,15)} - {item.color} ({item.size}) x{item.quantity}
                       </Box>
                     ))}
                   </TableCell>
                   <TableCell sx={{ color: '#ffffff' }}>₹{order.totalAmount}</TableCell>
+                  <TableCell sx={{ color: '#ffffff' }}>₹{order.createdAt}</TableCell>
                   <TableCell sx={{ color: '#ffffff' }}>{order.orderStatus}</TableCell>
                   <TableCell>
                     <Button

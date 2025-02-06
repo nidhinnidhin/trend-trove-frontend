@@ -37,6 +37,7 @@ const OrdersPage = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -62,8 +63,9 @@ const OrdersPage = () => {
   }, []);
   console.log("Ordersssssssss", orders);
 
-  const handleOpenModal = (orderId) => {
+  const handleOpenModal = (orderId, itemId) => {
     setSelectedOrder(orderId);
+    setSelectedItem(itemId);
     setOpenModal(true);
   };
 
@@ -80,26 +82,38 @@ const OrdersPage = () => {
 
     const token = localStorage.getItem("usertoken");
     try {
-      await axios.put(
-        `http://localhost:9090/api/checkout/cancel-order/${selectedOrder}`,
-        { reason: cancelReason }, // Send reason to backend
+      const response = await axios.patch(
+        `http://localhost:9090/api/checkout/cancel-order/${selectedOrder}/${selectedItem}`,
+        { reason: cancelReason },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.orderId === selectedOrder
-            ? { ...order, orderStatus: "Cancelled" }
-            : order
-        )
-      );
-      handleCloseModal();
+
+      if (response.data.success) {
+        // Update the orders state to reflect the cancelled item and the updated order status
+        setOrders((prevOrders) =>
+          prevOrders.map((order) => {
+            if (order.orderId === selectedOrder) {
+              return {
+                ...order,
+                items: order.items.map((item) =>
+                  item.itemId === selectedItem
+                    ? { ...item, status: "Cancelled" } // update the status of the cancelled item
+                    : item
+                ),
+                orderStatus: response.data.order.orderStatus, // update order status if necessary
+              };
+            }
+            return order;
+          })
+        );
+        handleCloseModal();
+      }
     } catch (error) {
-      console.error("Error canceling order:", error);
+      console.error("Error cancelling order:", error);
     }
   };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -108,6 +122,17 @@ const OrdersPage = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "success";
+      case "Cancelled":
+        return "error";
+      default:
+        return "primary";
+    }
   };
 
   if (loading) {
@@ -249,7 +274,7 @@ const OrdersPage = () => {
                         <Typography variant="body2" color="primary">
                           ₹{item.price * item.quantity}
                         </Typography>
-                        <Chip
+                        {/* <Chip
                           size="small"
                           label={order.payment.status}
                           color={
@@ -257,40 +282,29 @@ const OrdersPage = () => {
                               ? "success"
                               : "error"
                           }
-                        />
+                        /> */}
                       </Box>
                     </TableCell>
 
                     {/* Order Status Column */}
                     <TableCell>
                       <Chip
-                        label={order.orderStatus}
-                        color={
-                          order.orderStatus === "Delivered"
-                            ? "success"
-                            : order.orderStatus === "Cancelled"
-                            ? "error"
-                            : "primary"
-                        }
+                        label={item.status || order.orderStatus}
+                        color={getStatusColor(item.status || order.orderStatus)}
                       />
                     </TableCell>
 
                     {/* Actions Column */}
                     <TableCell>
-                      {order.orderStatus === "pending" ||
-                      order.orderStatus === "Processing" ? (
+                      {(item.status === "pending" || item.status === "Processing") && (
                         <Button
                           variant="outlined"
                           color="error"
                           startIcon={<Cancel />}
-                          onClick={() => handleOpenModal(order.orderId)}
+                          onClick={() => handleOpenModal(order.orderId, item.itemId)}
                         >
-                          Cancel
+                          Cancel Item
                         </Button>
-                      ) : (
-                        <Typography variant="body2" color="textSecondary">
-                          No actions available
-                        </Typography>
                       )}
                     </TableCell>
                   </TableRow>
