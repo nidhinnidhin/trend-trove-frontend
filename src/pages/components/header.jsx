@@ -58,6 +58,7 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const dispatch = useDispatch();
   const cartLength = useSelector((state) => state.cart.cartLength);
@@ -75,9 +76,16 @@ const Header = () => {
               },
             }
           );
-          dispatch(setCartLength(response.data.cart.items.length));
+
+          if (response.data.cart) {
+            dispatch(setCartLength(response.data.cart.items.length));
+          }
         } catch (error) {
-          console.error("Error fetching cart length:", error);
+          if (error.response?.status === 404) {
+            dispatch(setCartLength(0));
+          } else {
+            console.error("Error fetching cart length:", error);
+          }
         }
       }
     };
@@ -115,7 +123,7 @@ const Header = () => {
             console.error("Error fetching Profile:", error);
           }
           setIsLoading(false);
-          setSnackbarOpen(true); // Show an error snackbar to the user
+          setSnackbarOpen(true);
         }
       } else {
         setIsLoading(false);
@@ -313,6 +321,12 @@ const Header = () => {
                 >
                   <MenuItem onClick={handleProfileClick}>My Profile</MenuItem>
                   <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
+                  <Link
+                    href="/orders/orders"
+                    style={{ textDecoration: "none", color: "black" }}
+                  >
+                    <MenuItem>Orders</MenuItem>
+                  </Link>
                 </Menu>
               </>
             ) : (
@@ -473,6 +487,18 @@ const Header = () => {
         onClose={handleSnackbarClose}
         message="You are logged out"
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      />
+
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={3000}
+        onClose={() => setErrorMessage("")}
+        message={errorMessage}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          backgroundColor: "black",
+          color: "white",
+        }}
       />
 
       <ProfileModal

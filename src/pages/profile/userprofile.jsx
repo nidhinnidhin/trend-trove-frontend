@@ -24,6 +24,8 @@ import {
   Grid,
   Paper,
   CircularProgress,
+  TableContainer,
+  Chip,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -36,6 +38,7 @@ import {
 import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
+import Image from "next/image";
 
 const UserProfilePage = () => {
   const [selectedSection, setSelectedSection] = useState("profile");
@@ -49,53 +52,63 @@ const UserProfilePage = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
 
   useEffect(() => {
-    const token = localStorage.getItem("usertoken");
-
     const fetchUserData = async () => {
-      try {
-        const userResponse = await axios.get(
-          "http://localhost:9090/api/users/profile",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setUser(userResponse.data.user);
+      const token = localStorage.getItem("usertoken");
+      if (token) {
+        try {
+          const userResponse = await axios.get(
+            "http://localhost:9090/api/users/profile",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setUser(userResponse.data.user);
 
-        const addressesResponse = await axios.get(
-          "http://localhost:9090/api/address/get-address",
-          {
-            headers: { Authorization: `Bearer ${token}` },
+          const addressesResponse = await axios.get(
+            "http://localhost:9090/api/address/get-address",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (addressesResponse.data.addresses.length != 0) {
+            setAddresses(addressesResponse.data.addresses || []);
+          } else {
+            setAddresses([]);
           }
-        );
-        setAddresses(addressesResponse.data.addresses || []);
 
-        const ordersResponse = await axios.get(
-          "http://localhost:9090/api/checkout/get-orders",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setOrders(ordersResponse.data.orders || []);
+          const ordersResponse = await axios.get(
+            "http://localhost:9090/api/checkout/get-orders",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setOrders(ordersResponse.data.orders || []);
 
-        const cartResponse = await axios.get(
-          "http://localhost:9090/api/cart/get-cart",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setCart(cartResponse.data.cart || null);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setSnackbarMessage("Failed to fetch user data");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-      } finally {
-        setLoading(false);
+          const cartResponse = await axios.get(
+            "http://localhost:9090/api/cart/get-cart",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setCart(cartResponse.data.cart || null);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          console.error(
+            "Error details:",
+            error.response?.data || error.message
+          );
+          setSnackbarMessage("Failed to fetch user data");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
     fetchUserData();
   }, []);
+  console.log("Orderssssssss", orders);
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -128,89 +141,138 @@ const UserProfilePage = () => {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case "delivered":
+        return "success"; // Green
+      case "pending":
+        return "warning"; // Orange
+      case "cancelled":
+        return "error"; // Red
+      default:
+        return "default"; // Grey
+    }
+  };
+
   const renderContent = () => {
     switch (selectedSection) {
       case "profile":
         return (
           <Card
             sx={{
-              backgroundColor: "#f5f5f5",
+              backgroundColor: "#ffffff",
               p: 3,
               width: "100%",
-              height: "80vh",
+              maxWidth: 500,
+              mx: "auto",
+              borderRadius: 3,
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <CardContent>
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar
-                  src={user?.profileImage || "/default-avatar.png"}
-                  sx={{ width: 100, height: 100, mr: 2 }}
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  mb: 2,
+                  border: "3px solid #222",
+                }}
+              >
+                <Image
+                  src={user?.image || "/default-avatar.png"}
+                  width={120}
+                  height={120}
+                  style={{ objectFit: "cover" }}
+                  alt="User Profile"
                 />
-                <Typography variant="h4" color="text.primary">
-                  {user?.firstname} {user?.lastname}
-                </Typography>
               </Box>
-              <Typography variant="body1" color="text.secondary">
-                <strong>Username:</strong> {user?.username}
+              <Typography variant="h5" fontWeight={600} color="#222">
+                {user?.firstname} {user?.lastname}
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                <strong>Email:</strong> {user?.email}
+              <Typography variant="body2" color="gray" mt={0.5}>
+                @{user?.username}
               </Typography>
-              <CardActions>
-                <Button
-                  variant="contained"
-                  startIcon={<EditIcon />}
-                  onClick={handleEditProfile}
-                >
-                  Edit Profile
-                </Button>
-              </CardActions>
+              <Typography variant="body2" color="gray">
+                {user?.email}
+              </Typography>
             </CardContent>
+            <CardActions sx={{ justifyContent: "center", pb: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={handleEditProfile}
+                sx={{
+                  backgroundColor: "#222",
+                  color: "white",
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  textTransform: "none",
+                  "&:hover": { backgroundColor: "#444" },
+                }}
+              >
+                Edit Profile
+              </Button>
+            </CardActions>
           </Card>
         );
       case "addresses":
         return (
-          <Grid container sx={{ width: "100%" }}>
+          <Grid
+            container
+            spacing={2}
+            sx={{ width: "100%", justifyContent: "center" }}
+          >
             {addresses.length > 0 ? (
               addresses.map((address) => (
-                <Grid
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  key={address._id}
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    height: "80vh",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
+                <Grid item xs={12} sm={6} md={4} key={address._id}>
                   <Card
                     sx={{
-                      backgroundColor: "white",
-                      width: "90%",
-                      margin: "5px 0px",
+                      backgroundColor: "#fff",
+                      borderRadius: 3,
+                      p: 2,
+                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                      transition: "0.3s",
+                      "&:hover": {
+                        boxShadow: "0 6px 15px rgba(0, 0, 0, 0.15)",
+                      },
                     }}
                   >
                     <CardContent>
-                      <Typography variant="h6" color="text.primary">
+                      <Typography variant="h6" fontWeight={600} color="#222">
                         {address.fullName}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="gray" mt={1}>
                         {address.address}, {address.city}, {address.state} -{" "}
                         {address.pincode}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="gray">
                         Phone: {address.mobileNumber}
                       </Typography>
                       <Box display="flex" justifyContent="flex-end" mt={2}>
-                        <IconButton>
+                        <IconButton
+                          sx={{
+                            color: "#222",
+                            "&:hover": { color: "#444" },
+                          }}
+                        >
                           <EditIcon />
                         </IconButton>
                         <IconButton
                           onClick={() => handleDeleteAddress(address._id)}
+                          sx={{
+                            color: "red",
+                            "&:hover": { color: "#d32f2f" },
+                          }}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -220,7 +282,11 @@ const UserProfilePage = () => {
                 </Grid>
               ))
             ) : (
-              <Typography variant="body1" color="text.secondary">
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ textAlign: "center", mt: 2 }}
+              >
                 No addresses found
               </Typography>
             )}
@@ -228,65 +294,146 @@ const UserProfilePage = () => {
         );
       case "orders":
         return (
-          <Table sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order ID</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {orders.length > 0 ? (
-                orders.map((order) => (
-                  <TableRow key={order.orderId}>
-                    <TableCell>{order.orderId}</TableCell>
-                    <TableCell>
-                      {new Date(order.orderDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>₹{order.totalPrice}</TableCell>
-                    <TableCell>{order.orderStatus}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    No orders found
+          <TableContainer
+            component={Paper}
+            sx={{
+              backgroundColor: "#fff",
+              borderRadius: 3,
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
+            }}
+          >
+            <Table>
+              {/* Table Header */}
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#222" }}>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Order ID
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Date
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Payment
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Total
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Status
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHead>
+
+              {/* Table Body */}
+              <TableBody>
+                {orders.length > 0 ? (
+                  orders.map((order) => (
+                    <TableRow
+                      key={order.orderId}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                        transition: "0.3s",
+                      }}
+                    >
+                      <TableCell sx={{ color: "#222", fontWeight: 500 }}>
+                        {order.orderId}
+                      </TableCell>
+                      <TableCell sx={{ color: "#444" }}>
+                        {new Date(order.orderDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell sx={{ color: "#000", fontWeight: 500 }}>
+                        {order.payment.method}
+                      </TableCell>
+                      <TableCell sx={{ color: "#000", fontWeight: 600 }}>
+                        ₹{order.totalAmount}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.orderStatus}
+                          color={getStatusColor(order.orderStatus)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      align="center"
+                      sx={{ color: "#888", py: 3 }}
+                    >
+                      No orders found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         );
       case "cart":
         return (
-          <Table sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Product</TableCell>
-                <TableCell>Quantity</TableCell>
-                <TableCell>Price</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {cart?.items?.length > 0 ? (
-                cart.items.map((item) => (
-                  <TableRow key={item.product._id}>
-                    <TableCell>{item.product.name}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>₹{item.price * item.quantity}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} align="center">
-                    No items in cart
+          <TableContainer
+            component={Paper}
+            sx={{
+              backgroundColor: "#fff",
+              borderRadius: 3,
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
+            }}
+          >
+            <Table>
+              {/* Table Head */}
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#222" }}>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Product
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Quantity
+                  </TableCell>
+                  <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
+                    Price
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHead>
+
+              {/* Table Body */}
+              <TableBody>
+                {cart?.items?.length > 0 ? (
+                  cart.items.map((item) => (
+                    <TableRow
+                      key={item.product._id}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                        transition: "0.3s",
+                      }}
+                    >
+                      <TableCell sx={{ color: "#222", fontWeight: 500 }}>
+                        {item.product.name}
+                      </TableCell>
+                      <TableCell sx={{ color: "#444" }}>
+                        {item.quantity}
+                      </TableCell>
+                      <TableCell sx={{ color: "#000", fontWeight: 600 }}>
+                        ₹{item.price * item.quantity}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      align="center"
+                      sx={{ color: "#888", py: 3 }}
+                    >
+                      No items in cart
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         );
       default:
         return null;

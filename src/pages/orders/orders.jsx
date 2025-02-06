@@ -12,6 +12,7 @@ import {
   Box,
   Chip,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import { 
   LocalShipping, 
@@ -97,7 +98,7 @@ const OrdersPage = () => {
         My Orders
       </Typography>
 
-      <Paper elevation={3} sx={{ p: 2, bgcolor: "#fafafa", margin: "80px 0px" }}>
+      <Paper elevation={3} sx={{ p: 2, bgcolor: "#fafafa", margin: "30px 0px" }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <ShoppingBag sx={{ mr: 1, color: "#333" }} />
           <Typography variant="h6">Order History</Typography>

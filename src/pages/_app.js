@@ -12,11 +12,11 @@ export default function App({ Component, pageProps }) {
   const router = useRouter();
 
   useEffect(() => {
-    const token = router.query.token;
-    if (token) {
-      localStorage.setItem("usertoken", token);
+    const storedToken = localStorage.getItem("usertoken");
+    if (storedToken && (router.pathname === "/authentication/loginSignup" || router.pathname === "/authentication/login")) {
+      router.push("/");
     }
-  }, [router.query]);
+  }, [router.pathname]);
 
   return (
     <Provider store={store}>
