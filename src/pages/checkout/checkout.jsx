@@ -27,6 +27,7 @@ const CheckoutPage = () => {
   const router = useRouter();
   const [checkoutData, setCheckoutData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (router.query.data) {

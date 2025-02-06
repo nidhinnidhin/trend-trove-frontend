@@ -39,6 +39,7 @@ import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Image from "next/image";
+import ProfileModal from "@/components/modals/profileModal";
 
 const UserProfilePage = () => {
   const [selectedSection, setSelectedSection] = useState("profile");
@@ -50,6 +51,9 @@ const UserProfilePage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
+  const [userProfile, setUserProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -115,7 +119,14 @@ const UserProfilePage = () => {
   };
 
   const handleEditProfile = () => {
-    // Implement edit profile functionality
+    setIsProfileModalOpen(true); // Open the modal
+  };
+
+  const handleProfileUpdate = (updatedUser) => {
+    setUser(updatedUser); // Update the user data in the parent component
+    setSnackbarMessage("Profile updated successfully");
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
   };
 
   const handleDeleteAddress = async (addressId) => {
@@ -209,7 +220,7 @@ const UserProfilePage = () => {
               <Button
                 variant="contained"
                 startIcon={<EditIcon />}
-                onClick={handleEditProfile}
+                onClick={handleEditProfile} // Open modal on click
                 sx={{
                   backgroundColor: "#222",
                   color: "white",
@@ -530,6 +541,14 @@ const UserProfilePage = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <ProfileModal
+        open={isProfileModalOpen}
+        handleClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        profileImage={user?.image}
+        onProfileUpdate={handleProfileUpdate} // Pass the update handler
+      />
       <Footer />
     </Container>
   );
