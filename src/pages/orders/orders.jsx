@@ -91,7 +91,6 @@ const OrdersPage = () => {
       );
 
       if (response.data.success) {
-        // Update the orders state to reflect the cancelled item and the updated order status
         setOrders((prevOrders) =>
           prevOrders.map((order) => {
             if (order.orderId === selectedOrder) {
@@ -99,10 +98,10 @@ const OrdersPage = () => {
                 ...order,
                 items: order.items.map((item) =>
                   item.itemId === selectedItem
-                    ? { ...item, status: "Cancelled" } // update the status of the cancelled item
+                    ? { ...item, status: "Cancelled" } 
                     : item
                 ),
-                orderStatus: response.data.order.orderStatus, // update order status if necessary
+                orderStatus: response.data.order.orderStatus, 
               };
             }
             return order;
@@ -300,10 +299,11 @@ const OrdersPage = () => {
                         <Button
                           variant="outlined"
                           color="error"
-                          startIcon={<Cancel />}
+                          sx={{width:"150px"}}
+                          // startIcon={<Cancel />}
                           onClick={() => handleOpenModal(order.orderId, item.itemId)}
                         >
-                          Cancel Item
+                          Cancel order
                         </Button>
                       )}
                     </TableCell>

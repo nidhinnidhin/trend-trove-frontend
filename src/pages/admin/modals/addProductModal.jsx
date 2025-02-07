@@ -255,7 +255,7 @@ const AddProductModal = ({ open, onClose }) => {
               </Grid>
 
               {/* Add Variant Button */}
-              <Grid item xs={12}>
+              {/* <Grid item xs={12}>
                 <Button
                   variant="contained"
                   onClick={handleOpenVariantModal} // Open variant modal on click
@@ -267,7 +267,7 @@ const AddProductModal = ({ open, onClose }) => {
                 >
                   Add Variant
                 </Button>
-              </Grid>
+              </Grid> */}
 
               {/* Submit Button */}
               <Grid item xs={12}>

@@ -14,6 +14,8 @@ import {
   CardMedia,
   CardContent,
   CardActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
@@ -33,6 +35,10 @@ const DetailProduct = () => {
   const [variants, setVariants] = useState([]);
   const [variantIndex, setVariantIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
   const router = useRouter();
   const { id } = router.query;
   const dispatch = useDispatch();
@@ -179,9 +185,10 @@ const DetailProduct = () => {
           },
         }
       );
-      alert("Product added to cart");
       if (response.status === 201) {
-        alert("Product added to cart successfully!");
+        setSnackbarMessage("Product added to cart successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
 
         // Fetch the updated cart length
         const cartResponse = await axios.get(
@@ -198,7 +205,9 @@ const DetailProduct = () => {
       }
     } catch (error) {
       console.error("Error adding product to cart", error);
-      alert("Failed to add to cart. Please try again.");
+      setSnackbarMessage("Failed to add to cart. Please try again.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
   const [zoomStyle, setZoomStyle] = useState({});
@@ -642,6 +651,20 @@ const DetailProduct = () => {
           )}
         </Grid>
       </Grid>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 };

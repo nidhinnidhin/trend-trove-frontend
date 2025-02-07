@@ -264,7 +264,7 @@ const AddVariantModal = ({ open, onClose, productId }) => {
             </Grid>
 
             {/* Add Size Button */}
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <Button
                 variant="contained"
                 fullWidth
@@ -278,7 +278,7 @@ const AddVariantModal = ({ open, onClose, productId }) => {
               >
                 Add Sizes
               </Button>
-            </Grid>
+            </Grid> */}
 
             {/* Add Variant Button */}
             <Grid item xs={12}>
