@@ -12,36 +12,36 @@ import ListProducts from './listProducts';
 export default function Explore() {
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('http://localhost:9090/api/products/get');
-        const data = await response.json();
-        const transformedProducts = data.map(product => {
-          const variant = product.variants[0];
-          const firstSize = variant.sizes[0];
-          return {
-            id: product._id,
-            image: variant.mainImage,
-            title: product.name,
-            description: product.description,
-            rating: product.ratings || 0,
-            price: firstSize.discountPrice || firstSize.price,
-            originalPrice: firstSize.price,
-            variantsCount: product.variants.length,
-            category: product.category?.name,
-            gender: product.gender,
-            isDeleted: product.isDeleted
-          };
-        });
-        setProducts(transformedProducts);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchProducts = async () => {
+  //     try {
+  //       const response = await fetch('http://localhost:9090/api/products/get');
+  //       const data = await response.json();
+  //       const transformedProducts = data.products.map(product => {
+  //         const variant = product.variants[0];
+  //         const firstSize = variant.sizes[0];
+  //         return {
+  //           id: product._id,
+  //           image: variant.mainImage,
+  //           title: product.name,
+  //           description: product.description,
+  //           rating: product.ratings || 0,
+  //           price: firstSize.discountPrice || firstSize.price,
+  //           originalPrice: firstSize.price,
+  //           variantsCount: product.variants.length,
+  //           category: product.category?.name,
+  //           gender: product.gender,
+  //           isDeleted: product.isDeleted
+  //         };
+  //       });
+  //       setProducts(transformedProducts);
+  //     } catch (error) {
+  //       console.error('Error fetching products:', error);
+  //     }
+  //   };
 
-    fetchProducts();
-  }, []);
+  //   fetchProducts();
+  // }, []);
 
   return (
     <>

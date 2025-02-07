@@ -86,7 +86,7 @@ const Products = ({ products }) => {
       }}
     >
       <Typography variant="h4" align="center" gutterBottom>
-        Products 
+        Latest Products 
       </Typography>
 
       <Grid container spacing={2}>

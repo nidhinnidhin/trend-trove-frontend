@@ -203,12 +203,11 @@ function Cart() {
         return {
           ...prevCart,
           items: updatedItems,
-          totalPrice: response.data.cart.totalPrice, // Update total price if needed
-          discountAmount: response.data.cart.discountAmount, // Update discount if needed
+          totalPrice: response.data.cart.totalPrice, 
+          discountAmount: response.data.cart.discountAmount, 
         };
       });
 
-      // Close the modal
       handleCloseModal();
     } catch (error) {
       console.error("Error removing product from cart:", error);
@@ -218,7 +217,6 @@ function Cart() {
   const handleQuantityChange = async (item, newQuantity) => {
     setQuantityError("");
 
-    // Validate quantity
     if (newQuantity > 4) {
       setQuantityError("Maximum quantity allowed is 4 items per product");
       return;
@@ -278,7 +276,6 @@ function Cart() {
         }
       );
 
-      // Dispatch the updated cart length to Redux
       dispatch(setCartLength(cartResponse.data.cart.items.length));
     } catch (error) {
       console.error("Error updating quantity:", error);
