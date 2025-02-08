@@ -44,7 +44,7 @@ const Category = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:9090/api/categories/get/admin"
+          "http://localhost:9090/api/admin/categories/get/admin"
         );
         if (response.data && Array.isArray(response.data.categories)) {
           setCategoryData(response.data.categories);
@@ -115,7 +115,7 @@ const Category = () => {
     if (!categoryToBlock) return;
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/categories/block/${categoryToBlock}`
+        `http://localhost:9090/api/admin/categories/block/${categoryToBlock}`
       );
       if (response.status === 200) {
         setCategoryData((prevData) =>
@@ -140,7 +140,7 @@ const Category = () => {
   const handleUnBlockCategory = async (categoryId) => {
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/categories/unblock/${categoryId}`
+        `http://localhost:9090/api/admin/categories/unblock/${categoryId}`
       );
       if (response.status === 200) {
         setCategoryData((prevData) =>

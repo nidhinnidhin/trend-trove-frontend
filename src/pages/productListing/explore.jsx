@@ -11,37 +11,51 @@ import ListProducts from './listProducts';
 
 export default function Explore() {
   const [products, setProducts] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       const response = await fetch('http://localhost:9090/api/products/get');
-  //       const data = await response.json();
-  //       const transformedProducts = data.products.map(product => {
-  //         const variant = product.variants[0];
-  //         const firstSize = variant.sizes[0];
-  //         return {
-  //           id: product._id,
-  //           image: variant.mainImage,
-  //           title: product.name,
-  //           description: product.description,
-  //           rating: product.ratings || 0,
-  //           price: firstSize.discountPrice || firstSize.price,
-  //           originalPrice: firstSize.price,
-  //           variantsCount: product.variants.length,
-  //           category: product.category?.name,
-  //           gender: product.gender,
-  //           isDeleted: product.isDeleted
-  //         };
-  //       });
-  //       setProducts(transformedProducts);
-  //     } catch (error) {
-  //       console.error('Error fetching products:', error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:9090/api/products/get?page=${currentPage}&limit=8`);
+        const data = await response.json();
+        
+        const transformedProducts = data.products.map(product => {
+          const variant = product.variants[0];
+          const firstSize = variant.sizes[0];
+          return {
+            id: product._id,
+            image: variant.mainImage,
+            title: product.name,
+            description: product.description,
+            rating: product.ratings || 0,
+            price: firstSize.discountPrice || firstSize.price,
+            originalPrice: firstSize.price,
+            variantsCount: product.variants.length,
+            category: product.category?.name,
+            gender: product.gender,
+            isDeleted: product.isDeleted
+          };
+        });
+        
+        setProducts(transformedProducts);
+        setTotalPages(data.totalPages || 1);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   fetchProducts();
-  // }, []);
+    fetchProducts();
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <>
@@ -55,7 +69,13 @@ export default function Explore() {
           <Header />
           <Box sx={{ display: 'flex', flexGrow: 1 }}>
             <Filter />
-            <ListProducts products={products} />
+            <ListProducts 
+              products={products}
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+              loading={loading}
+            />
           </Box>
           <Footer />
         </Box>

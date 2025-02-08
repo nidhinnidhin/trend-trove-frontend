@@ -43,7 +43,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       try {
         const response = await fetch(
-          "http://localhost:9090/api/checkout/get-all-order-product"
+          "http://localhost:9090/api/admin/checkout/get-all-order-product"
         );
         const data = await response.json();
         if (data.success) {
@@ -59,7 +59,7 @@ const Orders = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const response = await fetch(
-        `http://localhost:9090/api/checkout/update-order-status/${orderId}`,
+        `http://localhost:9090/api/admin/checkout/update-order-status/${orderId}`,
         {
           method: "PATCH",
           headers: {
@@ -103,7 +103,7 @@ const Orders = () => {
   const handleHistoryClick = async (orderId) => {
     try {
       const response = await fetch(
-        `http://localhost:9090/api/checkout/order-history/${orderId}`
+        `http://localhost:9090/api/admin/checkout/order-history/${orderId}`
       );
       const data = await response.json();
       if (data.success) {

@@ -188,10 +188,8 @@ function Cart() {
         }
       );
 
-      // Dispatch the updated cart length to Redux
       dispatch(setCartLength(cartResponse.data.cart.items.length));
 
-      // Update the cart state immediately
       setCart((prevCart) => {
         const updatedItems = prevCart.items.filter(
           (item) =>
@@ -230,7 +228,6 @@ function Cart() {
     const token = localStorage.getItem("usertoken");
     const { product, variant, sizeVariant } = item;
 
-    // Create a new cart object to trigger a re-render
     const updatedItems = cart.items.map((cartItem) =>
       cartItem.product._id === product._id &&
       cartItem.variant._id === variant._id &&
@@ -247,10 +244,9 @@ function Cart() {
     setCart({
       ...cart,
       items: updatedItems,
-      totalPrice: newTotalPrice, // Ensure the total price updates in real-time
+      totalPrice: newTotalPrice, 
     });
 
-    // API call to update quantity in backend
     try {
       await axios.put(
         "http://localhost:9090/api/cart/update-quantity",
@@ -283,10 +279,9 @@ function Cart() {
   };
 
   const handleAddressSelect = (address) => {
-    setSelectedAddress(address); // Set the selected address
+    setSelectedAddress(address); 
   };
 
-  // Address
   const handleOpenAddAddressModal = () => {
     setIsAddAddressModalOpen(true);
   };
@@ -299,7 +294,6 @@ function Cart() {
     setAddresses((prevAddresses) => [...prevAddresses, newAddress]);
   };
 
-  // Edit address
   const handleEditAddress = (address) => {
     return (e) => {
       e.stopPropagation();
@@ -307,12 +301,6 @@ function Cart() {
       setIsEditAddressModalOpen(true);
     };
   };
-
-  // const handleDeleteAddress = (addresId) => {
-  //   return (e) => {
-  //     e.stopPropagation();
-  //   };
-  // };
 
   const handleAddressUpdate = (updatedAddress) => {
     setAddresses((prevAddresses) =>
@@ -322,7 +310,6 @@ function Cart() {
     );
   };
 
-  // Delete address:
 
   const handleDeleteAddressClick = (e, addressId) => {
     e.stopPropagation();
@@ -352,7 +339,6 @@ function Cart() {
         }
       );
 
-      // Update the addresses state by filtering out the deleted address
       setAddresses((prevAddresses) =>
         prevAddresses.filter(
           (address) => address._id !== selectedAddressToDelete
@@ -362,7 +348,6 @@ function Cart() {
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting address:", error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -377,9 +362,8 @@ function Cart() {
     }
     const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
     const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
-    // Prepare data to pass to the checkout page
     const checkoutData = {
-      cartId: cart._id, // Ensure cartId is included
+      cartId: cart._id, 
       cartItems: cart.items,
       totalPrice: cart.totalPrice,
       finalTotal: finalTotal,

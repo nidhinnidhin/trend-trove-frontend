@@ -93,7 +93,6 @@ const Header = () => {
     fetchCartLength();
   }, [dispatch]);
 
-  // Use useEffect to check for window availability and get token from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedToken = localStorage.getItem("usertoken");

@@ -57,36 +57,30 @@ const Product = () => {
   const [variantId, setVariantId] = useState("");
   const [sizeVariantsData, setSizeVariantsData] = useState({});
   const [expandedSizes, setExpandedSizes] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const limit = 8;
 
   // Fetch products data from API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:9090/api/products/get?page=${currentPage}&limit=${limit}`
+      );
+      setProductsData(response.data.products);
+      setTotalPages(response.data.totalPages);
+      setCurrentPage(response.data.currentPage);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          "http://localhost:9090/api/products/get"
-        );
-        console.log("Response data", response.data);
-
-        if (response.data && Array.isArray(response.data)) {
-          setProductsData((prevData) =>
-            JSON.stringify(prevData) !== JSON.stringify(response.data)
-              ? response.data
-              : prevData
-          );
-        } else {
-          setError("No products found");
-        }
-      } catch (err) {
-        setError("Failed to fetch product data");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    fetchProducts();
+  }, [currentPage]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -143,7 +137,7 @@ const Product = () => {
 
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/products/block/${productToBlock}` // Use productToBlock directly
+        `http://localhost:9090/api/admin/products/block/${productToBlock}` // Use productToBlock directly
       );
 
       if (response.status === 200) {
@@ -167,7 +161,7 @@ const Product = () => {
   const handleUnBlockProduct = async (productId) => {
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/products/unblock/${productId}`
+        `http://localhost:9090/api/admin/products/unblock/${productId}`
       );
       if (response.status === 200) {
         setProductsData((prevData) =>
@@ -265,6 +259,12 @@ const Product = () => {
       setError("Error fetching size variants.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
   };
 
@@ -805,8 +805,8 @@ const Product = () => {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         sx={{
-          backgroundColor: "#333", // Dark background for pagination
-          color: "#FF9800", // Orange color for pagination
+          backgroundColor: "#333",
+          color: "#FF9800",
         }}
       />
 

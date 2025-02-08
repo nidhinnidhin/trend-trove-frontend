@@ -104,15 +104,14 @@ const DetailProduct = () => {
   }, [id]);
 
   const handleQuantityChange = (action) => {
-    if (action === "increment" && quantity < 4) setQuantity(quantity + 1);
-    if (action === "decrement" && quantity > 1) setQuantity(quantity - 1);
+    if (action === "increment" && quantity < 4 && quantity < product.stockCount) setQuantity(quantity + 1);
+    if (action === "decrement" && quantity > 1 ) setQuantity(quantity - 1);
   };
 
   const handleColorChange = (index) => {
     setVariantIndex(index);
     setMainImage(variants[index].mainImage);
     setSelectedColor(variants[index].color);
-
     const initialSize = variants[index].sizes[0]?.size || "";
     setSelectedSize(initialSize);
 

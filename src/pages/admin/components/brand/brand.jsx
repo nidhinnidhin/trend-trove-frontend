@@ -43,7 +43,7 @@ const Brand = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:9090/api/brands/get/admin");
+        const response = await axios.get("http://localhost:9090/api/admin/brands/get/admin");
         setBrandsData(response.data);
       } catch (err) {
         setError("Failed to fetch brands data");
@@ -93,7 +93,7 @@ const Brand = () => {
   const handleConfirmBlock = async () => {
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/brands/block/${brandToBlock}`
+        `http://localhost:9090/api/admin/brands/block/${brandToBlock}`
       );
       setBrandsData((prevData) =>
         prevData.map((brand) =>
@@ -112,7 +112,7 @@ const Brand = () => {
   const handleUnBlockBrand = async (brandId) => {
     try {
       const response = await axios.patch(
-        `http://localhost:9090/api/brands/unblock/${brandId}`
+        `http://localhost:9090/api/admin/brands/unblock/${brandId}`
       );
       setBrandsData((prevData) =>
         prevData.map((brand) =>
