@@ -19,8 +19,9 @@ import {
   DialogContent,
   DialogActions,
   Collapse,
+  Typography,
 } from "@mui/material";
-import { Add, Block, Search } from "@mui/icons-material";
+import { Add, Block, Edit, ExpandMore, Search } from "@mui/icons-material";
 import axios from "axios";
 import EditIcon from "@mui/icons-material/Edit";
 import AddProductModal from "../../modals/addProductModal";
@@ -32,8 +33,10 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditVariantModal from "../../modals/editVariantModel";
+import EditSizeVariantModal from "../../modals/editSizeModal";
 
 const Product = () => {
+  // State Management
   const [productsData, setProductsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,23 +48,31 @@ const Product = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isEditVariantModalOpen, setIsEditVariantModalOpen] = useState(false);
   const [currentVariant, setCurrentVariant] = useState(null);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); // Confirmation modal state
-  const [productToBlock, setProductToBlock] = useState(null);
-  const [showVariantModal, setShowVariantModal] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState(null);
   const [variantsData, setVariantsData] = useState({});
-  const [expandedRows, setExpandedRows] = useState({});
-  const [sizeVariantModalOpen, setSizeVariantModalOpen] = useState(false);
-  const [variantId, setVariantId] = useState("");
   const [sizeVariantsData, setSizeVariantsData] = useState({});
-  const [expandedSizes, setExpandedSizes] = useState({});
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [sizeVariantModalOpen, setSizeVariantModalOpen] = useState(false);
+  const [isEditSizeVariantModalOpen, setIsEditSizeVariantModalOpen] =
+    useState(false);
+  const [currentSizeVariant, setCurrentSizeVariant] = useState(null);
+  const [variantId, setVariantId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [productToBlock, setProductToBlock] = useState(null);
+
   const limit = 8;
 
-  // Fetch products data from API
+  // Fetch initial products data
+  useEffect(() => {
+    fetchProducts();
+  }, [currentPage]);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -72,134 +83,15 @@ const Product = () => {
       setTotalPages(response.data.totalPages);
       setCurrentPage(response.data.currentPage);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
+      setError("Failed to fetch products");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, [currentPage]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to the first page when changing rows per page
-  };
-
-  const handleModalOpen = () => setIsModalOpen(true);
-  const handleModalClose = () => setIsModalOpen(false);
-
-  const handleVariantModalOpen = () => setIsVariantModalOpen(true);
-  const handleVariantModalClose = () => setIsVariantModalOpen(false);
-
-  const handleEditModalOpen = (product) => {
-    setCurrentProduct(product);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditVariant = (variant) => {
-    setCurrentVariant(variant); // Set the current variant
-    setIsEditVariantModalOpen(true); // Open the edit variant modal
-  };
-
-  const handleEditVariantModalClose = () => {
-    setIsVariantModalOpen(false);
-    setCurrentProduct(null);
-  };
-
-  const handleEditModalClose = () => {
-    setIsEditModalOpen(false);
-    setCurrentProduct(null);
-  };
-
-  const handleProductUpdated = (product) => {
-    if (product && product._id) {
-      setProductsData((prevData) =>
-        prevData.map((pro) => (pro._id === product._id ? product : pro))
-      );
-    } else {
-      console.error("Invalid updated product:", product);
-    }
-  };
-
-  const handleBlockProduct = (productId) => {
-    setProductToBlock(productId);
-    setIsConfirmationModalOpen(true); // Open confirmation modal
-  };
-
-  const handleConfirmBlock = async () => {
-    if (!productToBlock) return; // Make sure there's a product ID before proceeding
-
-    try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/products/block/${productToBlock}` // Use productToBlock directly
-      );
-
-      if (response.status === 200) {
-        setProductsData((prevData) =>
-          prevData.map((product) =>
-            product._id === productToBlock
-              ? { ...product, isDeleted: true }
-              : product
-          )
-        );
-        setSnackbarMessage("Product successfully blocked!");
-        setSnackbarOpen(true);
-      }
-    } catch (error) {
-      console.error("Error blocking product:", error);
-      setSnackbarMessage("Failed to block product.");
-      setSnackbarOpen(true);
-    }
-  };
-
-  const handleUnBlockProduct = async (productId) => {
-    try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/products/unblock/${productId}`
-      );
-      if (response.status === 200) {
-        setProductsData((prevData) =>
-          prevData.map((product) =>
-            product._id === productId
-              ? { ...product, isDeleted: false }
-              : product
-          )
-        );
-        setSnackbarMessage("Product successfully unblocked!");
-        setSnackbarOpen(true);
-      }
-    } catch (error) {
-      console.error("Error unblocking product:", error);
-      setSnackbarMessage("Failed to unblock product.");
-      setSnackbarOpen(true);
-    }
-  };
-
-  const handleSnackbarClose = () => setSnackbarOpen(false);
-  const handleConfirmationModalClose = () => setIsConfirmationModalOpen(false);
-
-  const handleCloseVariantModal = () => {
-    setShowVariantModal(false); // Close the AddVariantModal
-  };
-
-  const handleOpenVariantModal = (productId) => {
-    setShowVariantModal(true); // Open the AddVariantModal
-    setSelectedProductId(productId);
-  };
-
-  const handleToggleVariants = async (productId) => {
-    if (expandedRows[productId]) {
-      setExpandedRows((prev) => ({ ...prev, [productId]: false }));
-      return;
-    }
-
-    setLoading(true);
+  // Fetch variants for a product
+  const handleVariantFetch = async (productId) => {
     try {
       const response = await fetch(
         `http://localhost:9090/api/variants/variant/get/${productId}`
@@ -208,641 +100,416 @@ const Product = () => {
       if (response.ok) {
         setVariantsData((prev) => ({
           ...prev,
-          [productId]: data.variants, // Store variants for this product
+          [productId]: data.variants,
         }));
-        setExpandedRows((prev) => ({ ...prev, [productId]: true }));
-      } else {
-        setError(data.message);
       }
-    } catch (err) {
-      setError("Error fetching variants.");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching variants:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch variants",
+        severity: "error",
+      });
     }
   };
 
-  const closeSizeVariantModal = () => {
-    setSizeVariantModalOpen(false);
-  };
-
-  const handleOpenSizeVariantModal = () => {};
-
-  const openSizeVariantModal = (variantId) => {
-    console.log("VariantId", variantId);
-    setVariantId(variantId);
-    setSizeVariantModalOpen(true);
-  };
-
-  const handleToggleSizes = async (variantId) => {
-    if (expandedSizes[variantId]) {
-      setExpandedSizes((prev) => ({ ...prev, [variantId]: false }));
-      return;
-    }
-
-    setLoading(true);
+  // Fetch sizes for a variant
+  const handleSizesFetch = async (variantId) => {
     try {
       const response = await axios.get(
         `http://localhost:9090/api/sizes/sizes/${variantId}`
       );
-      const data = response.data;
-
       if (response.status === 200) {
         setSizeVariantsData((prev) => ({
           ...prev,
-          [variantId]: data.sizeVariants, // Store size variants for this variant
+          [variantId]: response.data.sizeVariants,
         }));
-        setExpandedSizes((prev) => ({ ...prev, [variantId]: true }));
-      } else {
-        setError(data.message);
       }
-    } catch (err) {
-      setError("Error fetching size variants.");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching sizes:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch sizes",
+        severity: "error",
+      });
     }
   };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
+  // Handle blocking/unblocking products
+  const handleBlockProduct = async (productId, isBlocked) => {
+    try {
+      const url = isBlocked
+        ? `http://localhost:9090/api/admin/products/unblock/${productId}`
+        : `http://localhost:9090/api/admin/products/block/${productId}`;
+
+      const response = await axios.patch(url);
+      if (response.status === 200) {
+        setProductsData((prevData) =>
+          prevData.map((product) =>
+            product._id === productId
+              ? { ...product, isDeleted: !isBlocked }
+              : product
+          )
+        );
+        setSnackbar({
+          open: true,
+          message: `Product successfully ${
+            isBlocked ? "unblocked" : "blocked"
+          }`,
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Failed to update product status",
+        severity: "error",
+      });
     }
+    setIsConfirmModalOpen(false);
+  };
+
+  const handleEditSizeVariant = (sizeVariant) => {
+    setCurrentSizeVariant(sizeVariant);
+    setIsEditSizeVariantModalOpen(true);
+  };
+
+  const handleEditSizeVariantModalClose = () => {
+    setIsEditSizeVariantModalOpen(false);
+    setCurrentSizeVariant(null);
+  };
+
+  const handleEditVariantModalClose = () => {
+    setIsEditVariantModalOpen(false);
+    setCurrentVariant(null);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const closeSizeVariantModal = () => {
+    setSizeVariantModalOpen(false);
+    setVariantId("");
+  };
+
+  const snackbarOpen = snackbar.open;
+  const snackbarMessage = snackbar.message;
+
+  // Handle product updates
+  const handleProductUpdated = (updatedProduct) => {
+    setProductsData((prevData) =>
+      prevData.map((product) =>
+        product._id === updatedProduct._id ? updatedProduct : product
+      )
+    );
+    setSnackbar({
+      open: true,
+      message: "Product updated successfully",
+      severity: "success",
+    });
+  };
+
+  // Modal handlers
+  const handleAddVariant = (productId) => {
+    setSelectedProductId(productId);
+    setIsVariantModalOpen(true);
+  };
+
+  const handleAddSize = (variantId) => {
+    setVariantId(variantId);
+    setSizeVariantModalOpen(true);
   };
 
   if (loading) {
-    return <Box sx={{ color: "#FF9800" }}>Loading...</Box>;
+    return (
+      <Box sx={{ padding: 3, textAlign: "center" }}>
+        <Typography variant="h6" sx={{ color: "#3f51b5" }}>
+          Loading...
+        </Typography>
+      </Box>
+    );
   }
 
   if (error) {
-    return <Box sx={{ color: "#FF9800" }}>Error: {error}</Box>;
+    return (
+      <Box sx={{ padding: 3, textAlign: "center" }}>
+        <Typography variant="h6" sx={{ color: "#f44336" }}>
+          Error: {error}
+        </Typography>
+      </Box>
+    );
   }
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: "#212121" }}>
-      {/* Header */}
+    <Box sx={{ padding: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Header Section */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#333", // Dark background
+          backgroundColor: "#3f51b5",
           borderRadius: 2,
           padding: 2,
           marginBottom: 2,
+          boxShadow: 3,
         }}
       >
-        <Box>
-          <Box
-            component="span"
-            sx={{ fontSize: "20px", fontWeight: "bold", color: "#FF9800" }}
-          >
-            Products
-          </Box>
-        </Box>
+        <Typography variant="h6" sx={{ color: "#ffffff", fontWeight: "bold" }}>
+          Products Management
+        </Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
+          onClick={() => setIsModalOpen(true)}
           sx={{
-            backgroundColor: "white",
-            color: "#FF9800",
-            "&:hover": { backgroundColor: "white" },
-            border: "1px solid #FF9800",
+            backgroundColor: "#4caf50",
+            color: "white",
+            "&:hover": { backgroundColor: "#66bb6a" },
           }}
-          onClick={handleModalOpen}
         >
           Add New Product
         </Button>
-        <Box>
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search..."
-            InputProps={{
-              endAdornment: (
-                <IconButton>
-                  <Search sx={{ color: "#FF9800" }} />
-                </IconButton>
-              ),
-            }}
-            sx={{
-              backgroundColor: "#424242", // Dark background for input
-              color: "#ffffff", // White text
-              borderRadius: 1,
-              "& .MuiOutlinedInput-root": {
-                color: "#ffffff", // White text inside input
-                "& fieldset": {
-                  borderColor: "#FF9800", // Orange border for the input
-                },
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Search products..."
+          sx={{
+            backgroundColor: "#ffffff",
+            borderRadius: 1,
+            width: "250px",
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#3f51b5",
               },
-            }}
-          />
-        </Box>
+              "&:hover fieldset": {
+                borderColor: "#3f51b5",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#3f51b5",
+              },
+            },
+          }}
+          InputProps={{
+            endAdornment: (
+              <IconButton>
+                <Search />
+              </IconButton>
+            ),
+          }}
+        />
       </Box>
 
-      {/* Table */}
-      <TableContainer
-        component={Paper}
-        sx={{
-          padding: 2,
-          backgroundColor: "#333", // Dark background for table
-          borderRadius: 3,
-        }}
-      >
-        <Table
-          sx={{
-            width: "100%",
-            backgroundColor: "#424242", // Light black background for table
-            overflow: "auto",
-          }}
+      {/* Products List with Accordions */}
+      {productsData.map((product) => (
+        <Accordion
+          key={product._id}
+          sx={{ mb: 2, boxShadow: 3 }}
+          onChange={() => handleVariantFetch(product._id)}
         >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Name
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Category
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Brand
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Created At
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Edit
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Status
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Add variant
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "#212121",
-                  color: "#FF9800",
-                  fontWeight: "bold",
-                }}
-              >
-                Variants
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {productsData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((product) => (
-                <React.Fragment key={product._id}>
-                  <TableRow>
-                    <TableCell sx={{ color: "#ffffff" }}>
-                      {product.name ? product.name.slice(0, 30) : "N/A"}...
-                    </TableCell>
-                    <TableCell sx={{ color: "#ffffff" }}>
-                      {product.category.name || "N/A"}
-                    </TableCell>
-                    <TableCell sx={{ color: "#ffffff" }}>
-                      {product.brand.name || "N/A"}
-                    </TableCell>
-                    <TableCell sx={{ color: "#ffffff" }}>
-                      {product.createdAt
-                        ? new Date(product.createdAt).toLocaleString()
-                        : "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<EditIcon />}
-                        onClick={() => handleEditModalOpen(product)}
-                        sx={{
-                          backgroundColor: "#FF9800",
-                          color: "white",
-                          "&:hover": { backgroundColor: "#FFB74D" },
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      {product.isDeleted ? (
-                        <Button
-                          variant="contained"
-                          color="error"
-                          startIcon={<Block />}
-                          sx={{
-                            backgroundColor: "black",
-                            color: "gray",
-                          }}
-                          onClick={() => handleUnBlockProduct(product._id)}
-                        >
-                          Unblock
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="contained"
-                          color="error"
-                          startIcon={<Block />}
-                          sx={{
-                            backgroundColor: "black",
-                            color: "#FF9800",
-                          }}
-                          onClick={() => handleBlockProduct(product._id)}
-                        >
-                          Block
-                        </Button>
-                      )}
-                    </TableCell>
-
-                    {/* Add Variant Button */}
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleOpenVariantModal(product._id)}
-                        sx={{
-                          backgroundColor: "#FF9800",
-                          width: "100px",
-                          color: "white",
-                          "&:hover": { backgroundColor: "#FFB74D" },
-                        }}
-                      >
-                        +Variant
-                      </Button>
-                    </TableCell>
-
-                    {/* Show Variants Button */}
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleToggleVariants(product._id)}
-                        sx={{
-                          backgroundColor: "#FF9800",
-                          width: "150px",
-                          color: "white",
-                          "&:hover": { backgroundColor: "#FFB74D" },
-                        }}
-                      >
-                        {expandedRows[product._id]
-                          ? "Hide Variants"
-                          : "Variants"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Row for Variants - Collapse below the clicked row */}
-                  <TableRow>
-                    <TableCell colSpan={8} sx={{ paddingBottom: 0 }}>
-                      <Collapse
-                        in={expandedRows[product._id]}
-                        timeout="auto"
-                        unmountOnExit
-                      >
-                        <Box sx={{ marginTop: 2 }}>
-                          {loading && <p>Loading variants...</p>}
-                          {error && <p>{error}</p>}
-                          {variantsData[product._id] &&
-                          variantsData[product._id].length > 0 ? (
-                            <Table sx={{ width: "100%" }}>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Color
-                                  </TableCell>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Main Image
-                                  </TableCell>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Color Image
-                                  </TableCell>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Edit Sizes
-                                  </TableCell>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Add Sizes
-                                  </TableCell>
-                                  <TableCell sx={{ color: "#FF9800" }}>
-                                    Available Sizes
-                                  </TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {variantsData[product._id].map((variant) => (
-                                  <TableRow key={variant._id}>
-                                    <TableCell sx={{ color: "#ffffff" }}>
-                                      {variant.color || "N/A"}
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#ffffff" }}>
-                                      {variant.mainImage ? (
-                                        <img
-                                          src={variant.mainImage}
-                                          alt={variant.color}
-                                          width="90"
-                                          height="90"
-                                          style={{ objectFit: "contain" }}
-                                        />
-                                      ) : (
-                                        "N/A"
-                                      )}
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#ffffff" }}>
-                                      {variant.colorImage ? (
-                                        <img
-                                          src={variant.colorImage}
-                                          alt={variant.color}
-                                          width="90"
-                                          height="90"
-                                          style={{ objectFit: "contain" }}
-                                        />
-                                      ) : (
-                                        "N/A"
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Button
-                                        variant="contained"
-                                        color="primary"
-                                        startIcon={<EditIcon />}
-                                        onClick={() =>
-                                          handleEditVariant(variant)
-                                        } 
-                                        sx={{
-                                          backgroundColor: "#FF9800",
-                                          width: "100px",
-                                          color: "white",
-                                          "&:hover": {
-                                            backgroundColor: "#FFB74D",
-                                          },
-                                        }}
-                                      >
-                                        Edit
-                                      </Button>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() =>
-                                          openSizeVariantModal(variant._id)
-                                        }
-                                        sx={{
-                                          backgroundColor: "#FF9800",
-                                          width: "100px",
-                                          color: "white",
-                                          "&:hover": {
-                                            backgroundColor: "#FFB74D",
-                                          },
-                                        }}
-                                      >
-                                        +Size
-                                      </Button>
-                                    </TableCell>
-                                    <TableCell>
-                                      {variant.sizes &&
-                                      variant.sizes.length > 0 ? (
-                                        <Button
-                                          variant="contained"
-                                          color="primary"
-                                          onClick={() =>
-                                            handleToggleSizes(variant._id)
-                                          }
-                                          sx={{
-                                            backgroundColor: "#FF9800",
-                                            width: "100px",
-                                            color: "white",
-                                            "&:hover": {
-                                              backgroundColor: "#FFB74D",
-                                            },
-                                          }}
-                                        >
-                                          Sizes
-                                        </Button>
-                                      ) : (
-                                        <Button
-                                          variant="contained"
-                                          color="primary"
-                                          disabled
-                                          sx={{
-                                            backgroundColor: "gray",
-                                            width: "100px",
-                                            color: "white",
-                                          }}
-                                        >
-                                          No Sizes
-                                        </Button>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={6} sx={{ color: "#ffffff" }}>
-                                No variants available for this product.
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Sizes collapse for each variant */}
-                  {variantsData[product._id]?.map((variant) => (
-                    <TableRow key={variant._id}>
-                      <TableCell colSpan={8} sx={{ paddingBottom: 0 }}>
-                        <Collapse
-                          in={expandedSizes[variant._id]}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <Box sx={{ marginTop: 2 }}>
-                            {sizeVariantsData[variant._id] &&
-                            sizeVariantsData[variant._id].length > 0 ? (
-                              <Table sx={{ width: "100%" }}>
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Size
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Price
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Discount Price
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      In Stock
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Stock Count
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Description
-                                    </TableCell>
-                                    <TableCell sx={{ color: "#FF9800" }}>
-                                      Edit
-                                    </TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {sizeVariantsData[variant._id].map(
-                                    (sizeVariant, index) => (
-                                      <TableRow key={index}>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.size}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.price}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.discountPrice}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.inStock ? "Yes" : "No"}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.stockCount}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          {sizeVariant.description}
-                                        </TableCell>
-                                        <TableCell sx={{ color: "#ffffff" }}>
-                                          <Button
-                                            variant="contained"
-                                            color="primary"
-                                            startIcon={<EditIcon />}
-                                            // onClick={() =>
-                                            //   handleEditModalOpen(product)
-                                            // }
-                                            sx={{
-                                              backgroundColor: "#FF9800",
-                                              color: "white",
-                                              "&:hover": {
-                                                backgroundColor: "#FFB74D",
-                                              },
-                                            }}
-                                          >
-                                            Edit
-                                          </Button>
-                                        </TableCell>
-                                      </TableRow>
-                                    )
-                                  )}
-                                </TableBody>
-                              </Table>
-                            ) : (
-                              <TableRow>
-                                <TableCell
-                                  colSpan={6}
-                                  sx={{ color: "#ffffff" }}
-                                >
-                                  No size variants available for this variant.
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pagination */}
-      <TablePagination
-        component="div"
-        count={productsData.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        sx={{
-          backgroundColor: "#333",
-          color: "#FF9800",
-        }}
-      />
-
-      {/* Confirmation Modal */}
-      <Dialog
-        open={isConfirmationModalOpen}
-        onClose={handleConfirmationModalClose}
-      >
-        <DialogTitle>Confirm Block</DialogTitle>
-        <DialogContent>
-          Are you sure you want to block this Product?
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleConfirmationModalClose}
-            sx={{ color: "#FF9800" }}
+          <AccordionSummary
+            expandIcon={<ExpandMore />}
+            sx={{
+              backgroundColor: "#ffffff",
+              borderBottom: "1px solid #e0e0e0",
+            }}
           >
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmBlock} sx={{ color: "#FF9800" }}>
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: "bold", color: "#3f51b5" }}
+                >
+                  {product.name}
+                </Typography>
+                <Typography variant="body1" sx={{ color: "#757575" }}>
+                  Category: {product.category.name} | Brand:{" "}
+                  {product.brand.name}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#757575" }}>
+                  Created: {new Date(product.createdAt).toLocaleString()}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<Edit />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentProduct(product);
+                    setIsEditModalOpen(true);
+                  }}
+                  sx={{
+                    backgroundColor: "#ff9800",
+                    color: "white",
+                    "&:hover": { backgroundColor: "#ffb74d" },
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Block />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProductToBlock(product._id);
+                    setIsConfirmModalOpen(true);
+                  }}
+                  sx={{
+                    backgroundColor: product.isDeleted ? "#f44336" : "#4caf50",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: product.isDeleted
+                        ? "#ef5350"
+                        : "#66bb6a",
+                    },
+                  }}
+                >
+                  {product.isDeleted ? "Unblock" : "Block"}
+                </Button>
+              </Box>
+            </Box>
+          </AccordionSummary>
+
+          <AccordionDetails sx={{ backgroundColor: "#fafafa" }}>
+            {/* Add Variant Button */}
+            <Box sx={{ mb: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => handleAddVariant(product._id)}
+                sx={{
+                  backgroundColor: "#4caf50",
+                  color: "white",
+                  "&:hover": { backgroundColor: "#66bb6a" },
+                }}
+              >
+                Add Variant
+              </Button>
+            </Box>
+
+            {/* Variants Section */}
+            {variantsData[product._id]?.map((variant) => (
+              <Accordion
+                key={variant._id}
+                sx={{ mb: 1 }}
+                onChange={() => handleSizesFetch(variant._id)}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMore />}
+                  sx={{ backgroundColor: "#ffffff" }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <img
+                      src={variant.mainImage}
+                      alt={variant.color}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "cover",
+                        borderRadius: "4px",
+                      }}
+                    />
+                    <Typography sx={{ color: "#3f51b5", fontWeight: "bold" }}>
+                      {variant.color}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  {/* Size Variants Table */}
+                  <Box sx={{ mb: 2 }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<Add />}
+                      onClick={() => handleAddSize(variant._id)}
+                      sx={{
+                        backgroundColor: "#4caf50",
+                        color: "white",
+                        "&:hover": { backgroundColor: "#66bb6a" },
+                        mb: 2,
+                      }}
+                    >
+                      Add Size
+                    </Button>
+                  </Box>
+
+                  <TableContainer component={Paper}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: "#3f51b5" }}>
+                          <TableCell sx={{ color: "white" }}>Size</TableCell>
+                          <TableCell sx={{ color: "white" }}>Price</TableCell>
+                          <TableCell sx={{ color: "white" }}>
+                            Discount Price
+                          </TableCell>
+                          <TableCell sx={{ color: "white" }}>Stock</TableCell>
+                          <TableCell sx={{ color: "white" }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {sizeVariantsData[variant._id]?.map((size) => (
+                          <TableRow key={size._id}>
+                            <TableCell>{size.size}</TableCell>
+                            <TableCell>₹{size.price}</TableCell>
+                            <TableCell>₹{size.discountPrice}</TableCell>
+                            <TableCell>{size.stockCount}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<EditIcon />}
+                                onClick={() =>
+                                  handleEditSizeVariant(size)
+                                }
+                                sx={{
+                                  backgroundColor: "#FF9800",
+                                  color: "white",
+                                  "&:hover": { backgroundColor: "#FFB74D" },
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      ))}
 
       {/* Modals */}
-      <AddProductModal open={isModalOpen} onClose={handleModalClose} />
+      <AddProductModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+
       <EditProductModal
         open={isEditModalOpen}
-        handleClose={handleEditModalClose}
+        handleClose={() => setIsEditModalOpen(false)}
         product={currentProduct}
         handleProductUpdated={handleProductUpdated}
       />
+
       <AddVariantModal
-        open={showVariantModal} // Control the visibility
-        onClose={handleCloseVariantModal} // Close the variant modal
+        open={isVariantModalOpen}
+        onClose={() => setIsVariantModalOpen(false)}
         productId={selectedProductId}
       />
       <AddSizeVariantModal
@@ -854,6 +521,12 @@ const Product = () => {
         open={isEditVariantModalOpen}
         onClose={handleEditVariantModalClose}
         variant={currentVariant}
+      />
+
+      <EditSizeVariantModal
+        open={isEditSizeVariantModalOpen}
+        onClose={handleEditSizeVariantModalClose}
+        sizeVariant={currentSizeVariant}
       />
 
       {/* Snackbar */}

@@ -20,19 +20,23 @@ import {
   TablePagination,
   Snackbar,
   Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import CancelIcon from "@mui/icons-material/Cancel";
-import { HistoryIcon } from "lucide-react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import HistoryIcon from "@mui/icons-material/History";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [isOrderDetailModalOpen, setIsOrderDetailModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -56,10 +60,10 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = async (orderId, itemId, newStatus) => {
     try {
       const response = await fetch(
-        `http://localhost:9090/api/admin/checkout/update-order-status/${orderId}`,
+        `http://localhost:9090/api/admin/checkout/update-order-status/${orderId}/${itemId}`,
         {
           method: "PATCH",
           headers: {
@@ -71,182 +75,177 @@ const Orders = () => {
 
       const data = await response.json();
       if (data.success) {
-        setOrders(
-          orders.map((order) =>
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
             order.orderId === orderId
-              ? { ...order, orderStatus: newStatus }
+              ? {
+                  ...order,
+                  items: order.items.map((item) =>
+                    item.itemId === itemId
+                      ? { ...item, status: newStatus }
+                      : item
+                  ),
+                  orderStatus: data.order.orderStatus,
+                }
               : order
           )
         );
         setSnackbar({
           open: true,
-          message: "Order status updated successfully",
+          message: "Item status updated successfully",
           severity: "success",
         });
       }
     } catch (error) {
       setSnackbar({
         open: true,
-        message: "Error updating order status",
+        message: "Error updating item status",
         severity: "error",
       });
     }
     setIsEditModalOpen(false);
   };
 
-  const handleEditClick = (order) => {
+  const handleOrderDetailClick = (order) => {
     setSelectedOrder(order);
-    setNewStatus(order.orderStatus);
+    setIsOrderDetailModalOpen(true);
+  };
+
+  const handleEditClick = (order, item) => {
+    setSelectedOrder(order);
+    setSelectedItem(item);
+    setNewStatus(item.status);
     setIsEditModalOpen(true);
   };
 
-  const handleHistoryClick = async (orderId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:9090/api/admin/checkout/order-history/${orderId}`
-      );
-      const data = await response.json();
-      if (data.success) {
-        setSelectedOrder(data.order);
-        setIsHistoryModalOpen(true);
-      }
-    } catch (error) {
-      console.error("Error fetching order history:", error);
-    }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: "#212121" }}>
+    <Box sx={{ padding: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       {/* Header */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#333",
+          backgroundColor: "#3f51b5",
           borderRadius: 2,
           padding: 2,
           marginBottom: 2,
+          boxShadow: 3,
         }}
       >
-        <Typography variant="h6" sx={{ color: "#FF9800" }}>
+        <Typography variant="h6" sx={{ color: "#ffffff", fontWeight: "bold" }}>
           Orders Management
         </Typography>
       </Box>
 
-      {/* Orders Table */}
-      <TableContainer
-        component={Paper}
-        sx={{ backgroundColor: "#333", borderRadius: 3 }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Order ID
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Customer
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Items
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Total Amount
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Created At
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Status
-              </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800" }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {orders
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((order) => (
-                <TableRow key={order.orderId}>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    {order.orderId}
-                  </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    {order.customer.name}
-                    <br />
-                    {order.customer.email}
-                  </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    {order.items.map((item, idx) => (
-                      <Box key={idx} sx={{ mb: 1 }}>
-                        {item.productName.slice(0, 15)} - {item.color} (
-                        {item.size}) x{item.quantity}
-                      </Box>
+      {/* Orders List */}
+      {orders
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .map((order) => (
+          <Accordion key={order.orderId} sx={{ mb: 2, boxShadow: 3 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box sx={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#3f51b5" }}>
+                    Order ID: {order.orderId}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: "#757575" }}>
+                    Customer: {order.customer.name} ({order.customer.email})
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: "#757575" }}>
+                    Total Amount: ₹{order.totalAmount}
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: "#757575" }}>
+                    Status: {order.orderStatus}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent accordion from expanding/collapsing
+                    handleOrderDetailClick(order);
+                  }}
+                  sx={{
+                    backgroundColor: "#4caf50",
+                    color: "white",
+                    "&:hover": { backgroundColor: "#66bb6a" },
+                  }}
+                >
+                  Order Details
+                </Button>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#3f51b5" }}>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Product</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Quantity</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Price</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Status</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {order.items.map((item) => (
+                      <TableRow key={item.itemId}>
+                        <TableCell>
+                          {item.productName} - {item.color} ({item.size})
+                        </TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>₹{item.price}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={() => handleEditClick(order, item)}
+                            sx={{
+                              backgroundColor: '#ff9800',
+                              color: 'white',
+                              '&:hover': { backgroundColor: '#ffb74d' },
+                            }}
+                          >
+                            Edit Status
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    ₹{order.totalAmount}
-                  </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    ₹{order.createdAt}
-                  </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>
-                    {order.orderStatus}
-                  </TableCell>
-                  <TableCell>
-                  <Button
-                      variant="contained"
-                      startIcon={<EditIcon />}
-                      onClick={() => handleEditClick(order)}
-                      sx={{
-                        backgroundColor: '#FF9800',
-                        color: 'white',
-                        mr: 1,
-                        '&:hover': { backgroundColor: '#FFB74D' },
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<HistoryIcon />}
-                      onClick={() => handleHistoryClick(order.orderId)}
-                      sx={{
-                        margin:"5px 0px",
-                        backgroundColor: "black",
-                        color: "white",
-                        "&:hover": { backgroundColor: "#66BB6A" },
-                      }}
-                    >
-                      History
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </AccordionDetails>
+          </Accordion>
+        ))}
 
-        <TablePagination
-          component="div"
-          count={orders.length}
-          page={page}
-          onPageChange={(event, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));
-            setPage(0);
-          }}
-          sx={{ color: "#FF9800" }}
-        />
-      </TableContainer>
+      {/* Pagination */}
+      <TablePagination
+        component="div"
+        count={orders.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{ mt: 2, color: "#3f51b5" }}
+      />
 
       {/* Edit Status Modal */}
       <Dialog open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
-        <DialogTitle>Update Order Status</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
+        <DialogTitle sx={{ backgroundColor: "#3f51b5", color: "#ffffff" }}>
+          Update Item Status
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <FormControl fullWidth>
             <Select
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value)}
@@ -262,153 +261,104 @@ const Orders = () => {
           <Button onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
           <Button
             onClick={() =>
-              handleStatusChange(selectedOrder?.orderId, newStatus)
+              handleStatusChange(selectedOrder?.orderId, selectedItem?.itemId, newStatus)
             }
             color="primary"
+            variant="contained"
           >
             Update
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Order History Modal */}
+      {/* Order Detail Modal */}
       <Dialog
-        open={isHistoryModalOpen}
-        onClose={() => setIsHistoryModalOpen(false)}
-        maxWidth="sm"
+        open={isOrderDetailModalOpen}
+        onClose={() => setIsOrderDetailModalOpen(false)}
+        maxWidth="md"
         fullWidth
-        sx={{
-          "& .MuiPaper-root": {
-            backgroundColor: "#121212", // Dark background
-            color: "#ffffff", // White text
-            borderRadius: "12px",
-            padding: 2,
-          },
-        }}
       >
-        <DialogTitle
-          sx={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "1.5rem",
-            borderBottom: "1px solid #333",
-            pb: 2,
-          }}
-        >
-          Order History
+        <DialogTitle sx={{ backgroundColor: "#3f51b5", color: "#ffffff" }}>
+          Order Details
         </DialogTitle>
         <DialogContent>
           {selectedOrder && (
-            <Paper
-              elevation={3}
-              sx={{
-                backgroundColor: "#1e1e1e",
-                color: "#ffffff",
-                p: 3,
-                borderRadius: 2,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
-                Order ID: {selectedOrder._id}
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#3f51b5" }}>
+                Order ID: {selectedOrder.orderId}
               </Typography>
               <Typography variant="body1">
-                <b>Status:</b> {selectedOrder.orderStatus}
+                <strong>Customer:</strong> {selectedOrder.customer.name} (
+                {selectedOrder.customer.email})
               </Typography>
               <Typography variant="body1">
-                <b>Total Amount:</b> ₹{selectedOrder.totalAmount}
+                <strong>Total Amount:</strong> ₹{selectedOrder.totalAmount}
               </Typography>
               <Typography variant="body1">
-                <b>Created At:</b>{" "}
+                <strong>Status:</strong> {selectedOrder.orderStatus}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Created At:</strong>{" "}
                 {new Date(selectedOrder.createdAt).toLocaleString()}
               </Typography>
 
-              {/* Items Section */}
-              <Typography
-                variant="h6"
-                sx={{
-                  mt: 3,
-                  fontWeight: "bold",
-                  borderBottom: "1px solid #444",
-                  pb: 1,
-                }}
-              >
-                Items
-              </Typography>
-              {selectedOrder.items.map((item, idx) => (
-                <Box
-                  key={idx}
-                  sx={{
-                    mt: 2,
-                    p: 2,
-                    borderRadius: 1,
-                    backgroundColor: "#2a2a2a",
-                  }}
-                >
-                  <Typography variant="body1">
-                    <b>Product:</b> {item.product?.name}
-                  </Typography>
-                  <Typography variant="body1">
-                    <b>Color:</b> {item.variant?.color}
-                  </Typography>
-                  <Typography variant="body1">
-                    <b>Size:</b> {item.sizeVariant?.size}
-                  </Typography>
-                  <Typography variant="body1">
-                    <b>Quantity:</b> {item.quantity}
-                  </Typography>
-                  <Typography variant="body1">
-                    <b>Price:</b> ₹{item.price}
-                  </Typography>
-                </Box>
-              ))}
-
-              {/* Shipping Address Section */}
-              {/* <Typography
-                variant="h6"
-                sx={{
-                  mt: 3,
-                  fontWeight: "bold",
-                  borderBottom: "1px solid #444",
-                  pb: 1,
-                }}
-              >
+              {/* Shipping Address */}
+              <Typography variant="h6" sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}>
                 Shipping Address
               </Typography>
               <Typography variant="body1">
-                {selectedOrder.shipping.address.fullName}
+                {selectedOrder.shippingAddress.fullName}
               </Typography>
               <Typography variant="body1">
-                {selectedOrder.shipping.address.address}
+                {selectedOrder.shippingAddress.address},{" "}
+                {selectedOrder.shippingAddress.city},{" "}
+                {selectedOrder.shippingAddress.state} -{" "}
+                {selectedOrder.shippingAddress.pincode}
               </Typography>
               <Typography variant="body1">
-                {selectedOrder.shipping.address.city},{" "}
-                {selectedOrder.shipping.address.state}{" "}
-                {selectedOrder.shipping.address.pincode}
+                <strong>Phone:</strong>{" "}
+                {selectedOrder.shippingAddress.mobileNumber}
               </Typography>
-              <Typography variant="body1">
-                <b>Phone:</b> {selectedOrder.shipping.address.mobileNumber}
-              </Typography> */}
-            </Paper>
+
+              {/* Products */}
+              <Typography variant="h6" sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}>
+                Products
+              </Typography>
+              <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 3 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#3f51b5" }}>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Product</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Quantity</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Price</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {selectedOrder.items.map((item) => (
+                      <TableRow key={item.itemId}>
+                        <TableCell>
+                          {item.productName} - {item.color} ({item.size})
+                        </TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>₹{item.price}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           )}
         </DialogContent>
-
-        <DialogActions
-          sx={{ justifyContent: "center", borderTop: "1px solid #333", pt: 2 }}
-        >
-          <Button
-            onClick={() => setIsHistoryModalOpen(false)}
-            variant="contained"
-            sx={{
-              backgroundColor: "#ffffff",
-              color: "#121212",
-              "&:hover": { backgroundColor: "#e0e0e0" },
-            }}
-          >
+        <DialogActions>
+          <Button onClick={() => setIsOrderDetailModalOpen(false)}>
             Close
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Snackbar for Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
