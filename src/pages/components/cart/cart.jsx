@@ -201,8 +201,8 @@ function Cart() {
         return {
           ...prevCart,
           items: updatedItems,
-          totalPrice: response.data.cart.totalPrice, 
-          discountAmount: response.data.cart.discountAmount, 
+          totalPrice: response.data.cart.totalPrice,
+          discountAmount: response.data.cart.discountAmount,
         };
       });
 
@@ -213,10 +213,14 @@ function Cart() {
   };
 
   const handleQuantityChange = async (item, newQuantity) => {
+    console.log("StockCounttttttttttttt", item.sizeVariant.stockCount);
+
     setQuantityError("");
 
-    if (newQuantity > 4) {
-      setQuantityError("Maximum quantity allowed is 4 items per product");
+    if (newQuantity > 4 || newQuantity > item.sizeVariant.stockCount) {
+      setQuantityError(
+        `Maximum quantity allowed is ${item.sizeVariant.stockCount} items per product only ${item.sizeVariant.stockCount} available`
+      );
       return;
     }
 
@@ -244,7 +248,7 @@ function Cart() {
     setCart({
       ...cart,
       items: updatedItems,
-      totalPrice: newTotalPrice, 
+      totalPrice: newTotalPrice,
     });
 
     try {
@@ -279,7 +283,7 @@ function Cart() {
   };
 
   const handleAddressSelect = (address) => {
-    setSelectedAddress(address); 
+    setSelectedAddress(address);
   };
 
   const handleOpenAddAddressModal = () => {
@@ -309,7 +313,6 @@ function Cart() {
       )
     );
   };
-
 
   const handleDeleteAddressClick = (e, addressId) => {
     e.stopPropagation();
@@ -363,7 +366,7 @@ function Cart() {
     const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
     const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
     const checkoutData = {
-      cartId: cart._id, 
+      cartId: cart._id,
       cartItems: cart.items,
       totalPrice: cart.totalPrice,
       finalTotal: finalTotal,
