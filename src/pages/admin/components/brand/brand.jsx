@@ -20,9 +20,9 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Add, Block, Search, Edit as EditIcon } from "@mui/icons-material";
-import axios from "axios";
 import AddBrandModal from "../../modals/addBrandModal";
 import EditBrandModal from "../../modals/editBrandModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const Brand = () => {
   const [brandsData, setBrandsData] = useState([]);
@@ -38,12 +38,11 @@ const Brand = () => {
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [brandToBlock, setBrandToBlock] = useState(null);
 
-  // Fetch brands data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:9090/api/admin/brands/get/admin");
+        const response = await axiosInstance.get("/brands/get/admin");
         setBrandsData(response.data);
       } catch (err) {
         setError("Failed to fetch brands data");
@@ -92,8 +91,8 @@ const Brand = () => {
 
   const handleConfirmBlock = async () => {
     try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/brands/block/${brandToBlock}`
+      const response = await axiosInstance.patch(
+        `/brands/block/${brandToBlock}`
       );
       setBrandsData((prevData) =>
         prevData.map((brand) =>
@@ -111,9 +110,7 @@ const Brand = () => {
 
   const handleUnBlockBrand = async (brandId) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/brands/unblock/${brandId}`
-      );
+      const response = await axiosInstance.patch(`/brands/unblock/${brandId}`);
       setBrandsData((prevData) =>
         prevData.map((brand) =>
           brand._id === brandId ? { ...brand, isDeleted: false } : brand
@@ -146,7 +143,7 @@ const Brand = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#333", // Dark background
+          backgroundColor: "#333",
           borderRadius: 2,
           padding: 2,
           marginBottom: 2,
@@ -186,13 +183,13 @@ const Brand = () => {
               ),
             }}
             sx={{
-              backgroundColor: "#424242", // Dark background for input
-              color: "#ffffff", // White text
+              backgroundColor: "#424242",
+              color: "#ffffff",
               borderRadius: 1,
               "& .MuiOutlinedInput-root": {
-                color: "#ffffff", // White text inside input
+                color: "#ffffff",
                 "& fieldset": {
-                  borderColor: "#FF9800", // Orange border for the input
+                  borderColor: "#FF9800",
                 },
               },
             }}
@@ -200,12 +197,11 @@ const Brand = () => {
         </Box>
       </Box>
 
-      {/* Table */}
       <TableContainer
         component={Paper}
         sx={{
           padding: 2,
-          backgroundColor: "#333", // Dark background for table container
+          backgroundColor: "#333",
           borderRadius: 3,
         }}
       >
@@ -276,7 +272,7 @@ const Brand = () => {
                       variant="contained"
                       startIcon={<EditIcon />}
                       sx={{
-                        backgroundColor: "#FF9800", // Orange color for edit button
+                        backgroundColor: "#FF9800",
                         color: "white",
                       }}
                       onClick={() => handleEditModalOpen(brand)}
@@ -305,7 +301,7 @@ const Brand = () => {
                         startIcon={<Block />}
                         sx={{
                           backgroundColor: "black",
-                          color: "#FF9800", // Orange color for block button
+                          color: "#FF9800",
                         }}
                         onClick={() => handleBlockBrand(brand._id)}
                       >
@@ -319,7 +315,6 @@ const Brand = () => {
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
       <TablePagination
         component="div"
         count={brandsData.length}
@@ -328,12 +323,11 @@ const Brand = () => {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         sx={{
-          backgroundColor: "#333", // Dark background for pagination
-          color: "#FF9800", // Orange color for pagination
+          backgroundColor: "#333",
+          color: "#FF9800",
         }}
       />
 
-      {/* Add/Edit Brand Modals */}
       <AddBrandModal open={isModalOpen} handleClose={handleModalClose} />
       <EditBrandModal
         open={isEditModalOpen}
@@ -342,7 +336,6 @@ const Brand = () => {
         handleBrandUpdated={handleBrandUpdated}
       />
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -354,7 +347,6 @@ const Brand = () => {
         </Alert>
       </Snackbar>
 
-      {/* Confirmation Modal */}
       <Dialog
         open={confirmationModalOpen}
         onClose={handleConfirmationModalClose}

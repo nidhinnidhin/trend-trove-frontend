@@ -20,8 +20,8 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { Add, Block, Search } from "@mui/icons-material";
-import axios from "axios";
+import { Block, Search } from "@mui/icons-material";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const Users = () => {
   const [usersData, setUsersData] = useState([]);
@@ -31,15 +31,14 @@ const Users = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); // Confirmation modal state
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [userToBlock, setUserToBlock] = useState(null);
 
-  // Fetch users data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:9090/api/admin/userlist");
+        const response = await axiosInstance.get("/userlist");
         setUsersData(response.data);
       } catch (err) {
         setError("Failed to fetch users data");
@@ -56,19 +55,19 @@ const Users = () => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to the first page when changing rows per page
+    setPage(0);
   };
 
   const handleBlockUser = (userId) => {
     setUserToBlock(userId);
-    setIsConfirmationModalOpen(true); // Open confirmation modal
+    setIsConfirmationModalOpen(true);
   };
 
   const handleConfirmBlock = async () => {
     if (!userToBlock) return;
 
     try {
-      const response = await axios.put(`http://localhost:9090/api/admin/block/${userToBlock}`);
+      const response = await axiosInstance.put(`/block/${userToBlock}`);
       setUsersData((prevUsers) =>
         prevUsers.map((user) =>
           user._id === userToBlock ? { ...user, isDeleted: true } : user
@@ -81,12 +80,12 @@ const Users = () => {
       setSnackbarMessage("Error blocking user.");
       setSnackbarOpen(true);
     }
-    setIsConfirmationModalOpen(false); // Close the modal
+    setIsConfirmationModalOpen(false);
   };
 
   const handleUnblockUser = async (userId) => {
     try {
-      const response = await axios.put(`http://localhost:9090/api/admin/unblock/${userId}`);
+      const response = await axiosInstance.put(`/unblock/${userId}`);
       setUsersData((prevUsers) =>
         prevUsers.map((user) =>
           user._id === userId ? { ...user, isDeleted: false } : user
@@ -179,22 +178,58 @@ const Users = () => {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Profile
               </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Fullname
               </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Username
               </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Email
               </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Created At
               </TableCell>
-              <TableCell sx={{ backgroundColor: "#212121", color: "#FF9800", fontWeight: "bold" }}>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Status
               </TableCell>
             </TableRow>
@@ -210,7 +245,9 @@ const Users = () => {
                   <TableCell sx={{ color: "#ffffff" }}>
                     {`${user.firstname} ${user.lastname}`}
                   </TableCell>
-                  <TableCell sx={{ color: "#ffffff" }}>{user.username}</TableCell>
+                  <TableCell sx={{ color: "#ffffff" }}>
+                    {user.username}
+                  </TableCell>
                   <TableCell sx={{ color: "#ffffff" }}>{user.email}</TableCell>
                   <TableCell sx={{ color: "#ffffff" }}>
                     {new Date(user.createdAt).toLocaleString()}
@@ -264,11 +301,17 @@ const Users = () => {
       />
 
       {/* Confirmation Modal */}
-      <Dialog open={isConfirmationModalOpen} onClose={handleConfirmationModalClose}>
+      <Dialog
+        open={isConfirmationModalOpen}
+        onClose={handleConfirmationModalClose}
+      >
         <DialogTitle>Confirm Block</DialogTitle>
         <DialogContent>Are you sure you want to block this User?</DialogContent>
         <DialogActions>
-          <Button onClick={handleConfirmationModalClose} sx={{ color: "#FF9800" }}>
+          <Button
+            onClick={handleConfirmationModalClose}
+            sx={{ color: "#FF9800" }}
+          >
             Cancel
           </Button>
           <Button onClick={handleConfirmBlock} sx={{ color: "#FF9800" }}>
@@ -293,9 +336,6 @@ const Users = () => {
 };
 
 export default Users;
-
-
-
 
 // import React, { useState, useEffect } from "react";
 // import {

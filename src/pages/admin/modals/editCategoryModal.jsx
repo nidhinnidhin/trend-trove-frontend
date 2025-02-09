@@ -10,11 +10,12 @@ import {
   Alert,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditCategoryModal = ({ open, onClose, category, handleCategoryUpdated }) => {
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false); // For spinner
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" }); // Snackbar state
+  const [loading, setLoading] = useState(false); 
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" }); 
 
   useEffect(() => {
     if (category) {
@@ -29,9 +30,9 @@ const EditCategoryModal = ({ open, onClose, category, handleCategoryUpdated }) =
     }
 
     try {
-      setLoading(true); // Show spinner
-      const response = await axios.put(
-        `http://localhost:9090/api/categories/edit/${category._id}`,
+      setLoading(true);
+      const response = await axiosInstance.put(
+        `/categories/edit/${category._id}`,
         { name }
       );
       handleCategoryUpdated(response.data.category);
@@ -41,7 +42,7 @@ const EditCategoryModal = ({ open, onClose, category, handleCategoryUpdated }) =
       console.error("Error updating category:", error);
       setSnackbar({ open: true, message: "Failed to update category. Please try again.", severity: "error" });
     } finally {
-      setLoading(false); // Hide spinner
+      setLoading(false); 
     }
   };
 
@@ -87,7 +88,7 @@ const EditCategoryModal = ({ open, onClose, category, handleCategoryUpdated }) =
               variant="contained"
               sx={{ bgcolor: "orange", "&:hover": { bgcolor: "darkorange" } }}
               onClick={handleUpdate}
-              disabled={loading} // Disable button while loading
+              disabled={loading} 
             >
               {loading ? (
                 <CircularProgress size={24} sx={{ color: "white" }} />
@@ -99,7 +100,6 @@ const EditCategoryModal = ({ open, onClose, category, handleCategoryUpdated }) =
         </Box>
       </Modal>
 
-      {/* Snackbar for success or error messages */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

@@ -13,6 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const modalStyle = {
   position: "absolute",
@@ -26,12 +27,16 @@ const modalStyle = {
   borderRadius: "8px",
 };
 
-const AddBrandModal = ({ open, handleClose, addBrandToList}) => {
+const AddBrandModal = ({ open, handleClose }) => {
   const [brandName, setBrandName] = useState("");
   const [brandImage, setBrandImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    type: "",
+  });
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -59,30 +64,33 @@ const AddBrandModal = ({ open, handleClose, addBrandToList}) => {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/brands/add", // Replace with your API endpoint
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      addBrandToList(response.data.brand);
-
-      setSnackbar({
-        open: true,
-        message: response.data.message || "Brand added successfully!",
-        type: "success",
+      const response = await axiosInstance.post("/brands/add", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      setBrandName("");
-      setBrandImage(null); // Clear image after successful submission
-      handleClose(); // Close the modal
+
+      if (response.status === 201) {
+
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Brand added successfully!",
+          type: "success",
+        });
+
+        setBrandName("");
+        setBrandImage(null);
+        handleClose();
+      } else {
+        throw new Error("Unexpected response status");
+      }
     } catch (err) {
+      console.error("Error adding brand:", err); // Debugging log
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || "Failed to add brand. Please try again.",
+        message:
+          err.response?.data?.message ||
+          "Failed to add brand. Please try again.",
         type: "error",
       });
     } finally {
@@ -142,7 +150,11 @@ const AddBrandModal = ({ open, handleClose, addBrandToList}) => {
               <img
                 src={URL.createObjectURL(brandImage)}
                 alt="Preview"
-                style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "150px",
+                  borderRadius: "8px",
+                }}
               />
               <IconButton
                 onClick={handleRemoveImage}

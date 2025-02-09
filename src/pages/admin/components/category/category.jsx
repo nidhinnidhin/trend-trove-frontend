@@ -23,6 +23,7 @@ import { Add, Block, Search, Edit as EditIcon } from "@mui/icons-material";
 import axios from "axios";
 import AddCategoryModal from "../../modals/addCategoryModal";
 import EditCategoryModal from "../../modals/editCategoryModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const Category = () => {
   const [categoryData, setCategoryData] = useState([]);
@@ -30,22 +31,19 @@ const Category = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); // Confirmation modal state
-  const [categoryToBlock, setCategoryToBlock] = useState(null); // Store category to be blocked
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [categoryToBlock, setCategoryToBlock] = useState(null);
 
-  // Fetch categories data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          "http://localhost:9090/api/admin/categories/get/admin"
-        );
+        const response = await axiosInstance.get("/categories/get/admin");
         if (response.data && Array.isArray(response.data.categories)) {
           setCategoryData(response.data.categories);
         } else {
@@ -114,8 +112,8 @@ const Category = () => {
   const handleConfirmBlock = async () => {
     if (!categoryToBlock) return;
     try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/categories/block/${categoryToBlock}`
+      const response = await axiosInstance.patch(
+        `/categories/block/${categoryToBlock}`
       );
       if (response.status === 200) {
         setCategoryData((prevData) =>
@@ -127,20 +125,20 @@ const Category = () => {
         );
         setSnackbarMessage(response.data.message);
         setSnackbarOpen(true);
-        setIsConfirmationModalOpen(false); // Close confirmation modal after blocking
+        setIsConfirmationModalOpen(false); 
       }
     } catch (error) {
       console.error("Error blocking category:", error);
       setSnackbarMessage("Failed to block category.");
       setSnackbarOpen(true);
-      setIsConfirmationModalOpen(false); // Close confirmation modal on error
+      setIsConfirmationModalOpen(false); 
     }
   };
 
   const handleUnBlockCategory = async (categoryId) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/admin/categories/unblock/${categoryId}`
+      const response = await axiosInstance.patch(
+        `/categories/unblock/${categoryId}`
       );
       if (response.status === 200) {
         setCategoryData((prevData) =>
@@ -375,10 +373,9 @@ const Category = () => {
       <Dialog
         open={isConfirmationModalOpen}
         onClose={handleConfirmationModalClose}
-        
       >
-        <DialogTitle >Confirm Block</DialogTitle>
-        <DialogContent >
+        <DialogTitle>Confirm Block</DialogTitle>
+        <DialogContent>
           Are you sure you want to block this category?
         </DialogContent>
         <DialogActions>
@@ -388,10 +385,7 @@ const Category = () => {
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleConfirmBlock}
-            sx={{ color: "#FF9800" }}
-          >
+          <Button onClick={handleConfirmBlock} sx={{ color: "#FF9800" }}>
             Confirm
           </Button>
         </DialogActions>
@@ -404,7 +398,11 @@ const Category = () => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: "100%" }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

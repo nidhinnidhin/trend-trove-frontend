@@ -85,7 +85,7 @@ const Filter = () => {
         borderRight: "1px solid #e0e0e0",
       }}
     >
-      <Box sx={{ marginBottom: 4 }}>
+      <Box sx={{ marginBottom: 4, marginTop: 10 }}>
         <Typography variant="h6" gutterBottom>
           Price Range
         </Typography>
@@ -107,6 +107,26 @@ const Filter = () => {
           <Typography>₹{filterState.priceRange[0]}</Typography>
           <Typography>₹{filterState.priceRange[1]}</Typography>
         </Box>
+      </Box>
+
+      <Box
+        sx={{ width: "100%", bgcolor: "background.paper", marginTop: "20px" }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Sort By
+        </Typography>
+        <Select
+          value={filterState.sortBy}
+          onChange={handleSortChange}
+          fullWidth
+          size="small"
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="default">Default</MenuItem>
+          <MenuItem value="asc">Name (A-Z)</MenuItem>
+          <MenuItem value="desc">Name (Z-A)</MenuItem>
+          <MenuItem value="popularity">Popularity</MenuItem>
+        </Select>
       </Box>
 
       {/* Categories, Gender, Rating, Discount sections */}
@@ -136,7 +156,7 @@ const Filter = () => {
           state: filterState.selectedDiscounts,
         },
       ].map((section) => (
-        <Accordion key={section.title}>
+        <Accordion key={section.title} defaultExpanded={true}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="subtitle1">{section.title}</Typography>
           </AccordionSummary>
@@ -164,25 +184,6 @@ const Filter = () => {
           </AccordionDetails>
         </Accordion>
       ))}
-
-      <Box sx={{ width: "100%", bgcolor: "background.paper", marginTop:"20px" }}>
-        <Typography variant="h6" gutterBottom>
-          Sort By
-        </Typography>
-        <Select
-          value={filterState.sortBy}
-          onChange={handleSortChange}
-          fullWidth
-          
-          size="small"
-          sx={{ mb: 2 }}
-        >
-          <MenuItem value="default">Default</MenuItem>
-          <MenuItem value="asc">Name (A-Z)</MenuItem>
-          <MenuItem value="desc">Name (Z-A)</MenuItem>
-          <MenuItem value="popularity">Popularity</MenuItem>
-        </Select>
-      </Box>
     </Box>
   );
 };

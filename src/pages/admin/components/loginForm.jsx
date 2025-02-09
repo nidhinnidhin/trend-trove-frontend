@@ -13,6 +13,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useRouter } from "next/router";
+import Cookies from "js-cookie"; // Import Cookies for storing token securely
 
 const LoginForm = () => {
   const router = useRouter();
@@ -22,52 +23,43 @@ const LoginForm = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
 
-    // Basic form validation
-    if (!form.checkValidity()) {
-      form.reportValidity();
+    if (!email.trim() || !password.trim()) {
+      setSnackbarMessage("Email and password are required.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
       return;
     }
 
-    const userData = {
-      email: email,
-      password: password,
-    };
-
-    setLoading(true); // Show spinner while loading
+    setLoading(true);
 
     try {
-      // Replace with your actual API endpoint
       const response = await axios.post(
         "http://localhost:9090/api/admin/adminlogin",
-        userData
+        { email, password },
+        { withCredentials: true }
       );
+
       setSnackbarMessage(response.data.message);
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
+
+      // Store token securely in cookies (httpOnly in backend)
+      Cookies.set("adminToken", response.data.token, { expires: 1 });
+
+      // Redirect to admin dashboard
       router.push("/admin/dashboard/dashboard");
-      // Save token or user data to localStorage/sessionStorage here
-      localStorage.setItem("admintoken", response.data.token);
     } catch (err) {
-      setSnackbarMessage(err.response?.data?.message);
+      setSnackbarMessage(err.response?.data?.message || "Login failed!");
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
     } finally {
-      setLoading(false); // Hide spinner after API call finishes
+      setLoading(false);
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword); // Toggle password visibility
   };
 
   return (
@@ -84,11 +76,7 @@ const LoginForm = () => {
       <Typography
         variant="h4"
         component="h1"
-        sx={{
-          marginBottom: 4,
-          fontWeight: "bold",
-          textAlign: "center",
-        }}
+        sx={{ marginBottom: 4, fontWeight: "bold", textAlign: "center" }}
       >
         Admin Login
       </Typography>
@@ -112,26 +100,12 @@ const LoginForm = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           sx={{
-            "& .MuiInputLabel-root": {
-              color: "gray",
-            },
             "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "gray",
-              },
-              "&:hover fieldset": {
-                borderColor: "orange",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "orange",
-              },
+              "& fieldset": { borderColor: "gray" },
+              "&:hover fieldset": { borderColor: "orange" },
+              "&.Mui-focused fieldset": { borderColor: "orange" },
             },
-            "& .MuiInputLabel-root": {
-              color: "gray",
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "#FFA500", // Orange placeholder on focus
-            },
+            "& .MuiInputLabel-root.Mui-focused": { color: "#FFA500" },
           }}
         />
 
@@ -140,15 +114,14 @@ const LoginForm = () => {
           required
           fullWidth
           margin="normal"
-          type={showPassword ? "text" : "password"} // Toggle between password and text
+          type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           InputProps={{
-            endAdornment: password.length > 0 && ( // Conditionally render eye icon if password length > 0
+            endAdornment: password.length > 0 && (
               <InputAdornment position="end">
                 <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={handleClickShowPassword} // Toggle password visibility
+                  onClick={() => setShowPassword(!showPassword)}
                   edge="end"
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -157,26 +130,12 @@ const LoginForm = () => {
             ),
           }}
           sx={{
-            "& .MuiInputLabel-root": {
-              color: "gray",
-            },
             "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "gray",
-              },
-              "&:hover fieldset": {
-                borderColor: "orange",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "orange",
-              },
+              "& fieldset": { borderColor: "gray" },
+              "&:hover fieldset": { borderColor: "orange" },
+              "&.Mui-focused fieldset": { borderColor: "orange" },
             },
-            "& .MuiInputLabel-root": {
-              color: "gray",
-            },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "#FFA500", // Orange placeholder on focus
-            },
+            "& .MuiInputLabel-root.Mui-focused": { color: "#FFA500" },
           }}
         />
 
@@ -189,32 +148,26 @@ const LoginForm = () => {
             marginTop: 2,
             alignSelf: "center",
             width: "50%",
-            "&:hover": {
-              backgroundColor: "#ff8c00",
-            },
+            "&:hover": { backgroundColor: "#ff8c00" },
           }}
           disabled={loading}
         >
           {loading ? (
-            <>
-              <CircularProgress size={20} sx={{ marginRight: 1 }} /> Logging
-              in...
-            </>
+            <CircularProgress size={20} sx={{ marginRight: 1 }} />
           ) : (
             "Login"
           )}
         </Button>
       </Box>
 
-      {/* Snackbar for success/error messages */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={handleCloseSnackbar}
+          onClose={() => setOpenSnackbar(false)}
           severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >

@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const modalStyle = {
   position: "absolute",
@@ -44,8 +45,8 @@ const AddCategoryModal = ({ open, handleClose, onCategoryAdded }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/categories/add", // Replace with your API endpoint
+      const response = await axiosInstance.post(
+        "/categories/add",
         { name: categoryName }
       );
       setSnackbar({

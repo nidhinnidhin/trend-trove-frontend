@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.7.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.0",
@@ -19,6 +20,8 @@
     "connect-mongo": "^5.1.0",
     "cropperjs": "^1.6.2",
     "express-session": "^1.18.1",
+    "framer-motion": "^12.4.1",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.474.0",
     "mongoose": "^8.9.5",
     "next": "15.1.4",

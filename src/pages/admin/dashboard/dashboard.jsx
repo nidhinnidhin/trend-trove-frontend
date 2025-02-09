@@ -30,6 +30,7 @@ import Brand from "../components/brand/brand";
 import { useRouter } from "next/router";
 import Products from "../components/products/products";
 import Orders from "../components/orders/orders";
+import Cookies from "js-cookie";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -38,17 +39,24 @@ const Dashboard = () => {
 
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if the admin token is present in localStorage
-    const token = localStorage.getItem("admintoken");
-
-    // If no token found, redirect to the login page
-    if (!token) {
-      router.push("/admin/authentication/login"); // Redirect to login page
-    } else {
-      router.push("/admin/dashboard/dashboard");
-    }
-  }, []);
+  // useEffect(() => {
+  //   const getCookie = (name) => {
+  //     const cookies = document.cookie.split("; ");
+  //     for (let cookie of cookies) {
+  //       const [key, value] = cookie.split("=");
+  //       if (key === name) return value;
+  //     }
+  //     return null;
+  //   };
+  
+  //   const token = getCookie("adminToken");
+  
+  //   if (!token) {
+  //     router.push("/admin/authentication/login");
+  //   } else {
+  //     router.push("/admin/dashboard/dashboard");
+  //   }
+  // }, []);
 
   const handleLogout = () => {
     setOpenLogoutDialog(true);

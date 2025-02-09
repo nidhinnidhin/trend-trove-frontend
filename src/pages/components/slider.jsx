@@ -1,54 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button } from "@mui/material";
-import banner1 from "../../media/banner1.png";
+import { Box, Button, IconButton } from "@mui/material";
+import banner1 from "../../media/banner3.png";
 import banner2 from "../../media/banner2.jpg";
+import banner3 from "../../media/banner1.png";
+import banner4 from "../../media/banner4.png";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 const slides = [
   {
     id: 1,
-    image: banner2,
+    image: banner1,
     alt: "Slide 1",
   },
   {
     id: 2,
-    image: banner1,
+    image: banner4,
     alt: "Slide 2",
+  },
+  {
+    id: 3,
+    image: banner2,
+    alt: "Slide 3",
+  },
+  {
+    id: 4,
+    image: banner3,
+    alt: "Slide 4",
   },
 ];
 
 const Slider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
-    }, 5000);
+    }, 8000);
 
-    return () => clearInterval(interval); // Cleanup interval on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const handleDotClick = (index) => {
-    setCurrentSlide(index); // Set the current slide to the clicked dot's index
+    setCurrentSlide(index);
+  };
+
+  const handlePrevClick = () => {
+    setCurrentSlide((prevSlide) =>
+      prevSlide === 0 ? slides.length - 1 : prevSlide - 1
+    );
+  };
+
+  const handleNextClick = () => {
+    setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
   };
 
   return (
     <Box
       sx={{
         position: "relative",
-        width: "100%",
+        // width: "100%",
         height: {
-          xs: "50vh", // Smaller height for extra-small devices
-          sm: "60vh", // Slightly larger for small devices
-          md: "75vh", // Medium height for tablets
-          lg: "92vh", // Full height for desktops
+          xs: "50vh",
+          sm: "60vh",
+          md: "75vh",
+          lg: "92vh",
         },
         overflow: "hidden",
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {/* Slides */}
       {slides.map((slide, index) => (
         <Box
+          key={slide.id}
           sx={{
             position: "absolute",
             top: 0,
@@ -58,38 +86,98 @@ const Slider = () => {
             transition: "left 0.5s ease-in-out",
           }}
         >
-          <Image key={slide.id} src={slide.image} layout="fill"/>
+          <motion.div
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "relative",
+            }}
+            animate={{
+              filter: hovered ? "blur(4px)" : "blur(0px)",
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <Image
+              src={slide.image}
+              alt={slide.alt}
+              layout="fill"
+              objectFit="cover"
+              quality={100}
+            />
+          </motion.div>
         </Box>
       ))}
 
-      {/* Shop Button */}
-      <Button
-        variant="contained"
+      {/* Navigation Arrows */}
+      <IconButton
+        onClick={handlePrevClick}
         sx={{
           position: "absolute",
-          bottom: "10%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          backgroundColor: "black",
+          top: "50%",
+          left: "16px",
+          transform: "translateY(-50%)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
           color: "white",
-          padding: {
-            xs: "8px 16px", // Smaller padding for small devices
-            sm: "10px 20px",
-            md: "12px 24px", // Larger padding for bigger devices
-          },
-          borderRadius: "20px",
-          fontSize: {
-            xs: "12px", // Smaller font size for extra-small devices
-            sm: "14px",
-            md: "16px",
-          },
           "&:hover": {
-            backgroundColor: "gray",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
           },
         }}
       >
-        Shop
-      </Button>
+        <ChevronLeft />
+      </IconButton>
+      <IconButton
+        onClick={handleNextClick}
+        sx={{
+          position: "absolute",
+          top: "50%",
+          right: "16px",
+          transform: "translateY(-50%)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+          },
+        }}
+      >
+        <ChevronRight />
+      </IconButton>
+
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "40%",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+            }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Link href="/productListing/explore">
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  color: "white",
+                  padding: "16px 32px",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  borderRadius: "30px",
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.9)",
+                  },
+                }}
+              >
+                Explore More Products
+              </Button>
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pagination Dots */}
       <Box
@@ -105,15 +193,18 @@ const Slider = () => {
         {slides.map((_, index) => (
           <Box
             key={index}
-            onClick={() => handleDotClick(index)} // Update currentSlide on dot click
+            onClick={() => handleDotClick(index)}
             sx={{
-              width: "10px",
-              height: "10px",
+              width: "12px",
+              height: "12px",
               borderRadius: "50%",
               backgroundColor: currentSlide === index ? "black" : "white",
               border: "1px solid black",
               transition: "background-color 0.3s ease",
               cursor: "pointer",
+              "&:hover": {
+                backgroundColor: currentSlide === index ? "black" : "gray",
+              },
             }}
           />
         ))}

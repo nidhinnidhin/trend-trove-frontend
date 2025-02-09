@@ -12,18 +12,19 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditBrandModal = ({ open, onClose, brand, handleBrandUpdated }) => {
   console.log(brand);
   const [name, setName] = useState("");
-  const [image, setImage] = useState(""); // For storing image URL or file
-  const [selectedImage, setSelectedImage] = useState(null); // For previewing the image
-  const [loading, setLoading] = useState(false); // For spinner
+  const [image, setImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
-  }); // Snackbar state
+  });
 
   useEffect(() => {
     if (brand) {
@@ -35,8 +36,8 @@ const EditBrandModal = ({ open, onClose, brand, handleBrandUpdated }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedImage(URL.createObjectURL(file)); // Preview the selected image
-      setImage(file); // Set the file to be submitted
+      setSelectedImage(URL.createObjectURL(file));
+      setImage(file);
     }
   };
 
@@ -51,18 +52,19 @@ const EditBrandModal = ({ open, onClose, brand, handleBrandUpdated }) => {
     }
 
     try {
-      setLoading(true); // Show spinner
+      setLoading(true);
       const formData = new FormData();
       formData.append("name", name);
       if (image instanceof File) {
-        formData.append("image", image); // Append image if it's a file
+        formData.append("image", image);
       }
 
-      const response = await axios.put(
-        `http://localhost:9090/api/brands/edit/${brand._id}`, 
+      const response = await axiosInstance.patch(
+        `/brands/edit/${brand._id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
+
       handleBrandUpdated(response.data.brand);
       setSnackbar({
         open: true,
@@ -78,7 +80,7 @@ const EditBrandModal = ({ open, onClose, brand, handleBrandUpdated }) => {
         severity: "error",
       });
     } finally {
-      setLoading(false); // Hide spinner
+      setLoading(false);
     }
   };
 
@@ -133,7 +135,7 @@ const EditBrandModal = ({ open, onClose, brand, handleBrandUpdated }) => {
               type="file"
               onChange={handleImageChange}
             />
-            <label htmlFor="upload-image" style={{cursor:'pointer'}}>
+            <label htmlFor="upload-image" style={{ cursor: "pointer" }}>
               <IconButton color="primary" component="span">
                 <CloudUploadIcon />
               </IconButton>

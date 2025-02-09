@@ -8,12 +8,15 @@ import {
   CardContent,
   Typography,
   Chip,
+  CircularProgress,
+  Pagination,
 } from "@mui/material";
 import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Filter from "../components/filter";
 import { useFilter } from "@/context/filterContext";
+import { motion } from "framer-motion";
 
 const SearchResults = () => {
   const router = useRouter();
@@ -104,104 +107,174 @@ const SearchResults = () => {
     }
   };
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const handleProductDetail = (id) => {
+    router.push(`/product/${id}`);
+  };
+
   const filteredProducts = sortProducts(filterProducts(products));
 
   return (
     <>
       <Header />
-      <Box sx={{ display: "flex" }}>
-        <Filter />
-        <Box
+      <Box
+        sx={{
+          width: "100%",
+          margin: "0 auto",
+          padding: "20px",
+          minHeight: "100vh",
+          backgroundColor: "#f5f5f5",
+          display:"flex"
+        }}
+      >
+        <Filter/>
+        <Box>
+        <Typography
+          variant="h4"
+          align="center"
+          gutterBottom
           sx={{
-            width: "90%",
-            backgroundColor: "#f9f9f9",
-            padding: "20px",
-            minHeight: "100vh",
+            fontWeight: "bold",
+            color: "#333",
+            marginBottom: "30px",
+            fontFamily: "'Poppins', sans-serif",
           }}
         >
-          <Typography variant="h4" align="center" gutterBottom>
-            Search Results
-          </Typography>
+          All Products
+        </Typography>
 
-          {loading ? (
-            <Typography variant="h6" align="center">
-              Loading...
-            </Typography>
-          ) : (
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "50vh",
+            }}
+          >
+            <CircularProgress sx={{ color: "#ff6f61" }} />
+          </Box>
+        ) : (
+          <>
             <Grid container spacing={2}>
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((product, index) => (
                 <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      boxShadow: "0",
-                      border: "0.5px solid lightgray",
-                      "&:hover": { boxShadow: 3 },
-                    }}
+                  <motion.div
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
-                    <CardMedia
-                      component="img"
-                      image={product.image}
-                      alt={product.title}
+                    <Card
                       sx={{
-                        height: 320,
-                        padding: "10px",
-                        objectFit: "contain",
-                        cursor: "pointer",
-                        transition: "transform 0.3s",
-                        "&:hover": { transform: "scale(1.05)" },
+                        height: "550px",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: "10px",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        transition: "transform 0.3s, box-shadow 0.3s",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+                        },
                       }}
-                      onClick={() => router.push(`/product/${product.id}`)}
-                    />
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" gutterBottom>
-                        {product.title.split('').slice(0,30)}...
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
+                    >
+                      <CardMedia
+                        component="img"
+                        image={product.image}
+                        alt={product.title}
                         sx={{
-                          height: "40px",
-                          overflow: "hidden",
-                          marginBottom: 2,
+                          height: 320,
+                          padding: "10px",
+                          objectFit: "contain",
+                          cursor: "pointer",
+                          borderRadius: "10px 10px 0 0",
                         }}
-                      >
-                        {product.description}
-                      </Typography>
-                      <Chip
-                        label={`${product.rating || "No"} Rating`}
-                        size="small"
-                        sx={{
-                          backgroundColor: "green",
-                          color: "white",
-                          fontSize: "0.65rem",
-                          margin: "5px 0px",
-                          borderRadius: "2px",
-                        }}
+                        onClick={() => handleProductDetail(product.id)}
                       />
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                          ₹{product.price}
+
+                      <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
+                        <Typography
+                          variant="h6"
+                          gutterBottom
+                          sx={{
+                            fontWeight: "600",
+                            fontFamily: "'Poppins', sans-serif",
+                            color: "#333",
+                          }}
+                        >
+                          {product.title.slice(0, 30)}...
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Variants: {product.variantsCount}
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            height: "40px",
+                            overflow: "hidden",
+                            marginBottom: 2,
+                            fontFamily: "'Open Sans', sans-serif",
+                          }}
+                        >
+                          {product.description}
                         </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                        <Chip
+                          label={`${product.rating || "No"} Rating`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#ff6f61",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            margin: "5px 0",
+                            borderRadius: "4px",
+                            fontFamily: "'Poppins', sans-serif",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: "10px",
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: "bold", color: "#333" }}
+                          >
+                            ₹{product.price}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontFamily: "'Open Sans', sans-serif" }}
+                          >
+                            Variants: {product.variantsCount}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 </Grid>
               ))}
             </Grid>
-          )}
-        </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "40px",
+                marginBottom: "20px",
+              }}
+            >
+              
+            </Box>
+          </>
+        )}
+      </Box>
       </Box>
       <Footer />
     </>

@@ -5,7 +5,6 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -41,6 +40,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
+import { motion } from "framer-motion";
+import LocalMallIcon from "@mui/icons-material/LocalMall"; // Custom cart icon
+import { ShoppingCartIcon } from "lucide-react";
 
 const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -112,7 +114,6 @@ const Header = () => {
               Authorization: `Bearer ${token}`,
             },
           });
-          console.log("User Profile:", response.data.user);
           setUserProfile(response.data.user.image || "");
           setUser(response.data.user);
         } catch (error) {
@@ -130,12 +131,10 @@ const Header = () => {
     };
 
     fetchProfile();
-  }, [token]); // Trigger fetchProfile when the token changes
+  }, [token]);
 
   const handleProfileClick = () => {
     router.push("/profile/userprofile");
-    // setIsProfileModalOpen(true);
-    // handleMenuClose();
   };
 
   const handleDrawerToggle = () => {
@@ -156,7 +155,7 @@ const Header = () => {
 
   const handleLogoutConfirm = () => {
     localStorage.removeItem("usertoken");
-    setToken(null); // Clear token state
+    setToken(null);
     setIsLoggedIn(false);
 
     setTimeout(() => {
@@ -179,6 +178,7 @@ const Header = () => {
     setUserProfile(updatedUser.image);
     setUser(updatedUser);
   };
+
   const handleSearchToggle = () => {
     setIsSearchOpen((prev) => !prev);
   };
@@ -215,9 +215,9 @@ const Header = () => {
       <AppBar
         position="fixed"
         sx={{
-          backgroundColor: "#f8f8f9",
-          color: "gray",
-          boxShadow: "none",
+          backgroundColor: "#ffffff",
+          color: "#333",
+          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         }}
       >
         <Toolbar
@@ -231,9 +231,15 @@ const Header = () => {
             paddingX: isMobile ? 2 : 0,
           }}
         >
-          <Link href="/">
-            <Image src={logo} height={50} width={150} />
-          </Link>
+          {/* Logo with Animation */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <Link href="/">
+              <Image src={logo} height={50} width={150} alt="Logo" />
+            </Link>
+          </motion.div>
 
           {isMobile && (
             <IconButton
@@ -259,56 +265,74 @@ const Header = () => {
                 alignItems: "center",
               }}
             >
-              <Typography variant="body1">
-                <Link
-                  href="/productListing/explore"
-                  style={{ textDecoration: "none", color: "gray" }}
-                >
-                  Explore
-                </Link>
-              </Typography>
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Category
-              </Typography>
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Brands
-              </Typography>
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Cart
-              </Typography>
-              <Typography variant="body1" sx={{ cursor: "pointer" }}>
-                Wishlist
-              </Typography>
+              {["Explore", "Category", "Brands", "Cart", "Wishlist"].map(
+                (item, index) => (
+                  <Typography
+                    key={index}
+                    variant="body1"
+                    sx={{
+                      cursor: "pointer",
+                      position: "relative",
+                      "&:hover::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: "-5px",
+                        left: 0,
+                        width: "100%",
+                        height: "2px",
+                        backgroundColor: "orange",
+                        transform: "scaleX(1)",
+                        transition: "transform 0.3s ease",
+                      },
+                    }}
+                  >
+                    <Link
+                      href={
+                        item === "Explore"
+                          ? "/productListing/explore"
+                          : `/${item.toLowerCase()}`
+                      }
+                      style={{ textDecoration: "none", color: "#333" }}
+                    >
+                      {item}
+                    </Link>
+                  </Typography>
+                )
+              )}
             </Box>
           )}
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <IconButton color="inherit" onClick={handleSearchToggle}>
               <Tooltip title="Search products">
-                <SearchIcon sx={{ fontSize: "30px" }} />
+                <SearchIcon sx={{ fontSize: "30px", color: "#333" }} />
               </Tooltip>
             </IconButton>
             {isLoggedIn ? (
               <>
                 <Link href="/cart/cartpage">
-                  <IconButton size="large" color="black">
-                    <Badge badgeContent={cartLength} color="error">
+                <Badge badgeContent={cartLength} color="error">
                       <ShoppingCartIcon />
                     </Badge>
-                  </IconButton>
                 </Link>
                 <IconButton size="large" color="inherit">
                   <Badge badgeContent={2} color="error">
-                    <FavoriteIcon />
+                    <FavoriteIcon sx={{ fontSize: "30px" }} />
                   </Badge>
                 </IconButton>
                 <IconButton
                   size="large"
                   color="inherit"
                   onClick={handleMenuClick}
+                  sx={{
+                    "&:hover": {
+                      transform: "scale(1.1)",
+                      transition: "transform 0.3s ease",
+                    },
+                  }}
                 >
                   <Avatar
-                    alt="Remy Sharp"
+                    alt="User Avatar"
                     src={userProfile || "/default-avatar.png"}
                   />
                 </IconButton>
@@ -319,20 +343,27 @@ const Header = () => {
                   onClose={handleMenuClose}
                 >
                   <MenuItem onClick={handleProfileClick}>My Profile</MenuItem>
-                  <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
                   <Link
                     href="/orders/orders"
                     style={{ textDecoration: "none", color: "black" }}
                   >
                     <MenuItem>Orders</MenuItem>
                   </Link>
+                  <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
                 </Menu>
               </>
             ) : (
               <Button
                 variant="outlined"
                 color="primary"
-                sx={{ borderColor: "orange", color: "orange" }}
+                sx={{
+                  borderColor: "orange",
+                  color: "orange",
+                  "&:hover": {
+                    backgroundColor: "orange",
+                    color: "white",
+                  },
+                }}
                 onClick={() => router.push("/authentication/loginSignup")}
               >
                 Login
@@ -340,20 +371,18 @@ const Header = () => {
             )}
           </Box>
         </Toolbar>
-      </AppBar>
-      {/* Search Bar */}
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
+
+        {/* Search Bar */}
         <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit>
           <Box
             sx={{
-              width: "70%",
+              width: "100%",
               p: 2,
-              backgroundColor: "#f8f8f9",
-              borderRadius: "10px",
-              position: "fixed",
+              backgroundColor: "#ffffff",
+              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+              position: "absolute",
               top: 64,
               zIndex: 1100,
-              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
             }}
           >
             <TextField
@@ -363,7 +392,7 @@ const Header = () => {
               value={searchQuery}
               onChange={handleSearchChange}
               sx={{
-                backgroundColor: "#ffffff",
+                backgroundColor: "#f8f8f8",
                 borderRadius: "8px",
                 "& .MuiOutlinedInput-root": {
                   "& fieldset": {
@@ -376,28 +405,22 @@ const Header = () => {
                     borderColor: "#000",
                   },
                 },
-                "& input": {
-                  color: "#333",
-                },
-                "&::placeholder": {
-                  color: "#757575",
-                },
               }}
             />
             {searchResults.length > 0 && (
               <List
                 sx={{
-                  backgroundColor: "#f8f8f8",
+                  backgroundColor: "#ffffff",
                   mt: 1,
                   borderRadius: "8px",
-                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
                 }}
               >
                 {searchResults.map((product) => (
                   <ListItem
                     key={product._id}
                     button
-                    sx={{ border: "0.5px solid lightgray", cursor: "pointer" }}
+                    sx={{ borderBottom: "1px solid #f0f0f0" }}
                     onClick={handleSearchItemClick}
                   >
                     <SearchIcon sx={{ color: "gray", marginRight: "10px" }} />
@@ -408,8 +431,9 @@ const Header = () => {
             )}
           </Box>
         </Slide>
-      </Box>
+      </AppBar>
 
+      {/* Drawer for Mobile */}
       <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerToggle}>
         <Box
           sx={{ width: 250 }}
@@ -417,29 +441,18 @@ const Header = () => {
           onClick={handleDrawerToggle}
         >
           <List>
-            <ListItem button>
-              <ListItemText primary="Products" />
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText primary="Category" />
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText primary="Brands" />
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText primary="Cart" />
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText primary="Wishlist" />
-            </ListItem>
+            {["Products", "Category", "Brands", "Cart", "Wishlist"].map(
+              (text, index) => (
+                <ListItem button key={text}>
+                  <ListItemText primary={text} />
+                </ListItem>
+              )
+            )}
           </List>
         </Box>
       </Drawer>
 
+      {/* Logout Dialog */}
       <Dialog
         open={openLogoutDialog}
         onClose={handleLogoutCancel}
@@ -447,7 +460,7 @@ const Header = () => {
           backgroundColor: "rgba(0, 0, 0, 0.5)",
         }}
       >
-        <Grid sx={{ backgroundColor: "transparant", color: "black" }}>
+        <Grid sx={{ backgroundColor: "transparent", color: "black" }}>
           <DialogTitle>Confirm Logout</DialogTitle>
           <DialogContent>Are you sure you want to logout?</DialogContent>
           <DialogActions>

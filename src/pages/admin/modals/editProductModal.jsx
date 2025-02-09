@@ -74,7 +74,7 @@ const EditProductModal = ({
 
     try {
       const response = await axios.put(
-        `http://localhost:9090/api/products/update/${product._id}`,
+        `http://localhost:9090/api/admin/products/update/${product._id}`,
         updatedProductData
       );
 

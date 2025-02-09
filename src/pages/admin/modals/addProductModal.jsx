@@ -74,7 +74,7 @@ const AddProductModal = ({ open, onClose }) => {
         };
 
         const response = await axios.post(
-            "http://localhost:9090/api/products/add",
+            "http://localhost:9090/api/admin/products/add",
             productPayload,
             { headers: { "Content-Type": "application/json" } }
         );

@@ -112,7 +112,7 @@ const EditVariantModal = ({ open, onClose, variant }) => {
 
     try {
       await axios.put(
-        `http://localhost:9090/api/variants/variant/edit/${variant._id}`,
+        `http://localhost:9090/api/admin/variants/variant/edit/${variant._id}`,
         updatedData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

@@ -147,31 +147,37 @@ const Orders = () => {
         </Typography>
       </Box>
 
-      {/* Orders List */}
       {orders
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((order) => (
           <Accordion key={order.orderId} sx={{ mb: 2, boxShadow: 3 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Box sx={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#3f51b5" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", color: "#3f51b5" }}
+                  >
                     Order ID: {order.orderId}
                   </Typography>
                   <Typography variant="body1" sx={{ color: "#757575" }}>
-                    Customer: {order.customer.name} ({order.customer.email})
+                    Customer: {order.customer.name} {order.customer.email}
                   </Typography>
                   <Typography variant="body1" sx={{ color: "#757575" }}>
                     Total Amount: ₹{order.totalAmount}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: "#757575" }}>
-                    Status: {order.orderStatus}
                   </Typography>
                 </Box>
                 <Button
                   variant="contained"
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent accordion from expanding/collapsing
+                    e.stopPropagation();
                     handleOrderDetailClick(order);
                   }}
                   sx={{
@@ -189,11 +195,21 @@ const Orders = () => {
                 <Table>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#3f51b5" }}>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Product</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Quantity</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Price</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Status</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Actions</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Product
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Quantity
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Price
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Status
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -204,16 +220,16 @@ const Orders = () => {
                         </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>₹{item.price}</TableCell>
-                        <TableCell>{item.status}</TableCell>
+                        <TableCell>{order.orderStatus}</TableCell>
                         <TableCell>
                           <Button
                             variant="contained"
                             startIcon={<EditIcon />}
                             onClick={() => handleEditClick(order, item)}
                             sx={{
-                              backgroundColor: '#ff9800',
-                              color: 'white',
-                              '&:hover': { backgroundColor: '#ffb74d' },
+                              backgroundColor: "#ff9800",
+                              color: "white",
+                              "&:hover": { backgroundColor: "#ffb74d" },
                             }}
                           >
                             Edit Status
@@ -228,7 +244,6 @@ const Orders = () => {
           </Accordion>
         ))}
 
-      {/* Pagination */}
       <TablePagination
         component="div"
         count={orders.length}
@@ -239,7 +254,6 @@ const Orders = () => {
         sx={{ mt: 2, color: "#3f51b5" }}
       />
 
-      {/* Edit Status Modal */}
       <Dialog open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <DialogTitle sx={{ backgroundColor: "#3f51b5", color: "#ffffff" }}>
           Update Item Status
@@ -261,7 +275,11 @@ const Orders = () => {
           <Button onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
           <Button
             onClick={() =>
-              handleStatusChange(selectedOrder?.orderId, selectedItem?.itemId, newStatus)
+              handleStatusChange(
+                selectedOrder?.orderId,
+                selectedItem?.itemId,
+                newStatus
+              )
             }
             color="primary"
             variant="contained"
@@ -271,7 +289,6 @@ const Orders = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Order Detail Modal */}
       <Dialog
         open={isOrderDetailModalOpen}
         onClose={() => setIsOrderDetailModalOpen(false)}
@@ -284,26 +301,28 @@ const Orders = () => {
         <DialogContent>
           {selectedOrder && (
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, color: "#3f51b5" }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: "bold", mb: 2, color: "#3f51b5" }}
+              >
                 Order ID: {selectedOrder.orderId}
               </Typography>
               <Typography variant="body1">
-                <strong>Customer:</strong> {selectedOrder.customer.name} (
-                {selectedOrder.customer.email})
+                <strong>Customer:</strong> {selectedOrder.customer.name} 
+                {selectedOrder.customer.email}
               </Typography>
               <Typography variant="body1">
                 <strong>Total Amount:</strong> ₹{selectedOrder.totalAmount}
               </Typography>
               <Typography variant="body1">
-                <strong>Status:</strong> {selectedOrder.orderStatus}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Created At:</strong>{" "}
+                <strong>Ordered at:</strong>{" "}
                 {new Date(selectedOrder.createdAt).toLocaleString()}
               </Typography>
 
-              {/* Shipping Address */}
-              <Typography variant="h6" sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}>
+              <Typography
+                variant="h6"
+                sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}
+              >
                 Shipping Address
               </Typography>
               <Typography variant="body1">
@@ -320,31 +339,45 @@ const Orders = () => {
                 {selectedOrder.shippingAddress.mobileNumber}
               </Typography>
 
-              {/* Products */}
-              <Typography variant="h6" sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}>
+              <Typography
+                variant="h6"
+                sx={{ mt: 3, fontWeight: "bold", color: "#3f51b5" }}
+              >
                 Products
               </Typography>
               <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 3 }}>
                 <Table>
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#3f51b5" }}>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Product</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Quantity</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Price</TableCell>
-                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>Status</TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Product
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Quantity
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Price
+                      </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Status
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {selectedOrder.items.map((item) => (
-                      <TableRow key={item.itemId}>
-                        <TableCell>
-                          {item.productName} - {item.color} ({item.size})
-                        </TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>₹{item.price}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                      </TableRow>
-                    ))}
+                    {selectedOrder.items.map((item) => {
+                      console.log("Orderrrrr", item);
+                      
+                      return (
+                        <TableRow key={item.itemId}>
+                          <TableCell>
+                            {item.productName} - {item.color} ({item.size})
+                          </TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>₹{item.price}</TableCell>
+                          <TableCell>{selectedOrder.orderStatus}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -358,7 +391,6 @@ const Orders = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
