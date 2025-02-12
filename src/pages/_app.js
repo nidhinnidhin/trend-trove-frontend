@@ -9,21 +9,21 @@ import store from "../redux/store";
 const theme = createTheme();
 
 export default function App({ Component, pageProps }) {
-  const router = useRouter();
+  // const router = useRouter();
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("usertoken");
+  // useEffect(() => {
+  //   const storedToken = localStorage.getItem("usertoken");
 
-    const googleToken = router.query.token;
+  //   const googleToken = router.query.token;
     
-    if (googleToken) {
-      localStorage.setItem("usertoken", googleToken);
-      router.push(router.pathname); 
-    }
-    if (storedToken && (router.pathname === "/authentication/loginSignup" || router.pathname === "/authentication/login")) {
-      router.push("/");
-    }
-  }, [router.pathname, router.query.token]);
+  //   if (googleToken) {
+  //     localStorage.setItem("usertoken", googleToken);
+  //     router.push(router.pathname); 
+  //   }
+  //   if (storedToken && (router.pathname === "/authentication/loginSignup" || router.pathname === "/authentication/login")) {
+  //     router.push("/");
+  //   }
+  // }, [router.pathname, router.query.token]);
 
   return (
     <Provider store={store}>

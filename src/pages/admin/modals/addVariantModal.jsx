@@ -12,6 +12,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete"; // For the delete icon
 import axios from "axios"; // Import axios for making API requests
 import AddSizeVariantModal from "./addSizeVariantModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const AddVariantModal = ({ open, onClose, productId }) => {
   const [color, setColor] = useState("");
@@ -63,8 +64,8 @@ const AddVariantModal = ({ open, onClose, productId }) => {
     subImages.forEach((img) => formData.append("subImages", img));
   
     try {
-      const response = await axios.post(
-        'http://localhost:9090/api/variants/color/add',  // Use the same URL as before (no need to pass productId in the URL)
+      const response = await axiosInstance.post(
+        '/variants/color/add',  // Use the same URL as before (no need to pass productId in the URL)
         formData,
         {
           headers: {

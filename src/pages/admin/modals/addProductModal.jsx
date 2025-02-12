@@ -10,22 +10,37 @@ import {
   InputLabel,
   FormControl,
   Typography,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import axios from "axios";
 import AddVariantModal from "./addVariantModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
-const AddProductModal = ({ open, onClose }) => {
+const AddProductModal = ({ open, onClose, onProductAdded }) => {
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [showVariantModal, setShowVariantModal] = useState(false); // State to control AddVariantModal
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const handleOpenVariantModal = () => {
-    setShowVariantModal(true); // Open the AddVariantModal
+    setShowVariantModal(true);
   };
 
   const handleCloseVariantModal = () => {
-    setShowVariantModal(false); // Close the AddVariantModal
+    setShowVariantModal(false);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const {
@@ -33,10 +48,10 @@ const AddProductModal = ({ open, onClose }) => {
     handleSubmit,
     formState: { errors },
     setValue,
+    reset,
   } = useForm();
 
   useEffect(() => {
-    // Fetch brands and categories when the modal opens
     if (open) {
       fetchCategories();
       fetchBrands();
@@ -46,53 +61,72 @@ const AddProductModal = ({ open, onClose }) => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get("http://localhost:9090/api/categories");
-      setCategories(response.data.categories); // Assuming response.data.categories is an array
+      setCategories(response.data.categories);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      setSnackbar({
+        open: true,
+        message: "Error fetching categories",
+        severity: "error",
+      });
     }
   };
 
   const fetchBrands = async () => {
     try {
       const response = await axios.get("http://localhost:9090/api/brands");
-      setBrands(response.data); // Assuming response.data is an array of brands
+      setBrands(response.data);
     } catch (error) {
-      console.error("Error fetching brands:", error);
+      setSnackbar({
+        open: true,
+        message: "Error fetching brands",
+        severity: "error",
+      });
     }
   };
 
   const onSubmit = async (data) => {
     try {
-        const productPayload = {
-            name: data.productName,
-            description: data.description,
-            brand: brands.find((brand) => brand.name === data.brand)?._id,
-            category: categories.find((category) => category.name === data.category)?._id,
-            gender: data.gender,
-            pattern: data.pattern,
-            material: data.material,
-        };
+      const productPayload = {
+        name: data.productName,
+        description: data.description,
+        brand: brands.find((brand) => brand.name === data.brand)?._id,
+        category: categories.find((category) => category.name === data.category)
+          ?._id,
+        gender: data.gender,
+        pattern: data.pattern,
+        material: data.material,
+      };
 
-        const response = await axios.post(
-            "http://localhost:9090/api/admin/products/add",
-            productPayload,
-            { headers: { "Content-Type": "application/json" } }
-        );
+      const response = await axiosInstance.post(
+        "/products/add",
+        productPayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-        if (response.status === 201) {
-            alert("Product added successfully!");
-            setShowVariantModal(true); // Open the AddVariantModal after product creation
-            onClose(); // Close the product modal
-        } else {
-            console.error("Failed to add product:", response.data);
-            alert("Failed to add product. Please try again.");
+      if (response.status === 201) {
+        setSnackbar({
+          open: true,
+          message: "Product added successfully!",
+          severity: "success",
+        });
+
+        // Call the callback to update parent component
+        if (onProductAdded) {
+          onProductAdded(response.data.product);
         }
-    } catch (error) {
-        console.error("Error while adding product:", error);
-        alert("An error occurred while adding the product.");
-    }
-};
 
+        reset(); // Reset form
+        onClose(); // Close modal
+        setShowVariantModal(true);
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Failed to add product. Please try again.",
+        severity: "error",
+      });
+    }
+  };
 
   return (
     <>
@@ -253,23 +287,6 @@ const AddProductModal = ({ open, onClose }) => {
                   )}
                 />
               </Grid>
-
-              {/* Add Variant Button */}
-              {/* <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  onClick={handleOpenVariantModal} // Open variant modal on click
-                  fullWidth
-                  sx={{
-                    backgroundColor: "orange",
-                    "&:hover": { backgroundColor: "darkorange" },
-                  }}
-                >
-                  Add Variant
-                </Button>
-              </Grid> */}
-
-              {/* Submit Button */}
               <Grid item xs={12}>
                 <Button
                   variant="contained"
@@ -288,11 +305,21 @@ const AddProductModal = ({ open, onClose }) => {
         </Box>
       </Modal>
 
-      {/* AddVariantModal */}
-      <AddVariantModal
-        open={showVariantModal} // Control the visibility
-        onClose={handleCloseVariantModal} // Close the variant modal
-      />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

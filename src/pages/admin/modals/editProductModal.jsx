@@ -12,10 +12,13 @@ import {
   Select,
   MenuItem,
   Grid,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import Image from "next/image";
 import { Edit } from "@mui/icons-material";
 import EditVariantModal from "./editVariantModel";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditProductModal = ({
   open,
@@ -32,6 +35,7 @@ const EditProductModal = ({
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openVariantModal, setOpenVariantModal] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   useEffect(() => {
     if (product) {
@@ -44,7 +48,6 @@ const EditProductModal = ({
     }
   }, [product]);
 
-  // Fetch variants from API
   const fetchVariants = async (productId) => {
     setIsLoading(true);
     try {
@@ -53,6 +56,11 @@ const EditProductModal = ({
       );
       setVariants(response.data.variants || []);
     } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Error fetching variants.",
+        severity: "error",
+      });
       console.error("Error fetching variants:", error);
     }
     setIsLoading(false);
@@ -73,25 +81,36 @@ const EditProductModal = ({
     };
 
     try {
-      const response = await axios.put(
-        `http://localhost:9090/api/admin/products/update/${product._id}`,
+      const response = await axiosInstance.put(
+        `/products/update/${product._id}`,
         updatedProductData
       );
 
       if (response.status === 200) {
-        alert("Product updated successfully");
+        setSnackbar({
+          open: true,
+          message: "Product updated successfully!",
+          severity: "success",
+        });
         handleProductUpdated(response.data.product);
         handleClose();
       }
     } catch (error) {
-      console.error("Error updating product:", error);
-      alert("There was an error updating the product.");
+      setSnackbar({
+        open: true,
+        message: "Error updating product.",
+        severity: "error",
+      });
     }
-  };  
+  };
 
   return (
     <>
-      <Modal open={open} onClose={handleClose} aria-labelledby="edit-product-modal">
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="edit-product-modal"
+      >
         <Box
           sx={{
             width: "60%",
@@ -151,7 +170,6 @@ const EditProductModal = ({
             />
           </Box>
 
-          {/* Select Variant Dropdown */}
           <FormControl fullWidth sx={{ marginTop: 3 }}>
             <InputLabel>Select Variant</InputLabel>
             <Select
@@ -169,15 +187,30 @@ const EditProductModal = ({
               ) : (
                 variants.map((variant) => (
                   <MenuItem key={variant._id} value={variant._id}>
-                    <Grid container alignItems="center" justifyContent="space-between" spacing={2}>
+                    <Grid
+                      container
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={2}
+                    >
                       <Grid item>
-                        <Image src={variant.colorImage} alt="Color" width={40} height={40} />
+                        <Image
+                          src={variant.colorImage}
+                          alt="Color"
+                          width={40}
+                          height={40}
+                        />
                       </Grid>
                       <Grid item xs>
                         <Typography variant="body1">{variant.color}</Typography>
                       </Grid>
                       <Grid item>
-                        <Image src={variant.mainImage} alt="Main" width={50} height={50} />
+                        <Image
+                          src={variant.mainImage}
+                          alt="Main"
+                          width={50}
+                          height={50}
+                        />
                       </Grid>
                       <Grid item>
                         <Button
@@ -214,12 +247,25 @@ const EditProductModal = ({
         </Box>
       </Modal>
 
-      {/* Edit Variant Modal */}
       <EditVariantModal
         open={openVariantModal}
         onClose={() => setOpenVariantModal(false)}
         variant={selectedVariant}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

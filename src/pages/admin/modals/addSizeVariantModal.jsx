@@ -1,9 +1,19 @@
 import React, { useState } from "react";
-import { Modal, Box, TextField, Button, Grid, Typography, Checkbox, FormControlLabel } from "@mui/material";
+import {
+  Modal,
+  Box,
+  TextField,
+  Button,
+  Grid,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const AddSizeVariantModal = ({ open, onClose, variantId }) => {
-    console.log("variantIddddd",variantId);
-    
+  console.log("variantIddddd", variantId);
+
   const [size, setSize] = useState("");
   const [price, setPrice] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
@@ -25,21 +35,18 @@ const AddSizeVariantModal = ({ open, onClose, variantId }) => {
 
     console.log("Size Variant Data:", sizeVariantData);
 
-    // Send the data to the server (example using fetch)
-    fetch("http://localhost:9090/api/sizes/size/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(sizeVariantData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Server response:", data);
-        onClose(); // Close the modal after successful submission
+    axiosInstance
+      .post("/sizes/size/add", sizeVariantData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((response) => {
+        console.log("Server response:", response.data);
+        onClose(); 
       })
       .catch((error) => {
-        console.error("Error:", error);
+        console.error("Error:", error.response?.data || error.message);
       });
   };
 

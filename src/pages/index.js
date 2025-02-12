@@ -7,9 +7,11 @@ import Header from './components/header';
 import Footer from './components/footer';
 import Slider from './components/slider';
 import { Box } from '@mui/material';
+import TopBrands from './components/topBrands';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -53,8 +55,9 @@ export default function Home() {
         <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Header />
           <Slider />
+          <TopBrands />
           <Box sx={{ display: 'flex', flexGrow: 1 }}>
-            <Filter />
+            {/* <Filter /> */}
             <Products products={products} />
           </Box>
           <Footer />

@@ -72,7 +72,6 @@ const CheckoutPage = () => {
     const { cartItems, totalPrice, discountAmount, selectedAddress } =
       checkoutData;
 
-    // Ensure cartId is present
     if (!checkoutData.cartId) {
       console.error("cartId is missing in checkoutData");
       setLoading(false);
@@ -80,7 +79,7 @@ const CheckoutPage = () => {
     }
 
     const checkoutPayload = {
-      cartId: checkoutData.cartId, // Use the correct cartId
+      cartId: checkoutData.cartId, 
       addressId: selectedAddress._id,
       shippingMethod: "Standard",
       paymentMethod: "Cash On Delivery",
@@ -88,7 +87,7 @@ const CheckoutPage = () => {
       paymentStatus: "completed",
     };
 
-    console.log("Checkout Payload:", checkoutPayload); // Log the payload
+    console.log("Checkout Payload:", checkoutPayload); 
 
     try {
       const response = await fetch(
@@ -107,7 +106,6 @@ const CheckoutPage = () => {
 
       if (response.ok) {
         try {
-        //   await clearCart();
           router.push("/orders/orders");
         } catch (clearCartError) {
           setError("Order placed but failed to clear cart. Please refresh the page.");

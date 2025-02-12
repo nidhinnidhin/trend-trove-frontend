@@ -316,9 +316,11 @@ const Header = () => {
                     </Badge>
                 </Link>
                 <IconButton size="large" color="inherit">
-                  <Badge badgeContent={2} color="error">
-                    <FavoriteIcon sx={{ fontSize: "30px" }} />
-                  </Badge>
+                  <Link href="/whishlist/whishlistPage">
+                    <Badge badgeContent={2} color="error">
+                      <FavoriteIcon sx={{ fontSize: "30px" }} />
+                    </Badge>
+                  </Link>
                 </IconButton>
                 <IconButton
                   size="large"

@@ -27,6 +27,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HistoryIcon from "@mui/icons-material/History";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -46,35 +47,34 @@ const Orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:9090/api/admin/checkout/get-all-order-product"
+        const response = await axiosInstance.get(
+          "/checkout/get-all-order-product"
         );
-        const data = await response.json();
-        if (data.success) {
-          setOrders(data.orders);
+
+        if (response.data.success) {
+          setOrders(response.data.orders);
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
       }
     };
+
     fetchOrders();
   }, []);
 
   const handleStatusChange = async (orderId, itemId, newStatus) => {
     try {
-      const response = await fetch(
-        `http://localhost:9090/api/admin/checkout/update-order-status/${orderId}/${itemId}`,
+      const response = await axiosInstance.patch(
+        `/checkout/update-order-status/${orderId}/${itemId}`,
+        { newStatus },
         {
-          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ newStatus }),
         }
       );
 
-      const data = await response.json();
-      if (data.success) {
+      if (response.data.success) {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.orderId === orderId
@@ -85,7 +85,7 @@ const Orders = () => {
                       ? { ...item, status: newStatus }
                       : item
                   ),
-                  orderStatus: data.order.orderStatus,
+                  orderStatus: response.data.order.orderStatus,
                 }
               : order
           )
@@ -112,12 +112,20 @@ const Orders = () => {
   };
 
   const handleEditClick = (order, item) => {
+    if (order.orderStatus === "Cancelled") {
+      setSnackbar({
+        open: true,
+        message: "Cannot edit status of a cancelled order",
+        severity: "warning",
+      });
+      return; 
+    }
+  
     setSelectedOrder(order);
     setSelectedItem(item);
     setNewStatus(item.status);
     setIsEditModalOpen(true);
   };
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -213,30 +221,34 @@ const Orders = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {order.items.map((item) => (
-                      <TableRow key={item.itemId}>
-                        <TableCell>
-                          {item.productName} - {item.color} ({item.size})
-                        </TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>₹{item.price}</TableCell>
-                        <TableCell>{order.orderStatus}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="contained"
-                            startIcon={<EditIcon />}
-                            onClick={() => handleEditClick(order, item)}
-                            sx={{
-                              backgroundColor: "#ff9800",
-                              color: "white",
-                              "&:hover": { backgroundColor: "#ffb74d" },
-                            }}
-                          >
-                            Edit Status
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {order.items.map((item) => {
+                      console.log("Itemmm", item);
+
+                      return (
+                        <TableRow key={item.itemId}>
+                          <TableCell>
+                            {item.productName} - {item.color} ({item.size})
+                          </TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>₹{item.price}</TableCell>
+                          <TableCell>{item.status || "Pending"}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="contained"
+                              startIcon={<EditIcon />}
+                              onClick={() => handleEditClick(order, item)}
+                              sx={{
+                                backgroundColor: "#ff9800",
+                                color: "white",
+                                "&:hover": { backgroundColor: "#ffb74d" },
+                              }}
+                            >
+                              Edit Status
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -308,7 +320,7 @@ const Orders = () => {
                 Order ID: {selectedOrder.orderId}
               </Typography>
               <Typography variant="body1">
-                <strong>Customer:</strong> {selectedOrder.customer.name} 
+                <strong>Customer:</strong> {selectedOrder.customer.name}
                 {selectedOrder.customer.email}
               </Typography>
               <Typography variant="body1">
@@ -366,7 +378,7 @@ const Orders = () => {
                   <TableBody>
                     {selectedOrder.items.map((item) => {
                       console.log("Orderrrrr", item);
-                      
+
                       return (
                         <TableRow key={item.itemId}>
                           <TableCell>

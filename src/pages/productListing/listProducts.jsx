@@ -15,6 +15,24 @@ import {
 import { motion } from "framer-motion";
 import styled from "@emotion/styled";
 
+// Styled offer badge using emotion
+const OfferBadge = styled(Chip)`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ff385c;
+  color: white;
+  font-weight: 600;
+  padding: 0 8px;
+  height: 24px;
+  z-index: 1;
+  font-family: "Poppins", sans-serif;
+
+  &:hover {
+    background-color: #ff385c;
+  }
+`;
+
 const ListProducts = ({
   products,
   totalPages,
@@ -78,6 +96,10 @@ const ListProducts = ({
     }
   };
 
+  const calculateDiscount = (originalPrice, currentPrice) => {
+    return Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+  };
+
   const filteredAndSortedProducts = sortProducts(filterProducts(products));
 
   const handleProductDetail = (id) => {
@@ -88,7 +110,6 @@ const ListProducts = ({
     onPageChange(value);
   };
 
-  // Animation variants for Framer Motion
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -131,7 +152,7 @@ const ListProducts = ({
         </Box>
       ) : (
         <>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             {filteredAndSortedProducts.map((product, index) => (
               <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
                 <motion.div
@@ -142,18 +163,27 @@ const ListProducts = ({
                 >
                   <Card
                     sx={{
-                      height: "550px",
+                      height: "580px",
                       display: "flex",
                       flexDirection: "column",
-                      borderRadius: "10px",
                       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                       transition: "transform 0.3s, box-shadow 0.3s",
+                      position: "relative",
                       "&:hover": {
                         transform: "translateY(-5px)",
                         boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
                       },
                     }}
                   >
+                    {product.originalPrice > product.price && (
+                      <OfferBadge
+                        label={`${calculateDiscount(
+                          product.originalPrice,
+                          product.price
+                        )}% OFF`}
+                      />
+                    )}
+
                     <CardMedia
                       component="img"
                       image={product.image}
@@ -212,12 +242,26 @@ const ListProducts = ({
                           marginTop: "10px",
                         }}
                       >
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: "bold", color: "#333" }}
-                        >
-                          ₹{product.price}
-                        </Typography>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: "bold", color: "#333" }}
+                          >
+                            ₹{product.price}
+                          </Typography>
+                          {product.originalPrice > product.price && (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                textDecoration: "line-through",
+                                marginLeft: "4px",
+                              }}
+                            >
+                              ₹{product.originalPrice}
+                            </Typography>
+                          )}
+                        </Box>
                         <Typography
                           variant="body2"
                           color="text.secondary"

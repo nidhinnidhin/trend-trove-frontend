@@ -9,6 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditSizeVariantModal = ({ open, onClose, selectedVariant, onSave }) => {
   // If no selectedVariant is passed, return null
@@ -63,25 +64,21 @@ const EditSizeVariantModal = ({ open, onClose, selectedVariant, onSave }) => {
         inStock: formData.inStock,
       };
   
-      const response = await fetch(`http://localhost:9090/api/sizes/sizeVariants/${selectedVariant._id}`, {
-        method: "PUT", 
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
+      const response = await axiosInstance.put(
+        `/sizes/sizeVariants/${selectedVariant._id}`,
+        updatedData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
   
-      const result = await response.json();
-  
-      if (response.ok) {
-        console.log("Successfully updated size variant:", result);
-        onSave(result.sizeVariant); // Pass the updated size variant data to the parent
-        onClose(); // Close modal after saving
-      } else {
-        console.error("Failed to update size variant:", result.message);
-      }
+      console.log("Successfully updated size variant:", response.data);
+      onSave(response.data.sizeVariant); 
+      onClose();
     } catch (error) {
-      console.error("Error saving changes:", error);
+      console.error("Error saving changes:", error.response?.data || error.message);
     }
   };
   

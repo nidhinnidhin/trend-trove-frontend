@@ -354,6 +354,33 @@ function Cart() {
     }
   };
 
+  // const handleCheckout = async () => {
+  //   console.log("Clicked");
+
+  //   if (!selectedAddress) {
+  //     setSnackbarMessage("Please select a delivery address");
+  //     setSnackbarSeverity("error");
+  //     setSnackbarOpen(true);
+  //     return;
+  //   }
+  //   const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
+  //   const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
+  //   const checkoutData = {
+  //     cartId: cart._id,
+  //     cartItems: cart.items,
+  //     totalPrice: cart.totalPrice,
+  //     finalTotal: finalTotal,
+  //     deliveryCharge: shippingCost,
+  //     discountAmount: cart.discountAmount,
+  //     selectedAddress: selectedAddress,
+  //   };
+
+  //   router.push({
+  //     pathname: "/checkout/checkout",
+  //     query: { data: JSON.stringify(checkoutData) },
+  //   });
+  // };
+
   const handleCheckout = async () => {
     console.log("Clicked");
 
@@ -363,6 +390,26 @@ function Cart() {
       setSnackbarOpen(true);
       return;
     }
+
+    // Check product availability before proceeding
+    let isOutOfStock = false;
+    let outOfStockMessage = "";
+
+    cart.items.forEach((item) => {
+      if (item.sizeVariant.stockCount < item.quantity) {
+        isOutOfStock = true;
+        outOfStockMessage = `Sorry, ${item.product.name} (${item.sizeVariant.size}, ${item.variant.color}) is out of stock. Only ${item.sizeVariant.stockCount} items available.`;
+      }
+    });
+
+    if (isOutOfStock) {
+      setSnackbarMessage(outOfStockMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Proceed to checkout if all items are available
     const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
     const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
     const checkoutData = {
@@ -380,7 +427,7 @@ function Cart() {
       query: { data: JSON.stringify(checkoutData) },
     });
   };
-
+  
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -593,7 +640,7 @@ function Cart() {
           </Grid>
 
           <Grid item xs={12} md={3}>
-            <Card>
+            {/* <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Have coupon?
@@ -614,7 +661,7 @@ function Cart() {
                   </Grid>
                 </Grid>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Box mt={3}>
               <Card>

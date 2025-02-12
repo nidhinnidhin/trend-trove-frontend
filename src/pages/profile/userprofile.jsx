@@ -34,12 +34,14 @@ import {
   Receipt as ReceiptIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  LockReset,
 } from "@mui/icons-material";
 import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Image from "next/image";
 import ProfileModal from "@/components/modals/profileModal";
+import ResetPasswordModal from "@/components/modals/resetPasswordModal";
 
 const UserProfilePage = () => {
   const [selectedSection, setSelectedSection] = useState("profile");
@@ -48,82 +50,78 @@ const UserProfilePage = () => {
   const [orders, setOrders] = useState([]);
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
-  const [userProfile, setUserProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
+    useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("usertoken");
-      if (token) {
-        try {
-          const userResponse = await axios.get(
-            "http://localhost:9090/api/users/profile",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setUser(userResponse.data.user);
+      if (!token) {
+        setError("No authentication token found");
+        setLoading(false);
+        return;
+      }
 
-          const addressesResponse = await axios.get(
-            "http://localhost:9090/api/address/get-address",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          if (addressesResponse.data.addresses.length != 0) {
-            setAddresses(addressesResponse.data.addresses || []);
-          } else {
-            setAddresses([]);
-          }
+      try {
+        const axiosInstance = axios.create({
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-          const ordersResponse = await axios.get(
-            "http://localhost:9090/api/checkout/get-orders",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setOrders(ordersResponse.data.orders || []);
+        const [userResponse, addressesResponse, ordersResponse, cartResponse] =
+          await Promise.allSettled([
+            axiosInstance.get("http://localhost:9090/api/users/profile"),
+            axiosInstance.get("http://localhost:9090/api/address/get-address"),
+            axiosInstance.get("http://localhost:9090/api/checkout/get-orders"),
+            axiosInstance.get("http://localhost:9090/api/cart/get-cart"),
+          ]);
 
-          const cartResponse = await axios.get(
-            "http://localhost:9090/api/cart/get-cart",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setCart(cartResponse.data.cart || null);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-          console.error(
-            "Error details:",
-            error.response?.data || error.message
-          );
-          setSnackbarMessage("Failed to fetch user data");
-          setSnackbarSeverity("error");
-          setSnackbarOpen(true);
-        } finally {
-          setLoading(false);
+        if (userResponse.status === "fulfilled" && userResponse.value.data) {
+          setUser(userResponse.value.data.user);
         }
+
+        if (
+          addressesResponse.status === "fulfilled" &&
+          addressesResponse.value.data
+        ) {
+          setAddresses(addressesResponse.value.data.addresses || []);
+        }
+
+        if (
+          ordersResponse.status === "fulfilled" &&
+          ordersResponse.value.data
+        ) {
+          setOrders(ordersResponse.value.data.orders || []);
+        }
+
+        if (cartResponse.status === "fulfilled" && cartResponse.value.data) {
+          setCart(cartResponse.value.data.cart || { items: [] });
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Failed to load user data. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
   }, []);
-  console.log("Orderssssssss", orders);
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
   const handleEditProfile = () => {
-    setIsProfileModalOpen(true); // Open the modal
+    setIsProfileModalOpen(true);
   };
 
   const handleProfileUpdate = (updatedUser) => {
-    setUser(updatedUser); // Update the user data in the parent component
+    setUser(updatedUser);
     setSnackbarMessage("Profile updated successfully");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
@@ -152,20 +150,54 @@ const UserProfilePage = () => {
     }
   };
 
+  const handlePasswordReset = (message) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
+  };
+
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "success"; // Green
+        return "success";
       case "pending":
-        return "warning"; // Orange
+        return "warning";
       case "cancelled":
-        return "error"; // Red
+        return "error";
       default:
-        return "default"; // Grey
+        return "default";
     }
   };
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <Typography variant="h6" color="error">
+            {error}
+          </Typography>
+        </Box>
+      );
+    }
+
     switch (selectedSection) {
       case "profile":
         return (
@@ -180,62 +212,89 @@ const UserProfilePage = () => {
               boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              }}
-            >
-              <Box
-                sx={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  mb: 2,
-                  border: "3px solid #222",
-                }}
-              >
-                <Image
-                  src={user?.image || "/default-avatar.png"}
-                  width={120}
-                  height={120}
-                  style={{ objectFit: "cover" }}
-                  alt="User Profile"
-                />
-              </Box>
-              <Typography variant="h5" fontWeight={600} color="#222">
-                {user?.firstname} {user?.lastname}
-              </Typography>
-              <Typography variant="body2" color="gray" mt={0.5}>
-                @{user?.username}
-              </Typography>
-              <Typography variant="body2" color="gray">
-                {user?.email}
-              </Typography>
-            </CardContent>
-            <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={handleEditProfile} // Open modal on click
-                sx={{
-                  backgroundColor: "#222",
-                  color: "white",
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  textTransform: "none",
-                  "&:hover": { backgroundColor: "#444" },
-                }}
-              >
-                Edit Profile
-              </Button>
-            </CardActions>
+            {!user ? (
+              <CardContent>
+                <Typography variant="h6" align="center">
+                  No profile information available
+                </Typography>
+              </CardContent>
+            ) : (
+              <>
+                <CardContent
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      mb: 2,
+                      border: "3px solid #222",
+                    }}
+                  >
+                    <Image
+                      src={user?.image || "/default-avatar.png"}
+                      width={120}
+                      height={120}
+                      style={{ objectFit: "cover" }}
+                      alt="User Profile"
+                    />
+                  </Box>
+                  <Typography variant="h5" fontWeight={600} color="#222">
+                    {user?.firstname} {user?.lastname}
+                  </Typography>
+                  <Typography variant="body2" color="gray" mt={0.5}>
+                    @{user?.username}
+                  </Typography>
+                  <Typography variant="body2" color="gray">
+                    {user?.email}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: "center", pb: 2, gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<EditIcon />}
+                    onClick={handleEditProfile}
+                    sx={{
+                      backgroundColor: "#222",
+                      color: "white",
+                      borderRadius: 2,
+                      px: 3,
+                      py: 1,
+                      textTransform: "none",
+                      "&:hover": { backgroundColor: "#444" },
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<LockReset />}
+                    onClick={() => setIsResetPasswordModalOpen(true)}
+                    sx={{
+                      backgroundColor: "#222",
+                      color: "white",
+                      borderRadius: 2,
+                      px: 3,
+                      py: 1,
+                      textTransform: "none",
+                      "&:hover": { backgroundColor: "#444" },
+                    }}
+                  >
+                    Reset Password
+                  </Button>
+                </CardActions>
+              </>
+            )}
           </Card>
         );
+
       case "addresses":
         return (
           <Grid
@@ -243,7 +302,13 @@ const UserProfilePage = () => {
             spacing={2}
             sx={{ width: "100%", justifyContent: "center" }}
           >
-            {addresses.length > 0 ? (
+            {addresses.length === 0 ? (
+              <Grid item xs={12}>
+                <Typography variant="h6" align="center">
+                  No addresses found. Add your first address.
+                </Typography>
+              </Grid>
+            ) : (
               addresses.map((address) => (
                 <Grid item xs={12} sm={6} md={4} key={address._id}>
                   <Card
@@ -292,17 +357,10 @@ const UserProfilePage = () => {
                   </Card>
                 </Grid>
               ))
-            ) : (
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ textAlign: "center", mt: 2 }}
-              >
-                No addresses found
-              </Typography>
             )}
           </Grid>
         );
+
       case "orders":
         return (
           <TableContainer
@@ -315,7 +373,6 @@ const UserProfilePage = () => {
             }}
           >
             <Table>
-              {/* Table Header */}
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#222" }}>
                   <TableCell sx={{ color: "#fff", fontWeight: 600 }}>
@@ -335,10 +392,16 @@ const UserProfilePage = () => {
                   </TableCell>
                 </TableRow>
               </TableHead>
-
-              {/* Table Body */}
               <TableBody>
-                {orders.length > 0 ? (
+                {orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="h6">
+                        No orders found. Start shopping to see your orders here.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
                   orders.map((order) => (
                     <TableRow
                       key={order.orderId}
@@ -367,16 +430,6 @@ const UserProfilePage = () => {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      align="center"
-                      sx={{ color: "#888", py: 3 }}
-                    >
-                      No orders found
-                    </TableCell>
-                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -546,6 +599,12 @@ const UserProfilePage = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <ResetPasswordModal
+        open={isResetPasswordModalOpen}
+        handleClose={() => setIsResetPasswordModalOpen(false)}
+        onPasswordReset={handlePasswordReset}
+      />
 
       <ProfileModal
         open={isProfileModalOpen}

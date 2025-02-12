@@ -18,13 +18,14 @@ import { styled, width } from "@mui/system";
 import axios from "axios";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import OtpVerificationModal from "../modals/openOtpVerification";
 
 const FileInput = styled("input")({
   display: "none",
 });
 
 const SignupDrawer = ({ open, onClose }) => {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
   const [image, setImage] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -38,6 +39,7 @@ const SignupDrawer = ({ open, onClose }) => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +50,20 @@ const SignupDrawer = ({ open, onClose }) => {
       return;
     }
 
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:9090/api/otp/send-otp", { email });
+      setOtpModalOpen(true); 
+    } catch (err) {
+      setSnackbarMessage(err.response?.data?.message || "Failed to send OTP.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpVerificationSuccess = async () => {
     const formData = new FormData();
     formData.append("firstname", firstName);
     formData.append("lastname", lastName);
@@ -73,7 +89,7 @@ const SignupDrawer = ({ open, onClose }) => {
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setTimeout(() => {
-        router.push("/otplogin/sendOtp"); 
+        router.push("/");
       }, 2000);
     } catch (err) {
       setSnackbarMessage(err.response?.data?.message || "Registration failed");
@@ -178,17 +194,17 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#FFA500", 
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
+                      borderColor: "#FFA500", 
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
+                    color: "#FFA500", 
                   },
                 }}
               />
@@ -206,17 +222,17 @@ const SignupDrawer = ({ open, onClose }) => {
                   borderColor: "gray",
                 },
                 "&:hover fieldset": {
-                  borderColor: "#FFA500", // Orange border on hover
+                  borderColor: "#FFA500", 
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#FFA500", // Orange border on focus
+                  borderColor: "#FFA500",
                 },
               },
               "& .MuiInputLabel-root": {
                 color: "gray",
               },
               "& .MuiInputLabel-root.Mui-focused": {
-                color: "#FFA500", // Orange placeholder on focus
+                color: "#FFA500", 
               },
             }}
               />
@@ -234,17 +250,17 @@ const SignupDrawer = ({ open, onClose }) => {
                   borderColor: "gray",
                 },
                 "&:hover fieldset": {
-                  borderColor: "#FFA500", // Orange border on hover
+                  borderColor: "#FFA500",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#FFA500", // Orange border on focus
+                  borderColor: "#FFA500",
                 },
               },
               "& .MuiInputLabel-root": {
                 color: "gray",
               },
               "& .MuiInputLabel-root.Mui-focused": {
-                color: "#FFA500", // Orange placeholder on focus
+                color: "#FFA500", 
               },
             }}
               />
@@ -263,17 +279,17 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#FFA500",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
+                      borderColor: "#FFA500", 
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
+                    color: "#FFA500", 
                   },
                 }}
               />
@@ -301,17 +317,17 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#FFA500", 
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
+                      borderColor: "#FFA500", 
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
+                    color: "#FFA500", 
                   },
                 }}
               />
@@ -346,7 +362,7 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#FFA500", 
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#FFA500", // Orange border on focus
@@ -383,6 +399,17 @@ const SignupDrawer = ({ open, onClose }) => {
           </Grid>
         </form>
       </div>
+
+      <OtpVerificationModal
+        open={otpModalOpen}
+        onClose={(success) => {
+          setOtpModalOpen(false);
+          if (success) {
+            handleOtpVerificationSuccess();
+          }
+        }}
+        email={email}
+      />
 
       {/* Snackbar for Feedback */}
       <Snackbar

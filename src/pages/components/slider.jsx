@@ -20,16 +20,16 @@ const slides = [
     image: banner4,
     alt: "Slide 2",
   },
-  {
-    id: 3,
-    image: banner2,
-    alt: "Slide 3",
-  },
-  {
-    id: 4,
-    image: banner3,
-    alt: "Slide 4",
-  },
+  // {
+  //   id: 3,
+  //   image: banner2,
+  //   alt: "Slide 3",
+  // },
+  // {
+  //   id: 4,
+  //   image: banner3,
+  //   alt: "Slide 4",
+  // },
 ];
 
 const Slider = () => {

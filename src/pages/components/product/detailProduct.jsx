@@ -14,7 +14,6 @@ import {
   CardMedia,
   CardContent,
   CardActions,
-  
   Snackbar,
   Alert,
   Chip,
@@ -35,6 +34,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -214,7 +214,6 @@ const DetailProduct = () => {
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
 
-        // Fetch the updated cart length
         const cartResponse = await axios.get(
           "http://localhost:9090/api/cart/get-cart",
           {
@@ -224,12 +223,54 @@ const DetailProduct = () => {
           }
         );
 
-        // Dispatch the updated cart length to Redux
         dispatch(setCartLength(cartResponse.data.cart.items.length));
       }
     } catch (error) {
       console.error("Error adding product to cart", error);
       setSnackbarMessage("Failed to add to cart. Please try again.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!isLoggedIn) {
+      router.push("/authentication/loginSignup");
+      return;
+    }
+  
+    if (!selectedSize || !selectedColor) {
+      alert("Please select a size and color before adding to the wishlist.");
+      return;
+    }
+  
+    const wishlistData = {
+      productId: product.id,
+      variantId: variants[variantIndex]._id,
+      sizeVariantId: variants[variantIndex].sizes.find(
+        (size) => size.size === selectedSize
+      )?._id,
+    };
+  
+    try {
+      const response = await axios.post(
+        "http://localhost:9090/api/user/wishlist/add",
+        wishlistData,
+        {
+          headers: {
+            Authorization: `Bearer ${isLoggedIn}`,
+          },
+        }
+      );
+  
+      if (response.status === 201) {
+        setSnackbarMessage("Product added to wishlist successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error("Error adding product to wishlist", error);
+      setSnackbarMessage("Failed to add to wishlist. Please try again.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
@@ -461,7 +502,7 @@ const DetailProduct = () => {
                       style={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: "contain",
                       }}
                     />
                   </Box>
@@ -533,7 +574,7 @@ const DetailProduct = () => {
                     fontWeight: 600,
                   }}
                 >
-                  ${product?.discountPrice}
+                  {product?.discountPrice}
                 </Typography>
                 {product?.price && (
                   <Typography
@@ -543,7 +584,7 @@ const DetailProduct = () => {
                       color: "#95a5a6",
                     }}
                   >
-                    ${product?.price}
+                    {product?.price}
                   </Typography>
                 )}
               </Box>
@@ -791,6 +832,30 @@ const DetailProduct = () => {
                   </Button>
                 </motion.div>
               </Box>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full"
+              >
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<FavoriteBorderIcon />}
+                  onClick={handleAddToWishlist}
+                  sx={{
+                    backgroundColor: "#2c3e50",
+                    color: "#fff",
+                    fontSize: "1rem",
+                    marginTop: "10px",
+                    py: 1.5,
+                    "&:hover": {
+                      backgroundColor: "#34495e",
+                    },
+                  }}
+                >
+                  Add to Wishlist
+                </Button>
+              </motion.div>
             </Box>
           </motion.div>
         </Grid>

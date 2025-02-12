@@ -34,6 +34,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditVariantModal from "../../modals/editVariantModel";
 import EditSizeVariantModal from "../../modals/editSizeModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const Product = () => {
   // State Management
@@ -65,19 +66,31 @@ const Product = () => {
   });
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [productToBlock, setProductToBlock] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
 
   const limit = 8;
 
-  // Fetch initial products data
   useEffect(() => {
     fetchProducts();
-  }, [currentPage]);
+  }, [currentPage, debouncedSearchTerm]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 1000); 
+  
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:9090/api/products/get?page=${currentPage}&limit=${limit}`
+      const response = await axiosInstance.get(
+        `/products/get?page=${currentPage}&limit=${rowsPerPage}&search=${searchTerm}`
       );
       setProductsData(response.data.products);
       setTotalPages(response.data.totalPages);
@@ -90,7 +103,6 @@ const Product = () => {
     }
   };
 
-  // Fetch variants for a product
   const handleVariantFetch = async (productId) => {
     try {
       const response = await fetch(
@@ -111,6 +123,10 @@ const Product = () => {
         severity: "error",
       });
     }
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   // Fetch sizes for a variant
@@ -139,10 +155,10 @@ const Product = () => {
   const handleBlockProduct = async (productId, isBlocked) => {
     try {
       const url = isBlocked
-        ? `http://localhost:9090/api/admin/products/unblock/${productId}`
-        : `http://localhost:9090/api/admin/products/block/${productId}`;
+        ? `/products/unblock/${productId}`
+        : `/products/block/${productId}`;
 
-      const response = await axios.patch(url);
+      const response = await axiosInstance.patch(url);
       if (response.status === 200) {
         setProductsData((prevData) =>
           prevData.map((product) =>
@@ -168,7 +184,6 @@ const Product = () => {
     }
     setIsConfirmModalOpen(false);
   };
-
   const handleEditSizeVariant = (sizeVariant) => {
     setCurrentSizeVariant(sizeVariant);
     setIsEditSizeVariantModalOpen(true);
@@ -278,6 +293,8 @@ const Product = () => {
           variant="outlined"
           size="small"
           placeholder="Search products..."
+          value={searchTerm}
+          onChange={handleSearchChange}
           sx={{
             backgroundColor: "#ffffff",
             borderRadius: 1,
@@ -363,16 +380,15 @@ const Product = () => {
                   startIcon={<Block />}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setProductToBlock(product._id);
-                    setIsConfirmModalOpen(true);
+                    handleBlockProduct(product._id, product.isDeleted);
                   }}
                   sx={{
-                    backgroundColor: product.isDeleted ? "#f44336" : "#4caf50",
+                    backgroundColor: product.isDeleted ? "#f44336" : "#4caf50", // Red for blocked, green for unblocked
                     color: "white",
                     "&:hover": {
                       backgroundColor: product.isDeleted
                         ? "#ef5350"
-                        : "#66bb6a",
+                        : "#66bb6a", // Darker red/green on hover
                     },
                   }}
                 >
@@ -470,9 +486,7 @@ const Product = () => {
                                 variant="contained"
                                 color="primary"
                                 startIcon={<EditIcon />}
-                                onClick={() =>
-                                  handleEditSizeVariant(size)
-                                }
+                                onClick={() => handleEditSizeVariant(size)}
                                 sx={{
                                   backgroundColor: "#FF9800",
                                   color: "white",
@@ -493,6 +507,20 @@ const Product = () => {
           </AccordionDetails>
         </Accordion>
       ))}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <TablePagination
+          component="div"
+          count={totalPages * limit} // Total number of products
+          page={currentPage - 1} // MUI Pagination is zero-based
+          rowsPerPage={limit}
+          onPageChange={(event, newPage) => setCurrentPage(newPage + 1)} // Convert to one-based
+          rowsPerPageOptions={[5, 10, 25]}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
+            setCurrentPage(1); // Reset to the first page
+          }}
+        />
+      </Box>
 
       {/* Modals */}
       <AddProductModal
@@ -529,7 +557,6 @@ const Product = () => {
         sizeVariant={currentSizeVariant}
       />
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

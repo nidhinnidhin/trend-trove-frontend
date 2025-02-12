@@ -19,6 +19,7 @@ import CloseIcon from "@mui/icons-material/Close"; // Import CloseIcon
 import EditIcon from "@mui/icons-material/Edit"; // Import EditIcon
 import axios from "axios";
 import EditSizeVariantModal from "./editSizeModal";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditVariantModal = ({ open, onClose, variant }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -111,8 +112,8 @@ const EditVariantModal = ({ open, onClose, variant }) => {
     formData.subImages.forEach((img) => updatedData.append("subImages", img));
 
     try {
-      await axios.put(
-        `http://localhost:9090/api/admin/variants/variant/edit/${variant._id}`,
+      await axiosInstance.put(
+        `/variants/variant/edit/${variant._id}`,
         updatedData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -377,16 +378,30 @@ const EditVariantModal = ({ open, onClose, variant }) => {
                           key={sizeVariant._id}
                           value={sizeVariant.size}
                         >
-                          <Typography>{sizeVariant.size}</Typography>
-                          <Typography>{sizeVariant.description}</Typography>
-                          <Typography>{sizeVariant.price} $</Typography>
-                          <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleEditButtonClick(sizeVariant)}
-                          >
-                            Edit
-                          </Button>
+                          <Grid container alignItems="center" spacing={2}>
+                            <Grid item xs={3}>
+                              <Typography>{sizeVariant.size}</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography>
+                                {sizeVariant.description.slice(0, 30)}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Typography>{sizeVariant.price} $</Typography>
+                            </Grid>
+                            <Grid item xs={3}>
+                              <Button
+                                variant="filled"
+                                sx={{backgroundColor:'orange', color:"white"}}
+                                onClick={() =>
+                                  handleEditButtonClick(sizeVariant)
+                                }
+                              >
+                                Edit
+                              </Button>
+                            </Grid>
+                          </Grid>
                         </MenuItem>
                       ))
                     ) : (

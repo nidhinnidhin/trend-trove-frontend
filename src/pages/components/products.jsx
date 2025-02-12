@@ -84,7 +84,6 @@ const Products = ({
     onPageChange(value);
   };
 
-  // Animation variants for Framer Motion
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -138,7 +137,6 @@ const Products = ({
                 >
                   <Card
                     sx={{
-                      height: "550px",
                       display: "flex",
                       flexDirection: "column",
                       borderRadius: "10px",
@@ -165,7 +163,7 @@ const Products = ({
                     />
 
                     <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-                      <Typography
+                      {/* <Typography
                         variant="h6"
                         gutterBottom
                         sx={{
@@ -175,8 +173,8 @@ const Products = ({
                         }}
                       >
                         {product.title.slice(0, 30)}...
-                      </Typography>
-                      <Typography
+                      </Typography> */}
+                      {/* <Typography
                         variant="body2"
                         color="text.secondary"
                         sx={{
@@ -187,7 +185,7 @@ const Products = ({
                         }}
                       >
                         {product.description}
-                      </Typography>
+                      </Typography> */}
                       <Chip
                         label={`${product.rating || "No"} Rating`}
                         size="small"
