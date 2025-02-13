@@ -48,24 +48,32 @@ const Wishlist = () => {
     fetchWishlist();
   }, []);
 
-  const handleRemoveItem = async (id) => {
+  const handleRemoveItem = async (item) => {
+    console.log("productId", item.product._id, "variantId", item.variant._id, "sizevariantId", item.sizeVariant._id);
+  
     try {
       const token = localStorage.getItem("usertoken");
+      console.log("Token:", token);
+  
       await axios.delete(
-        `http://localhost:9090/api/user/wishlist/remove/${id}`,
+        'http://localhost:9090/api/user/wishlist/remove/wishlist',
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          data: {
+            productId: item.product._id,
+            variantId: item.variant._id,
+            sizeVariantId: item.sizeVariant._id,
+          },
         }
       );
-
-      setItems((prevItems) => prevItems.filter((item) => item._id !== id));
+  
+      setItems((prevItems) => prevItems.filter((i) => i._id !== item._id));
     } catch (error) {
       console.error("Error removing item from wishlist:", error);
     }
   };
-
   const handleMoveToCart = async (item) => {
     try {
       const token = localStorage.getItem("usertoken");
@@ -82,7 +90,6 @@ const Wishlist = () => {
         },
       });
 
-      // Remove the item from the wishlist after moving to cart
       handleRemoveItem(item._id);
     } catch (error) {
       console.error("Error moving item to cart:", error);
@@ -133,7 +140,7 @@ const Wishlist = () => {
             <AnimatePresence>
               {items.map((item) => {
                 console.log("ITEMSSSSSSSSSSS", item);
-                
+
                 return (
                   <motion.tr
                     key={item._id}
@@ -148,9 +155,9 @@ const Wishlist = () => {
                           src={item.variant.mainImage}
                           alt={item.product.name}
                           style={{
-                            width: "50px",
+                            width: "70px",
                             height: "100px",
-                            objectFit: "cover",
+                            objectFit: "contain",
                             borderRadius: "5px",
                           }}
                         />
@@ -189,7 +196,7 @@ const Wishlist = () => {
                       <IconButton
                         aria-label="delete"
                         style={{ color: "#FF6F61" }}
-                        onClick={() => handleRemoveItem(item._id)}
+                        onClick={() => handleRemoveItem(item)}
                       >
                         <DeleteIcon />
                       </IconButton>
