@@ -169,13 +169,12 @@ const SearchResults = () => {
                     animate="visible"
                     transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
-                    <Card
+                    <Grid
                       sx={{
-                        height: "550px",
+                        margin:"0px 10px",
+                        height: "600px",
                         display: "flex",
                         flexDirection: "column",
-                        borderRadius: "10px",
-                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                         transition: "transform 0.3s, box-shadow 0.3s",
                         "&:hover": {
                           transform: "translateY(-5px)",
@@ -188,9 +187,9 @@ const SearchResults = () => {
                         image={product.image}
                         alt={product.title}
                         sx={{
-                          height: 320,
+                          height: 450,
                           padding: "10px",
-                          objectFit: "contain",
+                          objectFit: "cover",
                           cursor: "pointer",
                           borderRadius: "10px 10px 0 0",
                         }}
@@ -208,18 +207,6 @@ const SearchResults = () => {
                           }}
                         >
                           {product.title.slice(0, 30)}...
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            height: "40px",
-                            overflow: "hidden",
-                            marginBottom: 2,
-                            fontFamily: "'Open Sans', sans-serif",
-                          }}
-                        >
-                          {product.description}
                         </Typography>
                         <Chip
                           label={`${product.rating || "No"} Rating`}
@@ -256,7 +243,7 @@ const SearchResults = () => {
                           </Typography>
                         </Box>
                       </CardContent>
-                    </Card>
+                    </Grid>
                   </motion.div>
                 </Grid>
               ))}

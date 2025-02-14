@@ -72,6 +72,38 @@ const EditButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const StyledCard = styled(Card)(({ theme }) => ({
+  transition: "transform 0.3s, box-shadow 0.3s",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: theme.shadows[6],
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+  textTransform: "none",
+  fontWeight: "bold",
+  padding: "8px 20px",
+  borderRadius: "8px",
+  transition: "background-color 0.3s, color 0.3s",
+}));
+
+const StyledSelect = styled(Select)(({ theme }) => ({
+  borderRadius: "8px",
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: theme.palette.grey[300],
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: theme.palette.primary.main,
+  },
+}));
+
 function Cart() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -354,33 +386,6 @@ function Cart() {
     }
   };
 
-  // const handleCheckout = async () => {
-  //   console.log("Clicked");
-
-  //   if (!selectedAddress) {
-  //     setSnackbarMessage("Please select a delivery address");
-  //     setSnackbarSeverity("error");
-  //     setSnackbarOpen(true);
-  //     return;
-  //   }
-  //   const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
-  //   const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
-  //   const checkoutData = {
-  //     cartId: cart._id,
-  //     cartItems: cart.items,
-  //     totalPrice: cart.totalPrice,
-  //     finalTotal: finalTotal,
-  //     deliveryCharge: shippingCost,
-  //     discountAmount: cart.discountAmount,
-  //     selectedAddress: selectedAddress,
-  //   };
-
-  //   router.push({
-  //     pathname: "/checkout/checkout",
-  //     query: { data: JSON.stringify(checkoutData) },
-  //   });
-  // };
-
   const handleCheckout = async () => {
     console.log("Clicked");
 
@@ -391,7 +396,6 @@ function Cart() {
       return;
     }
 
-    // Check product availability before proceeding
     let isOutOfStock = false;
     let outOfStockMessage = "";
 
@@ -427,7 +431,7 @@ function Cart() {
       query: { data: JSON.stringify(checkoutData) },
     });
   };
-  
+
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -478,7 +482,7 @@ function Cart() {
       ) : (
         <Grid container spacing={4}>
           <Grid item xs={12} md={9}>
-            <Card>
+            <StyledCard>
               <CardContent>
                 <Table>
                   <TableHead>
@@ -499,8 +503,11 @@ function Cart() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {cart.items.map((item, index) => (
-                      <TableRow key={index}>
+                    {cart.items.map((item, index) => {
+                      console.log(item);
+                      
+                      return (
+                      <StyledTableRow key={index}>
                         <TableCell>
                           <Grid container spacing={2} alignItems="center">
                             <Grid item>
@@ -538,7 +545,7 @@ function Cart() {
                             sx={{ width: "100px" }}
                             size="small"
                           >
-                            <Select
+                            <StyledSelect
                               value={item.quantity}
                               onChange={(e) =>
                                 handleQuantityChange(item, e.target.value)
@@ -550,15 +557,15 @@ function Cart() {
                                   {num}
                                 </MenuItem>
                               ))}
-                            </Select>
+                            </StyledSelect>
                           </FormControl>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body1">{`₹${
-                            item.price * item.quantity
+                            item.sizeVariant.discountPrice * item.quantity
                           }`}</Typography>
                           <Typography variant="body2" color="textSecondary">
-                            {`₹${item.price} each`}
+                            {`₹${item.sizeVariant.discountPrice} each`}
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
@@ -576,15 +583,16 @@ function Cart() {
                             Remove
                           </Button>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </StyledTableRow>
+                    )
+})}
                   </TableBody>
                 </Table>
               </CardContent>
               <CardActions
                 sx={{ display: "flex", justifyContent: "space-between" }}
               >
-                <Button
+                <StyledButton
                   startIcon={<ChevronLeftIcon />}
                   onClick={navigateToHome}
                   sx={{
@@ -593,22 +601,18 @@ function Cart() {
                     "&:hover": {
                       backgroundColor: "#555",
                     },
-                    textTransform: "none",
-                    padding: "6px 20px",
                   }}
                 >
                   Continue Shopping
-                </Button>
+                </StyledButton>
 
-                <Button
+                <StyledButton
                   endIcon={<ChevronRightIcon />}
                   color="primary"
                   variant="outlined"
                   sx={{
                     color: "#333",
                     borderColor: "#333",
-                    textTransform: "none",
-                    padding: "6px 20px",
                     "&:hover": {
                       backgroundColor: "#f5f5f5",
                       borderColor: "#333",
@@ -617,9 +621,9 @@ function Cart() {
                   onClick={handleCheckout}
                 >
                   Checkout Cart
-                </Button>
+                </StyledButton>
               </CardActions>
-            </Card>
+            </StyledCard>
 
             <Box mt={3}>
               <Paper elevation={1}>

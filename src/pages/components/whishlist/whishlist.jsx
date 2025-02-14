@@ -10,6 +10,10 @@ import {
   IconButton,
   Button,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -18,6 +22,8 @@ import axios from "axios";
 
 const Wishlist = () => {
   const [items, setItems] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -48,52 +54,43 @@ const Wishlist = () => {
     fetchWishlist();
   }, []);
 
-  const handleRemoveItem = async (item) => {
-    console.log("productId", item.product._id, "variantId", item.variant._id, "sizevariantId", item.sizeVariant._id);
-  
+  const handleRemoveItem = async () => {
+    if (!selectedItem) return;
+
     try {
       const token = localStorage.getItem("usertoken");
-      console.log("Token:", token);
-  
+
       await axios.delete(
-        'http://localhost:9090/api/user/wishlist/remove/wishlist',
+        "http://localhost:9090/api/user/wishlist/remove/wishlist",
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           data: {
-            productId: item.product._id,
-            variantId: item.variant._id,
-            sizeVariantId: item.sizeVariant._id,
+            productId: selectedItem.product._id,
+            variantId: selectedItem.variant._id,
+            sizeVariantId: selectedItem.sizeVariant._id,
           },
         }
       );
-  
-      setItems((prevItems) => prevItems.filter((i) => i._id !== item._id));
+
+      setItems((prevItems) =>
+        prevItems.filter((i) => i._id !== selectedItem._id)
+      );
+      setOpenDialog(false);
     } catch (error) {
       console.error("Error removing item from wishlist:", error);
     }
   };
-  const handleMoveToCart = async (item) => {
-    try {
-      const token = localStorage.getItem("usertoken");
-      const cartData = {
-        productId: item.product._id,
-        variantId: item.variant._id,
-        sizeVariantId: item.sizeVariant._id,
-        quantity: 1,
-      };
 
-      await axios.post("http://localhost:9090/api/cart/add-to-cart", cartData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const handleOpenDialog = (item) => {
+    setSelectedItem(item);
+    setOpenDialog(true);
+  };
 
-      handleRemoveItem(item._id);
-    } catch (error) {
-      console.error("Error moving item to cart:", error);
-    }
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -138,76 +135,91 @@ const Wishlist = () => {
           </TableHead>
           <TableBody>
             <AnimatePresence>
-              {items.map((item) => {
-                console.log("ITEMSSSSSSSSSSS", item);
-
-                return (
-                  <motion.tr
-                    key={item._id}
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <TableCell>
-                      {item.variant.mainImage ? (
-                        <img
-                          src={item.variant.mainImage}
-                          alt={item.product.name}
-                          style={{
-                            width: "70px",
-                            height: "100px",
-                            objectFit: "contain",
-                            borderRadius: "5px",
-                          }}
-                        />
-                      ) : (
-                        <Typography
-                          variant="body2"
-                          style={{ color: "#777777" }}
-                        >
-                          No Image Available
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1" style={{ color: "#333333" }}>
-                        {item.product.name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1" style={{ color: "#777777" }}>
-                        {item.sizeVariant.price}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        startIcon={<ShoppingCartIcon />}
+              {items.map((item) => (
+                <motion.tr
+                  key={item._id}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TableCell>
+                    {item.variant.mainImage ? (
+                      <img
+                        src={item.variant.mainImage}
+                        alt={item.product.name}
                         style={{
-                          backgroundColor: "#FF6F61",
-                          color: "#FFFFFF",
-                          marginRight: "10px",
+                          width: "70px",
+                          height: "100px",
+                          objectFit: "contain",
+                          borderRadius: "5px",
                         }}
-                        onClick={() => handleMoveToCart(item)}
-                      >
-                        Move to Cart
-                      </Button>
-                      <IconButton
-                        aria-label="delete"
-                        style={{ color: "#FF6F61" }}
-                        onClick={() => handleRemoveItem(item)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </motion.tr>
-                );
-              })}
+                      />
+                    ) : (
+                      <Typography variant="body2" style={{ color: "#777777" }}>
+                        No Image Available
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body1" style={{ color: "#333333" }}>
+                      {item.product.name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body1" style={{ color: "#777777" }}>
+                      {item.sizeVariant.price}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      startIcon={<ShoppingCartIcon />}
+                      style={{
+                        backgroundColor: "#FF6F61",
+                        color: "#FFFFFF",
+                        marginRight: "10px",
+                      }}
+                      onClick={() => handleMoveToCart(item)}
+                    >
+                      Move to Cart
+                    </Button>
+                    <IconButton
+                      aria-label="delete"
+                      style={{ color: "#FF6F61" }}
+                      onClick={() => handleOpenDialog(item)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </motion.tr>
+              ))}
             </AnimatePresence>
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to remove this item from your wishlist?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRemoveItem}
+            color="secondary"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -211,7 +211,7 @@ const CheckoutPage = () => {
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      ₹{item.price * item.quantity}
+                      ₹{item.sizeVariant.discountPrice * item.quantity}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -231,7 +231,12 @@ const CheckoutPage = () => {
                   <TableCell colSpan={2}>
                     <Typography variant="subtitle1">Delivery</Typography>
                   </TableCell>
-                  <TableCell align="right">{deliverCharge}</TableCell>
+                {totalPrice < 1000 ?
+
+                  <TableCell align="right">40</TableCell>
+                  :
+                  <TableCell align="right">Free delivery</TableCell>
+                }
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={2}>

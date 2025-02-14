@@ -219,7 +219,7 @@ const OrdersPage = () => {
                         />
                         <Box>
                           <Typography variant="subtitle2">
-                            {item.productName}
+                            {item.productName.slice(0,10)}
                           </Typography>
                           <Typography variant="body2" color="textSecondary">
                             Color: {item.color}
@@ -230,13 +230,16 @@ const OrdersPage = () => {
                           <Typography variant="body2">
                             Quantity: {item.quantity} × ₹{item.price}
                           </Typography>
+                          <Typography variant="body2">
+                            Sub Total: ₹{item.quantity * item.price}
+                          </Typography>
                         </Box>
                       </Box>
                     </TableCell>
 
                     {/* Delivery Address Column */}
                     <TableCell>
-                      {/* <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                       <Typography variant="subtitle2">
                         {order.shippingAddress.fullName}
                       </Typography>
@@ -248,7 +251,7 @@ const OrdersPage = () => {
                       <Typography variant="body2">
                         Mobile: {order.shippingAddress.mobileNumber}
                       </Typography>
-                    </Box> */}
+                    </Box>
                     </TableCell>
 
                     {/* Payment Info Column */}
@@ -271,7 +274,8 @@ const OrdersPage = () => {
                           {order.payment.method}
                         </Typography>
                         <Typography variant="body2" color="primary">
-                          ₹{item.price * item.quantity}
+                        ₹{item.price * item.quantity < 1000 ? item.price * item.quantity + 40 : item.price * item.quantity}
+                          
                         </Typography>
                         {/* <Chip
                           size="small"

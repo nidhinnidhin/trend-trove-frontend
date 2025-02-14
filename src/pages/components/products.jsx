@@ -8,16 +8,99 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  Button,
+  IconButton,
+  Chip,
+  CircularProgress,
 } from "@mui/material";
-import StarIcon from "@mui/icons-material/Star";
-import { Chip } from "@mui/material";
+import FavoriteIcon from "@mui/icons-material/FavoriteBorder";
+import ShareIcon from "@mui/icons-material/Share";
 import { motion } from "framer-motion";
 
-const Products = ({
-  products,
-  loading
-}) => {
+const styles = {
+  container: {
+    width: "100%",
+    margin: "0 auto",
+    padding: "20px",
+    minHeight: "100vh",
+    backgroundColor: "#f5f5f5",
+  },
+  card: {
+    position: "relative",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    transition: "transform 0.3s, box-shadow 0.3s",
+    "&:hover": {
+      transform: "translateY(-5px)",
+      boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+    },
+  },
+  numberBadge: {
+    position: "absolute",
+    top: "8px",
+    left: "8px",
+    width: "32px",
+    height: "32px",
+    backgroundColor: "white",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    zIndex: 1,
+  },
+  imageContainer: {
+    height: 320,
+    padding: "10px",
+    backgroundColor: "#f7fafc",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    cursor: "pointer",
+    borderRadius: "10px 10px 0 0",
+  },
+  contentArea: {
+    flexGrow: 1,
+    padding: "16px",
+  },
+  priceTag: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "8px",
+  },
+  price: {
+    color: "#333",
+    fontWeight: "bold",
+    fontSize: "1.25rem",
+  },
+  metaContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "10px",
+  },
+  ratingChip: {
+    backgroundColor: "#ff6f61",
+    color: "white",
+    fontSize: "0.75rem",
+    margin: "5px 0",
+    borderRadius: "4px",
+    fontFamily: "'Poppins', sans-serif",
+  },
+  variantText: {
+    fontFamily: "'Open Sans', sans-serif",
+    color: "text.secondary",
+  },
+  actionButtons: {
+    display: "flex",
+    gap: "4px",
+  },
+};
+
+const Products = ({ products, loading }) => {
   const router = useRouter();
   const { filterState } = useFilter();
 
@@ -74,14 +157,11 @@ const Products = ({
     }
   };
 
+
   const filteredAndSortedProducts = sortProducts(filterProducts(products));
 
   const handleProductDetail = (id) => {
     router.push(`/product/${id}`);
-  };
-
-  const handlePageChange = (event, value) => {
-    onPageChange(value);
   };
 
   const cardVariants = {
@@ -90,15 +170,7 @@ const Products = ({
   };
 
   return (
-    <Box
-      sx={{
-        width: "90%",
-        margin: "0 auto",
-        padding: "20px",
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-      }}
-    >
+    <Box sx={styles.container}>
       <Typography
         variant="h4"
         align="center"
@@ -125,108 +197,66 @@ const Products = ({
           <CircularProgress sx={{ color: "#ff6f61" }} />
         </Box>
       ) : (
-        <>
-          <Grid container spacing={2}>
-            {filteredAndSortedProducts.map((product, index) => (
-              <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-                <motion.div
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                >
-                  <Card
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: "10px",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
-                      },
-                    }}
-                  >
+        <Grid container spacing={2}>
+          {filteredAndSortedProducts.map((product, index) => (
+            <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+              <motion.div
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+              >
+                <Grid sx={styles.card} onClick={() => handleProductDetail(product.id)}>
+                  {/* Number Badge */}
+                  <Box sx={styles.numberBadge}>
+                    <Typography variant="body2" fontWeight={500}>
+                      {index + 1}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={styles.imageContainer}>
                     <CardMedia
                       component="img"
                       image={product.image}
                       alt={product.title}
-                      sx={{
-                        height: 320,
-                        padding: "10px",
-                        objectFit: "contain",
-                        cursor: "pointer",
-                        borderRadius: "10px 10px 0 0",
-                      }}
-                      onClick={() => handleProductDetail(product.id)}
+                      sx={styles.productImage}
                     />
+                  </Box>
 
-                    <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-                      {/* <Typography
-                        variant="h6"
-                        gutterBottom
-                        sx={{
-                          fontWeight: "600",
-                          fontFamily: "'Poppins', sans-serif",
-                          color: "#333",
-                        }}
-                      >
-                        {product.title.slice(0, 30)}...
-                      </Typography> */}
-                      {/* <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          height: "40px",
-                          overflow: "hidden",
-                          marginBottom: 2,
-                          fontFamily: "'Open Sans', sans-serif",
-                        }}
-                      >
-                        {product.description}
-                      </Typography> */}
-                      <Chip
-                        label={`${product.rating || "No"} Rating`}
-                        size="small"
-                        sx={{
-                          backgroundColor: "#ff6f61",
-                          color: "white",
-                          fontSize: "0.75rem",
-                          margin: "5px 0",
-                          borderRadius: "4px",
-                          fontFamily: "'Poppins', sans-serif",
-                        }}
-                      />
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: "10px",
-                        }}
-                      >
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: "bold", color: "#333" }}
-                        >
-                          ₹{product.price}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ fontFamily: "'Open Sans', sans-serif" }}
-                        >
+                  <CardContent sx={styles.contentArea}>
+                    <Box sx={styles.priceTag}>
+                      <Typography sx={styles.price}>
+                        ₹{product.price}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={styles.metaContainer}>
+                      <Box>
+                        <Chip
+                          label={`${product.rating || "No"} Rating`}
+                          size="small"
+                          sx={styles.ratingChip}
+                        />
+                        <Typography variant="body2" sx={styles.variantText}>
                           Variants: {product.variantsCount}
                         </Typography>
                       </Box>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </>
+
+                      <Box sx={styles.actionButtons}>
+                        <IconButton size="small" color="inherit" >
+                          <FavoriteIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="inherit">
+                          <ShareIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Grid>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
       )}
     </Box>
   );

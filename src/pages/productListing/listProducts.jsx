@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useFilter } from "@/context/filterContext";
 import {
@@ -14,13 +14,15 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import styled from "@emotion/styled";
+import axios from "axios";
+import CategoryCarousel from "../components/categoryCarousal";
 
 // Styled offer badge using emotion
 const OfferBadge = styled(Chip)`
   position: absolute;
   top: 10px;
   left: 10px;
-  background-color: #ff385c;
+  background-color:rgb(56, 56, 56);
   color: white;
   font-weight: 600;
   padding: 0 8px;
@@ -42,6 +44,25 @@ const ListProducts = ({
 }) => {
   const router = useRouter();
   const { filterState } = useFilter();
+  const [categories, setCategories] = useState([])
+
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:9090/api/categories"
+        );
+        setCategories(response.data.categories.map((cat) => cat.name));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  console.log("Categories", categories);
+  
 
   const filterProducts = (products) => {
     return products.filter((product) => {
@@ -152,6 +173,7 @@ const ListProducts = ({
         </Box>
       ) : (
         <>
+        <CategoryCarousel categories={categories} />
           <Grid container spacing={1}>
             {filteredAndSortedProducts.map((product, index) => (
               <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
@@ -161,13 +183,14 @@ const ListProducts = ({
                   animate="visible"
                   transition={{ delay: index * 0.1, duration: 0.5 }}
                 >
-                  <Card
+                  <Grid
                     sx={{
-                      height: "580px",
+                      height: "650px",
                       display: "flex",
                       flexDirection: "column",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      // boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
                       transition: "transform 0.3s, box-shadow 0.3s",
+                      border:"0.5px solid lightgray",
                       position: "relative",
                       "&:hover": {
                         transform: "translateY(-5px)",
@@ -189,11 +212,11 @@ const ListProducts = ({
                       image={product.image}
                       alt={product.title}
                       sx={{
-                        height: 320,
-                        padding: "10px",
-                        objectFit: "contain",
+                        height: 450,
+                        // padding: "10px",
+                        objectFit: "cover",
                         cursor: "pointer",
-                        borderRadius: "10px 10px 0 0",
+                        // borderRadius: "10px 10px 0 0",
                       }}
                       onClick={() => handleProductDetail(product.id)}
                     />
@@ -210,7 +233,7 @@ const ListProducts = ({
                       >
                         {product.title.slice(0, 30)}...
                       </Typography>
-                      <Typography
+                      {/* <Typography
                         variant="body2"
                         color="text.secondary"
                         sx={{
@@ -221,7 +244,7 @@ const ListProducts = ({
                         }}
                       >
                         {product.description}
-                      </Typography>
+                      </Typography> */}
                       <Chip
                         label={`${product.rating || "No"} Rating`}
                         size="small"
@@ -271,7 +294,7 @@ const ListProducts = ({
                         </Typography>
                       </Box>
                     </CardContent>
-                  </Card>
+                  </Grid>
                 </motion.div>
               </Grid>
             ))}

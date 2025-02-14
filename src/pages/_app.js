@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { FilterProvider } from "@/context/filterContext";
 import { Provider } from "react-redux";
 import store from "../redux/store";
+import '@/styles/globals.css';
 
 const theme = createTheme();
 

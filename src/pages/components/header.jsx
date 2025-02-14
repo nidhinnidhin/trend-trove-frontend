@@ -215,6 +215,7 @@ const Header = () => {
       <AppBar
         position="fixed"
         sx={{
+          width:"100%",
           backgroundColor: "#ffffff",
           color: "#333",
           boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
@@ -310,15 +311,20 @@ const Header = () => {
             </IconButton>
             {isLoggedIn ? (
               <>
-                <Link href="/cart/cartpage">
-                <Badge badgeContent={cartLength} color="error">
-                      <ShoppingCartIcon />
+                <IconButton size="large" color="inherit">
+                  <Link href="/cart/cartpage">
+                    <Badge badgeContent={cartLength} color="error">
+                      <ShoppingCartIcon sx={{fontSize: "30px", color: "#ff6f61" }} />
                     </Badge>
-                </Link>
+                  </Link>
+                </IconButton>
+
                 <IconButton size="large" color="inherit">
                   <Link href="/whishlist/whishlistPage">
-                    <Badge badgeContent={2} color="error">
-                      <FavoriteIcon sx={{ fontSize: "30px" }} />
+                    <Badge badgeContent={cartLength} color="error">
+                      <FavoriteIcon
+                        sx={{ fontSize: "30px", color: "#ff6f61" }}
+                      />
                     </Badge>
                   </Link>
                 </IconButton>

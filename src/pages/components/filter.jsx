@@ -95,7 +95,7 @@ const Filter = () => {
           valueLabelDisplay="auto"
           min={0}
           max={10000}
-          sx={{ marginTop: 2, color: "black" }}
+          sx={{ marginTop: 2, color: "#ff6f61" }}
         />
         <Box
           sx={{
