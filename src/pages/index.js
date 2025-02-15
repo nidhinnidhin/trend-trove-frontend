@@ -11,6 +11,7 @@ import TopBrands from "./components/topBrands";
 import Image from "next/image";
 import latestProductsBanner from "../media/new arivals banner.png";
 import bannerFashion from "../media/bannerfashion.png";
+import CategoryCarousel from "./components/categoryCarousal";
 
 export default function Home() {
   const [products, setProducts] = useState([]);

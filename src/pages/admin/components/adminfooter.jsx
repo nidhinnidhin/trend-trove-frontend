@@ -17,7 +17,7 @@ const AdminFooter = () => {
       }}
     >
       <Typography variant="body2" component="p">
-        © {new Date().getFullYear()} Your Company. All Rights Reserved. |
+        © {new Date().getFullYear()} Trend Trove. All Rights Reserved. |
         Privacy Policy
       </Typography>
     </Box>

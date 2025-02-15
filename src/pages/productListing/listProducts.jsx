@@ -11,8 +11,9 @@ import {
   Pagination,
   CircularProgress,
   Chip,
+  TextField,
 } from "@mui/material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import styled from "@emotion/styled";
 import axios from "axios";
 import CategoryCarousel from "../components/categoryCarousal";
@@ -22,7 +23,7 @@ const OfferBadge = styled(Chip)`
   position: absolute;
   top: 10px;
   left: 10px;
-  background-color:rgb(56, 56, 56);
+  background-color: rgb(56, 56, 56);
   color: white;
   font-weight: 600;
   padding: 0 8px;
@@ -35,6 +36,59 @@ const OfferBadge = styled(Chip)`
   }
 `;
 
+const StyledWrapper = styled.div`
+  .group {
+    display: flex;
+    line-height: 28px;
+    align-items: center;
+    position: relative;
+    max-width: 250px;
+    margin: 10px 0px;
+  }
+
+  .input {
+    font-family: "Montserrat", sans-serif;
+    width: 100%;
+    height: 45px;
+    padding-left: 2.5rem;
+    box-shadow: 0 0 0 1.5px #2b2c37, 0 0 25px -17px #000;
+    border: 0;
+    border-radius: 12px;
+    background-color: #fff;
+    outline: none;
+    color: black;
+    transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+    cursor: text;
+    z-index: 0;
+  }
+
+  .input::placeholder {
+    color: black;
+  }
+
+  .input:hover {
+    box-shadow: 0 0 0 2.5px #2f303d, 0px 0px 25px -15px #000;
+  }
+
+  .input:active {
+    transform: scale(0.95);
+  }
+
+  .input:focus {
+    box-shadow: 0 0 0 2.5px #2f303d;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    fill:rgb(3, 3, 3);
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+`;
+
 const ListProducts = ({
   products,
   totalPages,
@@ -43,9 +97,9 @@ const ListProducts = ({
   loading,
 }) => {
   const router = useRouter();
-  const { filterState } = useFilter();
-  const [categories, setCategories] = useState([])
-
+  const { filterState, updateFilters } = useFilter();
+  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -61,11 +115,25 @@ const ListProducts = ({
     fetchCategories();
   }, []);
 
-  console.log("Categories", categories);
-  
+  const handleCategoryClick = (category) => {
+    updateFilters({ categories: [category] });
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value); // Update search query as the user types
+  };
 
   const filterProducts = (products) => {
     return products.filter((product) => {
+      // Filter by search query
+      if (
+        searchQuery &&
+        !product.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Filter by price range
       const price = product.price;
       if (
         price < filterState.priceRange[0] ||
@@ -73,24 +141,32 @@ const ListProducts = ({
       ) {
         return false;
       }
+
+      // Filter by categories
       if (
         filterState.categories.length > 0 &&
         !filterState.categories.includes(product.category)
       ) {
         return false;
       }
+
+      // Filter by gender
       if (
         filterState.selectedGenders.length > 0 &&
         !filterState.selectedGenders.includes(product.gender)
       ) {
         return false;
       }
+
+      // Filter by ratings
       if (
         filterState.selectedRatings.length > 0 &&
         !filterState.selectedRatings.includes(Math.floor(product.rating))
       ) {
         return false;
       }
+
+      // Filter by discounts
       if (filterState.selectedDiscounts.length > 0) {
         const discount =
           ((product.originalPrice - product.price) / product.originalPrice) *
@@ -99,6 +175,7 @@ const ListProducts = ({
           (d) => discount >= parseInt(d)
         );
       }
+
       return true;
     });
   };
@@ -173,7 +250,66 @@ const ListProducts = ({
         </Box>
       ) : (
         <>
-        <CategoryCarousel categories={categories} />
+          {/* Search Input Field with Animation */}
+          <CategoryCarousel
+            categories={categories}
+            onCategoryClick={handleCategoryClick}
+          />
+          {/* <Box
+            sx={{
+              display: "flex",
+              justifyContent: "end",
+              marginBottom: "20px",
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <TextField
+                label="Search Products"
+                variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                sx={{
+                  width: "300px",
+                  backgroundColor: "white",
+                  borderRadius: "4px",
+                }}
+              />
+            </motion.div>
+          </Box> */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "end",
+              marginBottom: "20px",
+            }}
+          >
+            <StyledWrapper>
+              <div className="group">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="search-icon"
+                >
+                  <g>
+                    <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z" />
+                  </g>
+                </svg>
+                <input
+                  id="query"
+                  className="input"
+                  type="search"
+                  placeholder="Search products..."
+                  name="searchbar"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </StyledWrapper>
+          </Box>
           <Grid container spacing={1}>
             {filteredAndSortedProducts.map((product, index) => (
               <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
@@ -188,9 +324,7 @@ const ListProducts = ({
                       height: "650px",
                       display: "flex",
                       flexDirection: "column",
-                      // boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                      border:"0.5px solid lightgray",
+                      border: "0.5px solid lightgray",
                       position: "relative",
                       "&:hover": {
                         transform: "translateY(-5px)",
@@ -213,10 +347,8 @@ const ListProducts = ({
                       alt={product.title}
                       sx={{
                         height: 450,
-                        // padding: "10px",
                         objectFit: "cover",
                         cursor: "pointer",
-                        // borderRadius: "10px 10px 0 0",
                       }}
                       onClick={() => handleProductDetail(product.id)}
                     />
@@ -233,18 +365,6 @@ const ListProducts = ({
                       >
                         {product.title.slice(0, 30)}...
                       </Typography>
-                      {/* <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          height: "40px",
-                          overflow: "hidden",
-                          marginBottom: 2,
-                          fontFamily: "'Open Sans', sans-serif",
-                        }}
-                      >
-                        {product.description}
-                      </Typography> */}
                       <Chip
                         label={`${product.rating || "No"} Rating`}
                         size="small"
@@ -299,7 +419,6 @@ const ListProducts = ({
               </Grid>
             ))}
           </Grid>
-
           <Box
             sx={{
               display: "flex",
