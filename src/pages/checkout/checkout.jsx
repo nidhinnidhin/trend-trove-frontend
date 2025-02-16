@@ -18,6 +18,12 @@ import {
   Box,
   Divider,
   Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { LocationOn, LocalShipping, Payment } from "@mui/icons-material";
 import Header from "../components/header";
@@ -27,39 +33,114 @@ const CheckoutPage = () => {
   const router = useRouter();
   const [checkoutData, setCheckoutData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('')
+  const [error, setError] = useState("");
+  const [coupons, setCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalTotal, setFinalTotal] = useState(0);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
     if (router.query.data) {
-      // Parse the data passed from the Cart page
       const data = JSON.parse(router.query.data);
-      console.log(router.query.data);
-
       setCheckoutData(data);
+      setFinalTotal(data.finalTotal);
     }
   }, [router.query.data]);
 
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      const token = localStorage.getItem("usertoken");
+      try {
+        const response = await fetch(`http://localhost:9090/api/coupon/get`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch coupons");
+        }
+
+        const data = await response.json();
+        setCoupons(data.coupons);
+      } catch (error) {
+        console.error("Error fetching coupons:", error);
+      }
+    };
+
+    fetchCoupons();
+  }, []);
+
+  const handleCouponChange = async (event) => {
+    const couponCode = event.target.value;
+    setSelectedCoupon(couponCode);
+
+    if (couponCode) {
+      const token = localStorage.getItem("usertoken");
+      try {
+        const response = await fetch(`http://localhost:9090/api/coupon/apply`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            couponCode,
+            totalPrice: checkoutData.totalPrice,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to apply coupon");
+        }
+
+        const data = await response.json();
+        setDiscountAmount(data.discountAmount);
+        setFinalTotal(data.finalTotal);
+        setSnackbarMessage(
+          `Discount of ₹${data.discountAmount} applied successfully`
+        );
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Error applying coupon:", error);
+        setSnackbarMessage("Failed to apply coupon");
+        setSnackbarOpen(true);
+      }
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   const clearCart = async () => {
     const token = localStorage.getItem("usertoken");
-    
+
     try {
-      const response = await fetch(`http://localhost:9090/api/cart/clear-cart`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `http://localhost:9090/api/cart/clear-cart`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to clear cart');
+        throw new Error("Failed to clear cart");
       }
 
       const data = await response.json();
-      console.log('Cart cleared successfully:', data);
+      console.log("Cart cleared successfully:", data);
     } catch (error) {
-      console.error('Error clearing cart:', error);
-      throw error; 
+      console.error("Error clearing cart:", error);
+      throw error;
     }
   };
 
@@ -69,8 +150,7 @@ const CheckoutPage = () => {
     setLoading(true);
     const token = localStorage.getItem("usertoken");
 
-    const { cartItems, totalPrice, discountAmount, selectedAddress } =
-      checkoutData;
+    const { cartItems, totalPrice, selectedAddress } = checkoutData;
 
     if (!checkoutData.cartId) {
       console.error("cartId is missing in checkoutData");
@@ -79,15 +159,16 @@ const CheckoutPage = () => {
     }
 
     const checkoutPayload = {
-      cartId: checkoutData.cartId, 
+      cartId: checkoutData.cartId,
       addressId: selectedAddress._id,
       shippingMethod: "Standard",
       paymentMethod: "Cash On Delivery",
       transactionId: "txn_1234567890",
       paymentStatus: "completed",
+      couponCode: selectedCoupon,
     };
 
-    console.log("Checkout Payload:", checkoutPayload); 
+    console.log("Checkout Payload:", checkoutPayload);
 
     try {
       const response = await fetch(
@@ -106,9 +187,12 @@ const CheckoutPage = () => {
 
       if (response.ok) {
         try {
+          await clearCart();
           router.push("/orders/orders");
         } catch (clearCartError) {
-          setError("Order placed but failed to clear cart. Please refresh the page.");
+          setError(
+            "Order placed but failed to clear cart. Please refresh the page."
+          );
         }
       } else {
         setError(data.message || "Checkout failed");
@@ -119,11 +203,12 @@ const CheckoutPage = () => {
       setLoading(false);
     }
   };
+
   if (!checkoutData) {
     return <Typography>Loading...</Typography>;
   }
 
-  const { cartItems, totalPrice, discountAmount, selectedAddress, deliverCharge, finalTotal } =
+  const { cartItems, totalPrice, selectedAddress, deliverCharge } =
     checkoutData;
 
   return (
@@ -195,7 +280,7 @@ const CheckoutPage = () => {
                       <img
                         src={item.variant.mainImage}
                         alt={item.product.name}
-                        style={{ width: 50, height: 50, objectFit: "cover" }}
+                        style={{ width: 50, height: 100, objectFit: "cover" }}
                       />
                     </TableCell>
                     <TableCell>
@@ -231,12 +316,11 @@ const CheckoutPage = () => {
                   <TableCell colSpan={2}>
                     <Typography variant="subtitle1">Delivery</Typography>
                   </TableCell>
-                {totalPrice < 1000 ?
-
-                  <TableCell align="right">40</TableCell>
-                  :
-                  <TableCell align="right">Free delivery</TableCell>
-                }
+                  {totalPrice < 1000 ? (
+                    <TableCell align="right">40</TableCell>
+                  ) : (
+                    <TableCell align="right">Free delivery</TableCell>
+                  )}
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={2}>
@@ -282,6 +366,34 @@ const CheckoutPage = () => {
                 sx={{ mb: 2 }}
               />
             </RadioGroup>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="coupon-select-label">Apply Coupon</InputLabel>
+              <Select
+                labelId="coupon-select-label"
+                id="coupon-select"
+                value={selectedCoupon}
+                label="Apply Coupon"
+                onChange={handleCouponChange}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {coupons.map((coupon) => {
+                  console.log(coupon.minOrderAmount);
+
+                  return (
+                    <>
+                      {coupon.minOrderAmount < finalTotal && (
+                        <MenuItem key={coupon._id} value={coupon.couponCode}>
+                          {coupon.couponCode} - {coupon.discountValue}
+                          {coupon.discountType === "percentage" ? "%" : "₹"} off
+                        </MenuItem>
+                      )}
+                    </>
+                  );
+                })}
+              </Select>
+            </FormControl>
             <Button
               variant="contained"
               fullWidth
@@ -308,6 +420,19 @@ const CheckoutPage = () => {
           </Paper>
         </Grid>
       </Grid>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
       <Footer />
     </Container>
   );

@@ -31,6 +31,7 @@ import { useRouter } from "next/router";
 import Products from "../components/products/products";
 import Orders from "../components/orders/orders";
 import Cookies from "js-cookie";
+import Coupons from "../components/coupons/coupons";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -73,33 +74,28 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* <AdminHeader /> */}
       <Box sx={{ display: "flex", width: "100%", height:"100vh" }}>
-        {/* Sidebar */}
         <Drawer
           sx={{
-            width: "25%", // Sidebar takes 25% of the width
+            width: "25%", 
             flexShrink: 0,
             "& .MuiDrawer-paper": {
-              width: "25%", // Ensures the drawer has a fixed width of 25%
+              width: "25%", 
               boxSizing: "border-box",
-              backgroundColor: "#333", // Light Black background for sidebar
-              paddingTop: "20px", // Add padding at the top
-              borderRight: "1px solid #444", // Dark border between sidebar and content
+              backgroundColor: "#333", 
+              paddingTop: "20px", 
+              borderRight: "1px solid #444", 
             },
           }}
           variant="permanent"
           anchor="left"
         >
-          {/* Wrapper Box for Sidebar */}
           <Box
             sx={{
-              backgroundColor: "#333", // Sidebar dark background
-              borderRadius: "10px", // Slight curve for the sidebar box
-              margin: "10px", // Inner box spacing
-              padding: "10px", // Inner padding
-              // height: "calc(100% - 20px)", // Adjust for padding/margin
-              // overflow: "auto", // Handle overflow if content is long
+              backgroundColor: "#333", 
+              borderRadius: "10px",
+              margin: "10px",
+              padding: "10px",
             }}
           >
             <List
@@ -185,8 +181,8 @@ const Dashboard = () => {
                       onChange={(e) => setSelectedDate(e.target.value)}
                       label="Select Date"
                       sx={{
-                        backgroundColor: "#f5f5f5", // Light gray background for select box
-                        color: "#212121", // Dark text color for contrast
+                        backgroundColor: "#f5f5f5", 
+                        color: "#212121", 
                       }}
                     >
                       <MenuItem value="Last 7 days">Last 7 days</MenuItem>
@@ -287,6 +283,7 @@ const Dashboard = () => {
           {selectedTopic === "Categories" && <Category />}
           {selectedTopic === "Brands" && <Brand />}
           {selectedTopic === "Orders" && <Orders />}
+          {selectedTopic === "Coupons" && <Coupons />}
         </Box>
       </Box>
 
