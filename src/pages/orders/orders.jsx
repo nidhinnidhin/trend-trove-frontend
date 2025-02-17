@@ -98,10 +98,10 @@ const OrdersPage = () => {
                 ...order,
                 items: order.items.map((item) =>
                   item.itemId === selectedItem
-                    ? { ...item, status: "Cancelled" } 
+                    ? { ...item, status: "Cancelled" }
                     : item
                 ),
-                orderStatus: response.data.order.orderStatus, 
+                orderStatus: response.data.order.orderStatus,
               };
             }
             return order;
@@ -158,7 +158,7 @@ const OrdersPage = () => {
             <TableRow>
               <TableCell>Order Details</TableCell>
               <TableCell>Product</TableCell>
-              {/* <TableCell>Delivery Address</TableCell> */}
+              <TableCell>Delivery Address</TableCell>
               <TableCell>Payment Info</TableCell>
               <TableCell>Order Status</TableCell>
               <TableCell>Actions</TableCell>
@@ -167,7 +167,11 @@ const OrdersPage = () => {
           <TableBody>
             {orders.length !== 0 &&
               orders.map((order) =>
-                order.items.map((item, index) => (
+                order.items.map((item, index) => {
+                  console.log(order.payment);
+                  
+                  return(
+                    
                   <TableRow key={`${order.orderId}-${index}`}>
                     {/* Order Details Column */}
                     <TableCell>
@@ -219,7 +223,7 @@ const OrdersPage = () => {
                         />
                         <Box>
                           <Typography variant="subtitle2">
-                            {item.productName.slice(0,10)}
+                            {item.productName.slice(0, 10)}
                           </Typography>
                           <Typography variant="body2" color="textSecondary">
                             Color: {item.color}
@@ -239,19 +243,26 @@ const OrdersPage = () => {
 
                     {/* Delivery Address Column */}
                     <TableCell>
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                      <Typography variant="subtitle2">
-                        {order.shippingAddress.fullName}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {order.shippingAddress.address},
-                        {order.shippingAddress.city},
-                        {order.shippingAddress.state} - {order.shippingAddress.pincode}
-                      </Typography>
-                      <Typography variant="body2">
-                        Mobile: {order.shippingAddress.mobileNumber}
-                      </Typography>
-                    </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography variant="subtitle2">
+                          {order.shippingAddress.fullName}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {order.shippingAddress.address},
+                          {order.shippingAddress.city},
+                          {order.shippingAddress.state} -{" "}
+                          {order.shippingAddress.pincode}
+                        </Typography>
+                        <Typography variant="body2">
+                          Mobile: {order.shippingAddress.mobileNumber}
+                        </Typography>
+                      </Box>
                     </TableCell>
 
                     {/* Payment Info Column */}
@@ -273,19 +284,35 @@ const OrdersPage = () => {
                           />
                           {order.payment.method}
                         </Typography>
-                        <Typography variant="body2" color="primary">
-                        ₹{item.price * item.quantity < 1000 ? item.price * item.quantity + 40 : item.price * item.quantity}
-                          
-                        </Typography>
-                        {/* <Chip
-                          size="small"
-                          label={order.payment.status}
-                          color={
-                            order.payment.status === "success"
-                              ? "success"
-                              : "error"
-                          }
-                        /> */}
+
+                        {/* Price Breakdown */}
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="body2" color="textSecondary">
+                            Subtotal: ₹{item.price * item.quantity}
+                          </Typography>
+
+                          {order.couponCode && (
+                            <Typography variant="body2" color="error">
+                              Coupon ({order.couponCode}): -₹
+                              {(item.price * item.quantity - order.payment.amount).toFixed(1)}
+                            </Typography>
+                          )}
+
+                          {order.deliveryCharge > 0 && (
+                            <Typography variant="body2" color="textSecondary">
+                              Delivery: ₹{order.deliveryCharge}
+                            </Typography>
+                          )}
+
+                          <Divider sx={{ my: 1 }} />
+
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "bold", color:"green" }}
+                          >
+                            Final Price: ₹{order.payment.amount}
+                          </Typography>
+                        </Box>
                       </Box>
                     </TableCell>
 
@@ -299,20 +326,23 @@ const OrdersPage = () => {
 
                     {/* Actions Column */}
                     <TableCell>
-                      {(item.status === "pending" || item.status === "Processing") && (
+                      {(item.status === "pending" ||
+                        item.status === "Processing") && (
                         <Button
                           variant="outlined"
                           color="error"
-                          sx={{width:"150px"}}
+                          sx={{ width: "150px" }}
                           // startIcon={<Cancel />}
-                          onClick={() => handleOpenModal(order.orderId, item.itemId)}
+                          onClick={() =>
+                            handleOpenModal(order.orderId, item.itemId)
+                          }
                         >
                           Cancel order
                         </Button>
                       )}
                     </TableCell>
                   </TableRow>
-                ))
+                )})
               )}
           </TableBody>
         </Table>

@@ -32,6 +32,7 @@ import Products from "../components/products/products";
 import Orders from "../components/orders/orders";
 import Cookies from "js-cookie";
 import Coupons from "../components/coupons/coupons";
+import Offers from "../components/offers/offfers";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -284,6 +285,7 @@ const Dashboard = () => {
           {selectedTopic === "Brands" && <Brand />}
           {selectedTopic === "Orders" && <Orders />}
           {selectedTopic === "Coupons" && <Coupons />}
+          {selectedTopic === "Offers" && <Offers />}
         </Box>
       </Box>
 

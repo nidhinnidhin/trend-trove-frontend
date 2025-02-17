@@ -272,15 +272,15 @@ function Cart() {
         : cartItem
     );
 
-    const newTotalPrice = updatedItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
+    // const newTotalPrice = updatedItems.reduce(
+    //   (acc, item) => acc + item.price * item.quantity,
+    //   0
+    // );
 
     setCart({
       ...cart,
       items: updatedItems,
-      totalPrice: newTotalPrice,
+      // totalPrice: newTotalPrice,
     });
 
     try {
@@ -386,9 +386,24 @@ function Cart() {
     }
   };
 
-  const handleCheckout = async () => {
-    console.log("Clicked");
+  const calculateTotals = (items) => {
+    return items.reduce(
+      (acc, item) => {
+        const discountedTotal = item.sizeVariant.discountPrice * item.quantity;
+        const regularTotal = item.sizeVariant.price * item.quantity;
+        const itemDiscount = regularTotal - discountedTotal;
 
+        return {
+          totalPrice: acc.totalPrice + regularTotal,
+          discountAmount: acc.discountAmount + itemDiscount,
+          finalTotal: acc.finalTotal + discountedTotal,
+        };
+      },
+      { totalPrice: 0, discountAmount: 0, finalTotal: 0 }
+    );
+  };
+
+  const handleCheckout = async () => {
     if (!selectedAddress) {
       setSnackbarMessage("Please select a delivery address");
       setSnackbarSeverity("error");
@@ -413,16 +428,16 @@ function Cart() {
       return;
     }
 
-    // Proceed to checkout if all items are available
-    const shippingCost = cart.totalPrice > 1000 ? 0 : 40;
-    const finalTotal = cart.totalPrice - cart.discountAmount + shippingCost;
+    const totals = calculateTotals(cart.items);
+    const shippingCost = totals.finalTotal > 1000 ? 0 : 40;
+
     const checkoutData = {
       cartId: cart._id,
       cartItems: cart.items,
-      totalPrice: cart.totalPrice,
-      finalTotal: finalTotal,
+      totalPrice: totals.totalPrice,
+      finalTotal: totals.finalTotal + shippingCost,
       deliveryCharge: shippingCost,
-      discountAmount: cart.discountAmount,
+      discountAmount: totals.discountAmount,
       selectedAddress: selectedAddress,
     };
 
@@ -505,87 +520,90 @@ function Cart() {
                   <TableBody>
                     {cart.items.map((item, index) => {
                       console.log(item);
-                      
+
                       return (
-                      <StyledTableRow key={index}>
-                        <TableCell>
-                          <Grid container spacing={2} alignItems="center">
-                            <Grid item>
-                              <img
-                                src={item.variant.mainImage}
-                                alt={item.product.name}
-                                style={{
-                                  width: 60,
-                                  height: 60,
-                                  objectFit: "contain",
-                                }}
-                              />
+                        <StyledTableRow key={index}>
+                          <TableCell>
+                            <Grid container spacing={2} alignItems="center">
+                              <Grid item>
+                                <img
+                                  src={item.variant.mainImage}
+                                  alt={item.product.name}
+                                  style={{
+                                    width: 60,
+                                    height: 60,
+                                    objectFit: "contain",
+                                  }}
+                                />
+                              </Grid>
+                              <Grid item>
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    height: "20px",
+                                    width: "170px",
+                                    overflowY: "hidden",
+                                  }}
+                                >
+                                  {item.product.name}...
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                >
+                                  Size: {item.sizeVariant.size}, Color:{" "}
+                                  {item.variant.color}
+                                </Typography>
+                              </Grid>
                             </Grid>
-                            <Grid item>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  height: "20px",
-                                  width: "170px",
-                                  overflowY: "hidden",
-                                }}
-                              >
-                                {item.product.name}...
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary">
-                                Size: {item.sizeVariant.size}, Color:{" "}
-                                {item.variant.color}
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                        </TableCell>
-                        <TableCell>
-                          <FormControl
-                            variant="outlined"
-                            sx={{ width: "100px" }}
-                            size="small"
-                          >
-                            <StyledSelect
-                              value={item.quantity}
-                              onChange={(e) =>
-                                handleQuantityChange(item, e.target.value)
-                              }
-                              error={item.quantity > 4}
+                          </TableCell>
+                          <TableCell>
+                            <FormControl
+                              variant="outlined"
+                              sx={{ width: "100px" }}
+                              size="small"
                             >
-                              {[1, 2, 3, 4].map((num) => (
-                                <MenuItem key={num} value={num}>
-                                  {num}
-                                </MenuItem>
-                              ))}
-                            </StyledSelect>
-                          </FormControl>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body1">{`₹${
-                            item.sizeVariant.discountPrice * item.quantity
-                          }`}</Typography>
-                          <Typography variant="body2" color="textSecondary">
-                            {`₹${item.sizeVariant.discountPrice} each`}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Button
-                            color="error"
-                            onClick={() => handleOpenModal(item)}
-                          >
-                            <IconButton
+                              <StyledSelect
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleQuantityChange(item, e.target.value)
+                                }
+                                error={item.quantity > 4}
+                              >
+                                {[1, 2, 3, 4].map((num) => (
+                                  <MenuItem key={num} value={num}>
+                                    {num}
+                                  </MenuItem>
+                                ))}
+                              </StyledSelect>
+                            </FormControl>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body1">{`₹${
+                              item.sizeVariant.discountPrice * item.quantity
+                            }`}</Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              {`₹${item.sizeVariant.discountPrice} each`}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Button
                               color="error"
                               onClick={() => handleOpenModal(item)}
-                              aria-label="delete"
                             >
-                              <DeleteIcon />
-                            </IconButton>
-                            Remove
-                          </Button>
-                        </TableCell>
-                      </StyledTableRow>
-                    )
-})}
+                              <IconButton
+                                color="error"
+                                onClick={() => handleOpenModal(item)}
+                                aria-label="delete"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                              Remove
+                            </Button>
+                          </TableCell>
+                        </StyledTableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -673,16 +691,20 @@ function Cart() {
                   <List>
                     <ListItem>
                       <ListItemText primary="Total price:" />
-                      <Typography variant="body1">{`₹ ${cart.totalPrice}`}</Typography>
+                      <Typography variant="body1">{`₹ ${
+                        calculateTotals(cart.items).totalPrice
+                      }`}</Typography>
                     </ListItem>
                     <ListItem>
                       <ListItemText primary="Discount:" />
-                      <Typography variant="body1">{`₹ ${cart.discountAmount}`}</Typography>
+                      <Typography variant="body1">{`₹ ${
+                        calculateTotals(cart.items).discountAmount
+                      }`}</Typography>
                     </ListItem>
                     <ListItem>
-                      <ListItemText primary="Shiping:" />
-                      {cart.totalPrice > 1000 ? (
-                        <Typography variant="body1"> Free shiping</Typography>
+                      <ListItemText primary="Shipping:" />
+                      {calculateTotals(cart.items).finalTotal > 1000 ? (
+                        <Typography variant="body1">Free shipping</Typography>
                       ) : (
                         <Typography variant="body1">₹ 40</Typography>
                       )}
@@ -691,9 +713,8 @@ function Cart() {
                     <ListItem>
                       <ListItemText primary="Total:" />
                       <Typography variant="h6">{`₹ ${
-                        cart.totalPrice -
-                        cart.discountAmount +
-                        (cart.totalPrice > 1000 ? 0 : 40)
+                        calculateTotals(cart.items).finalTotal +
+                        (calculateTotals(cart.items).finalTotal > 1000 ? 0 : 40)
                       }`}</Typography>
                     </ListItem>
                   </List>

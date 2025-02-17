@@ -18,11 +18,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Chip, // Import Chip component for status
 } from "@mui/material";
-import { Add, Block, Search, Edit as EditIcon } from "@mui/icons-material";
+import {
+  Add,
+  Block,
+  Search,
+  Edit as EditIcon,
+  Delete,
+} from "@mui/icons-material"; // Import Delete icon
 import axios from "axios";
 import axiosInstance from "@/utils/adminAxiosInstance";
-import AddCoupon from "../../modals/addCoupon"; 
+import AddCoupon from "../../modals/addCoupon";
 import EditCouponModal from "../../modals/editCouponModal";
 
 const Coupons = () => {
@@ -38,7 +45,7 @@ const Coupons = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [search, setSearch] = useState("");
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-  const [couponToBlock, setCouponToBlock] = useState(null);
+  const [couponToDelete, setCouponToDelete] = useState(null);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -67,7 +74,7 @@ const Coupons = () => {
     };
 
     fetchCoupons();
-  }, [page, rowsPerPage, search]); 
+  }, [page, rowsPerPage, search]);
 
   const handleCouponAdded = (newCoupon) => {
     if (newCoupon && newCoupon._id) {
@@ -109,58 +116,35 @@ const Coupons = () => {
       console.error("Invalid coupon selected:", coupon);
     }
   };
+
   const handleEditModalClose = () => {
     setIsEditModalOpen(false);
     setSelectedCoupon(null);
   };
 
-  const handleBlockCoupon = (couponId) => {
-    setCouponToBlock(couponId);
-    setIsConfirmationModalOpen(true); 
+  const handleDeleteCoupon = (couponId) => {
+    setCouponToDelete(couponId);
+    setIsConfirmationModalOpen(true);
   };
 
-  const handleConfirmBlock = async () => {
-    if (!couponToBlock) return;
+  const handleConfirmDelete = async () => {
+    if (!couponToDelete) return;
+
     try {
-      const response = await axiosInstance.patch(
-        `/coupon/block/${couponToBlock}`
-      );
+      const response = await axiosInstance.delete(`/coupon/delete/${couponToDelete}`);
       if (response.status === 200) {
         setCouponsData((prevData) =>
-          prevData.map((coupon) =>
-            coupon._id === couponToBlock
-              ? { ...coupon, isDeleted: true }
-              : coupon
-          )
+          prevData.filter((coupon) => coupon._id !== couponToDelete)
         );
         setSnackbarMessage(response.data.message);
         setSnackbarOpen(true);
         setIsConfirmationModalOpen(false);
       }
     } catch (error) {
-      console.error("Error blocking coupon:", error);
-      setSnackbarMessage("Failed to block coupon.");
+      console.error("Error deleting coupon:", error);
+      setSnackbarMessage("Failed to delete coupon.");
       setSnackbarOpen(true);
       setIsConfirmationModalOpen(false);
-    }
-  };
-
-  const handleUnBlockCoupon = async (couponId) => {
-    try {
-      const response = await axiosInstance.patch(`/coupon/unblock/${couponId}`);
-      if (response.status === 200) {
-        setCouponsData((prevData) =>
-          prevData.map((coupon) =>
-            coupon._id === couponId ? { ...coupon, isDeleted: false } : coupon
-          )
-        );
-        setSnackbarMessage("Coupon successfully unblocked!");
-        setSnackbarOpen(true);
-      }
-    } catch (error) {
-      console.error("Error unblocking coupon:", error);
-      setSnackbarMessage("Failed to unblock coupon.");
-      setSnackbarOpen(true);
     }
   };
 
@@ -278,13 +262,27 @@ const Coupons = () => {
                     fontWeight: "bold",
                   }}
                 >
+                  Status
+                </TableCell>
+                <TableCell
+                  sx={{
+                    backgroundColor: "#212121",
+                    color: "#FF9800",
+                    fontWeight: "bold",
+                  }}
+                >
                   Actions
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {couponsData.map((coupon) => (
-                <TableRow key={coupon._id}>
+                <TableRow
+                  key={coupon._id}
+                  sx={{
+                    opacity: coupon.isExpired ? 0.5 : 1,
+                  }}
+                >
                   <TableCell sx={{ color: "#ffffff" }}>
                     {coupon.couponCode}
                   </TableCell>
@@ -295,35 +293,33 @@ const Coupons = () => {
                     {new Date(coupon.createdAt).toLocaleString()}
                   </TableCell>
                   <TableCell>
+                    <Chip
+                      label={coupon.isExpired ? "Inactive" : "Active"}
+                      color={coupon.isExpired ? "error" : "success"}
+                    />
+                  </TableCell>
+                  <TableCell>
                     <Button
                       variant="contained"
                       startIcon={<EditIcon />}
-                      sx={{ backgroundColor: "#FF9800", color: "white" }}
+                      sx={{
+                        backgroundColor: "#FF9800",
+                        color: "white",
+                        margin: "0px 10px",
+                      }}
                       onClick={() => handleEditModalOpen(coupon)}
                     >
                       Edit
                     </Button>
-                    {coupon.isDeleted ? (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<Block />}
-                        sx={{ backgroundColor: "black", color: "gray" }}
-                        onClick={() => handleUnBlockCoupon(coupon._id)}
-                      >
-                        Unblock
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<Block />}
-                        sx={{ backgroundColor: "black", color: "#FF9800" }}
-                        onClick={() => handleBlockCoupon(coupon._id)}
-                      >
-                        Block
-                      </Button>
-                    )}
+                    <Button
+                      variant="contained"
+                      color="error"
+                      startIcon={<Delete />}
+                      sx={{ backgroundColor: "red", color: "white" }}
+                      onClick={() => handleDeleteCoupon(coupon._id)}
+                    >
+                      Delete Coupon
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -365,9 +361,9 @@ const Coupons = () => {
         open={isConfirmationModalOpen}
         onClose={handleConfirmationModalClose}
       >
-        <DialogTitle>Confirm Block</DialogTitle>
+        <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          Are you sure you want to block this coupon?
+          Are you sure you want to delete this coupon?
         </DialogContent>
         <DialogActions>
           <Button
@@ -376,7 +372,7 @@ const Coupons = () => {
           >
             Cancel
           </Button>
-          <Button onClick={handleConfirmBlock} sx={{ color: "#FF9800" }}>
+          <Button onClick={handleConfirmDelete} sx={{ color: "#FF9800" }}>
             Confirm
           </Button>
         </DialogActions>

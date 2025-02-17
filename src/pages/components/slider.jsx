@@ -92,9 +92,9 @@ const Slider = () => {
               height: "100%",
               position: "relative",
             }}
-            animate={{
-              filter: hovered ? "blur(4px)" : "blur(0px)",
-            }}
+            // animate={{
+            //   filter: hovered ? "blur(4px)" : "blur(0px)",
+            // }}
             transition={{ duration: 0.5 }}
           >
             <Image
