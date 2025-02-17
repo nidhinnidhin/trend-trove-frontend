@@ -378,20 +378,12 @@ const CheckoutPage = () => {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                {coupons.map((coupon) => {
-                  console.log(coupon.minOrderAmount);
-
-                  return (
-                    <>
-                      {coupon.minOrderAmount < finalTotal && (
-                        <MenuItem key={coupon._id} value={coupon.couponCode}>
-                          {coupon.couponCode} - {coupon.discountValue}
-                          {coupon.discountType === "percentage" ? "%" : "₹"} off
-                        </MenuItem>
-                      )}
-                    </>
-                  );
-                })}
+                {coupons.map((coupon) => (
+                  <MenuItem key={coupon._id} value={coupon.couponCode}>
+                    {coupon.couponCode} - {coupon.discountValue}
+                    {coupon.discountType === "percentage" ? "%" : "₹"} off
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <Button
