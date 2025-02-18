@@ -24,6 +24,8 @@ import {
   Search,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+
 } from "@mui/icons-material";
 import axiosInstance from "@/utils/adminAxiosInstance";
 import AddOfferModal from "../../modals/addOffer";
@@ -40,10 +42,58 @@ const Offers = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [offerToDelete, setOfferToDelete] = useState(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [offerToReset, setOfferToReset] = useState(null);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     fetchOffers();
+    const interval = setInterval(checkExpiredOffers, 60000);
+    return () => clearInterval(interval);
   }, [page, rowsPerPage, search]);
+
+  const checkExpiredOffers = async () => {
+    try {
+      const response = await axiosInstance.post("/offer/check-expired");
+      if (response.data.updatedOffers) {
+        fetchOffers(); 
+      }
+    } catch (err) {
+      console.error("Failed to check expired offers", err);
+    }
+  };
+
+  const handleResetOffer = async (offerId) => {
+    setOfferToReset(offerId);
+    setResetConfirmOpen(true);
+  };
+
+  const handleConfirmReset = async () => {
+    if (!offerToReset) return;
+
+    try {
+      await axiosInstance.post(`/offer/reset/${offerToReset}`);
+      setOffersData((prevOffers) =>
+        prevOffers.map((offer) =>
+          offer._id === offerToReset
+            ? { ...offer, isActive: false }
+            : offer
+        )
+      );
+      setSnackbarMessage("Offer reset successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage("Error resetting offer");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setResetConfirmOpen(false);
+      setOfferToReset(null);
+    }
+  };
 
   const fetchOffers = async () => {
     try {
@@ -54,7 +104,6 @@ const Offers = () => {
         setOffersData(response.data.offers);
       }
       console.log(response.data.offers);
-      
     } catch (err) {
       console.error("Failed to fetch offers", err);
     } finally {
@@ -247,7 +296,17 @@ const Offers = () => {
                     <DeleteIcon />
                     Delete
                   </Button>
-                  
+                  <Button
+                    onClick={() => handleResetOffer(offer._id)}
+                    sx={{
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      "&:hover": { backgroundColor: "#45a049" },
+                    }}
+                  >
+                    <RefreshIcon />
+                    Reset
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -267,6 +326,25 @@ const Offers = () => {
           setPage(0);
         }}
       />
+
+      <Dialog
+        open={resetConfirmOpen}
+        onClose={() => setResetConfirmOpen(false)}
+      >
+        <DialogTitle>Confirm Reset</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to reset this offer? This will remove all
+            discounts applied through this offer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResetConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmReset} color="primary">
+            Reset
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
