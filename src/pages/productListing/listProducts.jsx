@@ -81,7 +81,7 @@ const StyledWrapper = styled.div`
   .search-icon {
     position: absolute;
     left: 1rem;
-    fill:rgb(3, 3, 3);
+    fill: rgb(3, 3, 3);
     width: 1rem;
     height: 1rem;
     pointer-events: none;
@@ -311,113 +311,116 @@ const ListProducts = ({
             </StyledWrapper>
           </Box>
           <Grid container spacing={1}>
-            {filteredAndSortedProducts.map((product, index) => (
-              <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-                <motion.div
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                >
-                  <Grid
-                    sx={{
-                      height: "650px",
-                      display: "flex",
-                      flexDirection: "column",
-                      border: "0.5px solid lightgray",
-                      position: "relative",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
-                      },
-                    }}
+            {filteredAndSortedProducts.map((product, index) => {
+              console.log("Productttttttt", product);
+
+              return (
+                <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+                  <motion.div
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
-                    {product.originalPrice > product.price && (
-                      <OfferBadge
-                        label={`${calculateDiscount(
-                          product.originalPrice,
-                          product.price
-                        )}% OFF`}
-                      />
-                    )}
-
-                    <CardMedia
-                      component="img"
-                      image={product.image}
-                      alt={product.title}
+                    <Grid
                       sx={{
-                        height: 450,
-                        objectFit: "cover",
-                        cursor: "pointer",
+                        height: "650px",
+                        display: "flex",
+                        flexDirection: "column",
+                        border: "0.5px solid lightgray",
+                        position: "relative",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+                        },
                       }}
-                      onClick={() => handleProductDetail(product.id)}
-                    />
+                    >
+                      {product.isOfferActive &&
+                        product.discountPercentage > 0 && (
+                          <OfferBadge
+                            label={`${product.discountPercentage}% OFF`}
+                          />
+                        )}
 
-                    <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-                      <Typography
-                        variant="h6"
-                        gutterBottom
+                      <CardMedia
+                        component="img"
+                        image={product.image}
+                        alt={product.title}
                         sx={{
-                          fontWeight: "600",
-                          fontFamily: "'Poppins', sans-serif",
-                          color: "#333",
+                          height: 450,
+                          objectFit: "cover",
+                          cursor: "pointer",
                         }}
-                      >
-                        {product.title.slice(0, 30)}...
-                      </Typography>
-                      <Chip
-                        label={`${product.rating || "No"} Rating`}
-                        size="small"
-                        sx={{
-                          backgroundColor: "#ff6f61",
-                          color: "white",
-                          fontSize: "0.75rem",
-                          margin: "5px 0",
-                          borderRadius: "4px",
-                          fontFamily: "'Poppins', sans-serif",
-                        }}
+                        onClick={() => handleProductDetail(product.id)}
                       />
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: "10px",
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{ fontWeight: "bold", color: "#333" }}
-                          >
-                            ₹{product.price}
-                          </Typography>
-                          {product.originalPrice > product.price && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#666",
-                                textDecoration: "line-through",
-                                marginLeft: "4px",
-                              }}
-                            >
-                              ₹{product.originalPrice}
-                            </Typography>
-                          )}
-                        </Box>
+
+                      <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
                         <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ fontFamily: "'Open Sans', sans-serif" }}
+                          variant="h6"
+                          gutterBottom
+                          sx={{
+                            fontWeight: "600",
+                            fontFamily: "'Poppins', sans-serif",
+                            color: "#333",
+                          }}
                         >
-                          Variants: {product.variantsCount}
+                          {product.title.slice(0, 30)}...
                         </Typography>
-                      </Box>
-                    </CardContent>
-                  </Grid>
-                </motion.div>
-              </Grid>
-            ))}
+                        <Chip
+                          label={`${product.rating || "No"} Rating`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#ff6f61",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            margin: "5px 0",
+                            borderRadius: "4px",
+                            fontFamily: "'Poppins', sans-serif",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: "10px",
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{ fontWeight: "bold", color: "#333" }}
+                            >
+                              ₹{product.price.toFixed(1)}
+                            </Typography>
+                            {product.isOfferActive &&
+                              product.originalPrice > product.price && (
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#666",
+                                    textDecoration: "line-through",
+                                    marginLeft: "4px",
+                                  }}
+                                >
+                                  ₹{product.originalPrice}
+                                </Typography>
+                              )}
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontFamily: "'Open Sans', sans-serif" }}
+                          >
+                            Variants: {product.variantsCount}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Grid>
+                  </motion.div>
+                </Grid>
+              );
+            })}
           </Grid>
           <Box
             sx={{

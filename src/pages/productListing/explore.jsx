@@ -23,30 +23,105 @@ export default function Explore() {
         const response = await fetch(
           `http://localhost:9090/api/products/get?page=${currentPage}&limit=8`
         );
+
+        if (!response.ok) {
+          // Handle error responses
+          const errorData = await response.json();
+          console.error("API error:", errorData);
+          throw new Error(errorData.message || "Error fetching products");
+        }
+
         const data = await response.json();
+        console.log("API response:", data);
+
+        // const transformedProducts = data.products.map((product) => {
+        //   let originalPrice = 0;
+        //   let discountedPrice = 0;
+        //   let discountPercentage = 0;
+        
+        //   if (product.variants && product.variants.length > 0) {
+        //     const variant = product.variants[0];
+        //     if (variant.sizes && variant.sizes.length > 0) {
+        //       const firstSize = variant.sizes[0];
+        //       originalPrice = firstSize.price || 0;
+        //       discountedPrice = firstSize.discountPrice || originalPrice;
+        
+        //       // Check for active offer (either product or category)
+        //       if (product.activeOffer) {
+        //         discountPercentage = product.activeOffer._id.discountPercentage || 0;
+        //         if (!firstSize.discountPrice) {
+        //           discountedPrice = originalPrice * (1 - discountPercentage / 100);
+        //         }
+        //       }
+        //     }
+        //   }
+        
+        //   return {
+        //     id: product._id,
+        //     image: product.variants?.[0]?.mainImage || "",
+        //     title: product.name || "Unknown Product",
+        //     description: product.description || "",
+        //     rating: product.ratings || 0,
+        //     price: discountedPrice,
+        //     originalPrice: originalPrice,
+        //     discountPercentage: discountPercentage,
+        //     variantsCount: product.variants?.length || 0,
+        //     category: product.category?.name || "Uncategorized",
+        //     gender: product.gender || "Unisex",
+        //     isDeleted: product.isDeleted || false,
+        //   };
+        // });
 
         const transformedProducts = data.products.map((product) => {
-          const variant = product.variants[0];
-          const firstSize = variant.sizes[0];
+          let originalPrice = 0;
+          let discountedPrice = 0;
+          let discountPercentage = 0;
+          let isOfferActive = false;
+        
+          if (product.variants && product.variants.length > 0) {
+            const variant = product.variants[0];
+            if (variant.sizes && variant.sizes.length > 0) {
+              const firstSize = variant.sizes[0];
+              originalPrice = firstSize.price || 0;
+              discountedPrice = firstSize.discountPrice || originalPrice;
+        
+              // Check if the offer is active
+              if (product.activeOffer && product.activeOffer._id.isActive) {
+                discountPercentage = product.activeOffer._id.discountPercentage || 0;
+                isOfferActive = true;
+                if (!firstSize.discountPrice) {
+                  discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                }
+              } else {
+                // If the offer is inactive, revert to the original price
+                discountedPrice = originalPrice;
+              }
+            }
+          }
+        
           return {
             id: product._id,
-            image: variant.mainImage,
-            title: product.name,
-            description: product.description,
+            image: product.variants?.[0]?.mainImage || "",
+            title: product.name || "Unknown Product",
+            description: product.description || "",
             rating: product.ratings || 0,
-            price: firstSize.discountPrice || firstSize.price,
-            originalPrice: firstSize.price,
-            variantsCount: product.variants.length,
-            category: product.category?.name,
-            gender: product.gender,
-            isDeleted: product.isDeleted,
+            price: discountedPrice,
+            originalPrice: originalPrice,
+            discountPercentage: isOfferActive ? discountPercentage : 0, // Set to 0 if offer is inactive
+            variantsCount: product.variants?.length || 0,
+            category: product.category?.name || "Uncategorized",
+            gender: product.gender || "Unisex",
+            isDeleted: product.isDeleted || false,
+            isOfferActive, // Add a flag to indicate if the offer is active
           };
         });
-
+        
         setProducts(transformedProducts);
         setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error("Error fetching products:", error);
+        // Show error to user
+        alert("Failed to load products. Please try again later.");
       } finally {
         setLoading(false);
       }

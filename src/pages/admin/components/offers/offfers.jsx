@@ -50,20 +50,8 @@ const Offers = () => {
 
   useEffect(() => {
     fetchOffers();
-    const interval = setInterval(checkExpiredOffers, 60000);
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, [page, rowsPerPage, search]);
-
-  const checkExpiredOffers = async () => {
-    try {
-      const response = await axiosInstance.post("/offer/check-expired");
-      if (response.data.updatedOffers) {
-        fetchOffers(); 
-      }
-    } catch (err) {
-      console.error("Failed to check expired offers", err);
-    }
-  };
 
   const handleResetOffer = async (offerId) => {
     setOfferToReset(offerId);

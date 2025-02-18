@@ -90,30 +90,29 @@ const AddOfferModal = ({ open, handleClose, handleOfferAdded }) => {
 
   const handleSubmit = async () => {
     if (!validateFields()) return;
-
+  
     const newOffer = {
       offerName,
       offerType,
-      discountValue: parseFloat(discountValue),
+      discountPercentage: parseFloat(discountValue), // Ensure this is sent as discountPercentage
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       items: selectedItems,
     };
-
+  
     setLoading(true);
     try {
       console.log("Sending Offer:", newOffer);
-
+  
       const response = await axiosInstance.post("/offer/add", newOffer, {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
         },
       });
-
-      // Call handleOfferAdded to update the offers list
-      handleOfferAdded(response.data.offer); // Pass the new offer to parent component
-
+  
+      handleOfferAdded(response.data.offer); 
+  
       setSnackbar({
         open: true,
         message: response.data.message,
