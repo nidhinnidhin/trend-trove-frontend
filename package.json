@@ -14,7 +14,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.0",
     "@mui/material": "^6.4.0",
-    "@mui/x-date-pickers": "^7.26.0",
+    "@mui/x-date-pickers": "^7.27.0",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.5.1",
     "autoprefixer": "^10.4.20",
@@ -22,11 +22,14 @@
     "connect-mongo": "^5.1.0",
     "cropperjs": "^1.6.2",
     "crypto": "^1.0.1",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "express-session": "^1.18.1",
     "framer-motion": "^12.4.1",
     "init": "^0.1.2",
     "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.0",
+    "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.475.0",
     "mongoose": "^8.9.5",
     "next": "15.1.4",
@@ -42,7 +45,8 @@
     "react-redux": "^9.2.0",
     "recharts": "^2.15.0",
     "styled-components": "^6.1.15",
-    "tailwindcss": "^4.0.6"
+    "tailwindcss": "^4.0.6",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

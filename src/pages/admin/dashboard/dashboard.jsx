@@ -20,8 +20,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  ButtonGroup,
+  TextField,
+  Chip
 } from "@mui/material";
-import { ArrowForward } from "@mui/icons-material";
+import { ArrowForward, AttachMoney, ShoppingBag, LocalShipping, AssignmentReturn, LocalOffer, Cancel } from "@mui/icons-material";
 import DashLineChart from "../components/dashboard/dashLineChart";
 import RevenueCard from "../components/dashboard/revenueCard";
 import Users from "../components/users/users";
@@ -33,32 +43,120 @@ import Orders from "../components/orders/orders";
 import Cookies from "js-cookie";
 import Coupons from "../components/coupons/coupons";
 import Offers from "../components/offers/offfers";
+import axios from 'axios';
+import axiosInstance from "@/utils/adminAxiosInstance";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
   const [selectedDate, setSelectedDate] = useState("Last 7 days");
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [filterType, setFilterType] = useState('last7days');
+  const [customDates, setCustomDates] = useState({ startDate: '', endDate: '' });
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    returnedOrders: 0,
+    cancelledOrders: 0,
+    totalDiscount: 0
+  });
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   const getCookie = (name) => {
-  //     const cookies = document.cookie.split("; ");
-  //     for (let cookie of cookies) {
-  //       const [key, value] = cookie.split("=");
-  //       if (key === name) return value;
-  //     }
-  //     return null;
-  //   };
-  
-  //   const token = getCookie("adminToken");
-  
-  //   if (!token) {
-  //     router.push("/admin/authentication/login");
-  //   } else {
-  //     router.push("/admin/dashboard/dashboard");
-  //   }
-  // }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, [filterType, customDates]);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/checkout/get-all-order-product"
+      );
+      if (response.data?.orders) {
+        const filteredOrders = filterOrdersByDate(response.data.orders);
+        setOrders(filteredOrders);
+        calculateStats(filteredOrders);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const filterOrdersByDate = (orders) => {
+    const today = new Date();
+    let startDate = new Date();
+    let endDate = new Date();
+
+    switch (filterType) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'last7days':
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case 'last30days':
+        startDate.setDate(today.getDate() - 30);
+        break;
+      case 'custom':
+        if (customDates.startDate && customDates.endDate) {
+          startDate = new Date(customDates.startDate);
+          endDate = new Date(customDates.endDate);
+        }
+        break;
+    }
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= startDate && orderDate <= endDate;
+    });
+  };
+
+  const calculateStats = (orders) => {
+    const newStats = orders.reduce((acc, order) => {
+      // Total Revenue (excluding cancelled orders)
+      if (order.orderStatus !== 'Cancelled') {
+        acc.totalRevenue += order.totalAmount;
+      }
+
+      // Order counts
+      acc.totalOrders++;
+      
+      switch (order.orderStatus.toLowerCase()) {
+        case 'pending':
+          acc.pendingOrders++;
+          break;
+        case 'cancelled':
+          acc.cancelledOrders++;
+          break;
+      }
+
+      // Check for returns in items
+      if (order.items.some(item => item.status === 'Returned')) {
+        acc.returnedOrders++;
+      }
+
+      // Calculate total discount
+      order.items.forEach(item => {
+        const originalPrice = item.price * item.quantity;
+        const finalPrice = order.totalAmount;
+        acc.totalDiscount += (originalPrice - finalPrice);
+      });
+
+      return acc;
+    }, {
+      totalRevenue: 0,
+      totalOrders: 0,
+      pendingOrders: 0,
+      returnedOrders: 0,
+      cancelledOrders: 0,
+      totalDiscount: 0
+    });
+
+    setStats(newStats);
+  };
 
   const handleLogout = () => {
     setOpenLogoutDialog(true);
@@ -71,6 +169,60 @@ const Dashboard = () => {
 
   const handleCancelLogout = () => {
     setOpenLogoutDialog(false);
+  };
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Order Summary Report", 14, 22);
+    
+    // Add period
+    doc.setFontSize(12);
+    doc.text(`Period: ${filterType.replace(/([A-Z])/g, ' $1').toLowerCase()}`, 14, 32);
+    
+    // Add stats table
+    doc.autoTable({
+      startY: 40,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Revenue', `₹${stats.totalRevenue.toLocaleString('en-IN')}`],
+        ['Total Orders', stats.totalOrders],
+        ['Pending Orders', stats.pendingOrders],
+        ['Returned Orders', stats.returnedOrders],
+        ['Cancelled Orders', stats.cancelledOrders],
+        ['Total Discount', `₹${stats.totalDiscount.toLocaleString('en-IN')}`],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [255, 152, 0] }, // Orange header
+    });
+
+    // Add orders table
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 10,
+      head: [['Order ID', 'Date', 'Customer', 'Items', 'Amount', 'Status', 'Payment']],
+      body: orders.map(order => [
+        order.orderId,
+        new Date(order.createdAt).toLocaleDateString(),
+        order.customer.email,
+        order.items.map(item => `${item.productName} x ${item.quantity}`).join('\n'),
+        `₹${order.totalAmount}`,
+        order.orderStatus,
+        order.payment.method
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [255, 152, 0] },
+      styles: { overflow: 'linebreak' },
+      columnStyles: {
+        3: { cellWidth: 50 }, // Wider column for items
+      },
+    });
+
+    // Save the PDF
+    const fileName = `order_summary_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
   };
 
   return (
@@ -213,11 +365,12 @@ const Dashboard = () => {
               <Box sx={{ marginTop: 2 }}>
                 <Button
                   variant="contained"
+                  onClick={generatePDF}
                   sx={{
-                    backgroundColor: "#FF9800", // Orange button
+                    backgroundColor: "#FF9800",
                     color: "white",
                     "&:hover": {
-                      backgroundColor: "#FF5722", // Darker orange on hover
+                      backgroundColor: "#FF5722",
                     },
                   }}
                 >
@@ -227,54 +380,124 @@ const Dashboard = () => {
 
               <Divider sx={{ marginY: 3, borderColor: "#444" }} />
 
-              {/* Revenue Cards */}
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={3}>
-                  <RevenueCard title="Revenue" amount="$5,000" percent="+15%" />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <RevenueCard title="Orders" amount="250" percent="+10%" />
-                </Grid>
-                <Grid item xs={12} sm={3}>
+              {/* Stats Cards */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
                   <RevenueCard
-                    title="Products Sold"
-                    amount="1,500"
-                    percent="+5%"
+                    title="Total Revenue"
+                    amount={stats.totalRevenue}
+                    icon={AttachMoney}
+                    color="#4CAF50"
                   />
                 </Grid>
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
                   <RevenueCard
-                    title="Total Customers"
-                    amount="1,200"
-                    percent="+8%"
+                    title="Total Orders"
+                    amount={stats.totalOrders}
+                    icon={ShoppingBag}
+                    color="#2196F3"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <RevenueCard
+                    title="Pending Orders"
+                    amount={stats.pendingOrders}
+                    icon={LocalShipping}
+                    color="#FF9800"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <RevenueCard
+                    title="Returns"
+                    amount={stats.returnedOrders}
+                    icon={AssignmentReturn}
+                    color="#f44336"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <RevenueCard
+                    title="Cancelled"
+                    amount={stats.cancelledOrders}
+                    icon={Cancel}
+                    color="#9C27B0"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} lg={3}>
+                  <RevenueCard
+                    title="Total Discount"
+                    amount={stats.totalDiscount}
+                    icon={LocalOffer}
+                    color="#607D8B"
                   />
                 </Grid>
               </Grid>
 
-              {/* Graph */}
-              <Grid container spacing={3} sx={{ marginTop: 3 }}>
-                <Grid item xs={12}>
-                  <Card sx={{ backgroundColor: "#333", color: "white" }}>
-                    <CardHeader
-                      title="Orders Update"
-                      action={
-                        <Button
-                          endIcon={<ArrowForward />}
-                          sx={{
-                            color: "#FF9800", // Orange for button text
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      }
-                    />
-                    <CardContent>
-                      <DashLineChart />{" "}
-                      {/* Assume you have a LineChart component */}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+              {/* Chart */}
+              <Card sx={{ mb: 3, backgroundColor: '#333' }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>Sales Overview</Typography>
+                  <DashLineChart data={orders} />
+                </CardContent>
+              </Card>
+
+              {/* Orders Table */}
+              <Card sx={{ backgroundColor: '#333' }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>Recent Orders</Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ color: 'white' }}>Order ID</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Date</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Customer</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Items</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Total Amount</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Status</TableCell>
+                          <TableCell sx={{ color: 'white' }}>Payment</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.orderId}>
+                            <TableCell sx={{ color: 'white' }}>{order.orderId}</TableCell>
+                            <TableCell sx={{ color: 'white' }}>
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell sx={{ color: 'white' }}>{order.customer.email}</TableCell>
+                            <TableCell sx={{ color: 'white' }}>
+                              {order.items.map(item => (
+                                <div key={item.itemId}>
+                                  {item.productName} x {item.quantity}
+                                </div>
+                              ))}
+                            </TableCell>
+                            <TableCell sx={{ color: 'white' }}>₹{order.totalAmount}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={order.orderStatus}
+                                color={
+                                  order.orderStatus === 'pending' ? 'warning' :
+                                  order.orderStatus === 'Cancelled' ? 'error' :
+                                  order.orderStatus === 'Returned' ? 'info' : 'success'
+                                }
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={order.payment.method}
+                                color={order.payment.status === 'completed' ? 'success' : 'warning'}
+                                size="small"
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
             </Box>
           )}
 
