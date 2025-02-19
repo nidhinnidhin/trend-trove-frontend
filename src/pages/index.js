@@ -82,7 +82,7 @@ export default function Home() {
               alt="Latest Products Banner"
             />
           </div> */}
-          <TopBrands />
+          {/* <TopBrands /> */}
           <div
             style={{
               width: "100%",

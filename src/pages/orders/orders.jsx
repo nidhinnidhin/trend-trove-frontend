@@ -309,7 +309,7 @@ const OrdersPage = () => {
                       </TableCell>
 
                       {/* Delivery Address Column */}
-                      <TableCell>
+                      {/* <TableCell>
                         <Box
                           sx={{
                             display: "flex",
@@ -330,7 +330,7 @@ const OrdersPage = () => {
                             Mobile: {order.shippingAddress.mobileNumber}
                           </Typography>
                         </Box>
-                      </TableCell>
+                      </TableCell> */}
 
                       {/* Payment Info Column */}
                       <TableCell>

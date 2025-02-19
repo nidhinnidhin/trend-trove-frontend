@@ -61,7 +61,7 @@ const UserProfilePage = () => {
   const [walletData, setWalletData] = useState({
     totalAmount: 0,
     returnedOrders: [],
-    cancelledOrders: []
+    cancelledOrders: [],
   });
 
   useEffect(() => {
@@ -109,26 +109,34 @@ const UserProfilePage = () => {
         }
 
         const processOrdersData = (orders) => {
-          const returnedOrders = orders.filter(order => 
-            order.items.some(item => item.status === "Returned") || order.orderStatus === "returned"
-          );
-          
-          const cancelledOrders = orders.filter(order => 
-            order.items.some(item => item.status === "Cancelled") || order.orderStatus === "Cancelled"
+          const returnedOrders = orders.filter(
+            (order) =>
+              order.items.some((item) => item.status === "Returned") ||
+              order.orderStatus === "returned"
           );
 
-          const totalAmount = [...returnedOrders, ...cancelledOrders].reduce((sum, order) => 
-            sum + order.payment.amount, 0
+          const cancelledOrders = orders.filter(
+            (order) =>
+              order.items.some((item) => item.status === "Cancelled") ||
+              order.orderStatus === "Cancelled"
+          );
+
+          const totalAmount = [...returnedOrders, ...cancelledOrders].reduce(
+            (sum, order) => sum + order.payment.amount,
+            0
           );
 
           setWalletData({
             totalAmount,
             returnedOrders,
-            cancelledOrders
+            cancelledOrders,
           });
         };
 
-        if (ordersResponse.status === "fulfilled" && ordersResponse.value.data) {
+        if (
+          ordersResponse.status === "fulfilled" &&
+          ordersResponse.value.data
+        ) {
           const orders = ordersResponse.value.data.orders;
           processOrdersData(orders);
         }
@@ -234,13 +242,11 @@ const UserProfilePage = () => {
         return (
           <Card
             sx={{
-              backgroundColor: "#ffffff",
-              p: 3,
+              backgroundColor: "#f8f9fa",
               width: "100%",
-              maxWidth: 500,
-              mx: "auto",
-              borderRadius: 3,
-              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+              borderRadius: 2,
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              overflow: "hidden",
             }}
           >
             {!user ? (
@@ -251,76 +257,178 @@ const UserProfilePage = () => {
               </CardContent>
             ) : (
               <>
-                <CardContent
+                {/* Profile Header */}
+                <Box
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
+                    backgroundColor: "#1a1a1a",
+                    py: 6,
+                    px: 3,
                     textAlign: "center",
+                    position: "relative",
                   }}
                 >
                   <Box
                     sx={{
-                      width: 120,
-                      height: 120,
-                      borderRadius: "50%",
-                      overflow: "hidden",
-                      mb: 2,
-                      border: "3px solid #222",
+                      width: 150,
+                      height: 150,
+                      margin: "0 auto",
+                      position: "relative",
                     }}
                   >
-                    <Image
-                      src={user?.image || "/default-avatar.png"}
-                      width={120}
-                      height={120}
-                      style={{ objectFit: "cover" }}
-                      alt="User Profile"
-                    />
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        border: "4px solid #ffffff",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                      }}
+                    >
+                      <Image
+                        src={user?.image || "/default-avatar.png"}
+                        width={150}
+                        height={150}
+                        style={{ objectFit: "cover" }}
+                        alt="User Profile"
+                      />
+                    </Box>
                   </Box>
-                  <Typography variant="h5" fontWeight={600} color="#222">
+                  <Typography
+                    variant="h4"
+                    sx={{ color: "white", mt: 2, fontWeight: 600 }}
+                  >
                     {user?.firstname} {user?.lastname}
                   </Typography>
-                  <Typography variant="body2" color="gray" mt={0.5}>
+                  <Typography variant="body1" sx={{ color: "#9e9e9e", mt: 1 }}>
                     @{user?.username}
                   </Typography>
-                  <Typography variant="body2" color="gray">
-                    {user?.email}
-                  </Typography>
+                </Box>
+
+                {/* Profile Content */}
+                <CardContent sx={{ p: 4 }}>
+                  <Grid container spacing={4}>
+                    {/* Personal Information */}
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{ mb: 3, color: "#1a1a1a", fontWeight: 600 }}
+                        >
+                          Personal Information
+                        </Typography>
+                        <Box
+                          sx={{
+                            backgroundColor: "white",
+                            p: 3,
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ color: "#666" }}
+                              >
+                                Email Address
+                              </Typography>
+                              <Typography variant="body1" sx={{ mt: 1 }}>
+                                {user?.email}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ color: "#666" }}
+                              >
+                                First Name
+                              </Typography>
+                              <Typography variant="body1" sx={{ mt: 1 }}>
+                                {user?.firstname}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ color: "#666" }}
+                              >
+                                Last Name
+                              </Typography>
+                              <Typography variant="body1" sx={{ mt: 1 }}>
+                                {user?.lastname}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{ color: "#666" }}
+                              >
+                                Username
+                              </Typography>
+                              <Typography variant="body1" sx={{ mt: 1 }}>
+                                {user?.username}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Box>
+                    </Grid>
+
+                    {/* Account Settings */}
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ mb: 4 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{ mb: 3, color: "#1a1a1a", fontWeight: 600 }}
+                        >
+                          Account Settings
+                        </Typography>
+                        <Box
+                          sx={{
+                            backgroundColor: "white",
+                            p: 3,
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={handleEditProfile}
+                            sx={{
+                              mb: 2,
+                              backgroundColor: "#1a1a1a",
+                              color: "white",
+                              py: 1.5,
+                              "&:hover": {
+                                backgroundColor: "#333",
+                              },
+                            }}
+                          >
+                            Edit Profile
+                          </Button>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<LockReset />}
+                            onClick={() => setIsResetPasswordModalOpen(true)}
+                            sx={{
+                              borderColor: "#1a1a1a",
+                              color: "#1a1a1a",
+                              py: 1.5,
+                              "&:hover": {
+                                borderColor: "#333",
+                                backgroundColor: "rgba(26,26,26,0.04)",
+                              },
+                            }}
+                          >
+                            Reset Password
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
                 </CardContent>
-                <CardActions sx={{ justifyContent: "center", pb: 2, gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    onClick={handleEditProfile}
-                    sx={{
-                      backgroundColor: "#222",
-                      color: "white",
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: "none",
-                      "&:hover": { backgroundColor: "#444" },
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<LockReset />}
-                    onClick={() => setIsResetPasswordModalOpen(true)}
-                    sx={{
-                      backgroundColor: "#222",
-                      color: "white",
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: "none",
-                      "&:hover": { backgroundColor: "#444" },
-                    }}
-                  >
-                    Reset Password
-                  </Button>
-                </CardActions>
               </>
             )}
           </Card>
@@ -328,68 +436,187 @@ const UserProfilePage = () => {
 
       case "addresses":
         return (
-          <Grid
-            container
-            spacing={2}
-            sx={{ width: "100%", justifyContent: "center" }}
+          <Box
+            sx={{
+              width: "100%",
+              backgroundColor: "#fff",
+              borderRadius: 3,
+              p: 3,
+            }}
           >
-            {addresses.length === 0 ? (
-              <Grid item xs={12}>
-                <Typography variant="h6" align="center">
-                  No addresses found. Add your first address.
-                </Typography>
-              </Grid>
-            ) : (
-              addresses.map((address) => (
-                <Grid item xs={12} sm={6} md={4} key={address._id}>
-                  <Card
+            {/* Header */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 4,
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: "#1a1a1a" }}
+              >
+                My Addresses
+              </Typography>
+            </Box>
+
+            {/* Addresses List */}
+            <Grid container spacing={3}>
+              {addresses.length === 0 ? (
+                <Grid item xs={12}>
+                  <Box
                     sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: 3,
-                      p: 2,
-                      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-                      transition: "0.3s",
-                      "&:hover": {
-                        boxShadow: "0 6px 15px rgba(0, 0, 0, 0.15)",
-                      },
+                      textAlign: "center",
+                      py: 4,
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: 2,
                     }}
                   >
-                    <CardContent>
-                      <Typography variant="h6" fontWeight={600} color="#222">
-                        {address.fullName}
-                      </Typography>
-                      <Typography variant="body2" color="gray" mt={1}>
-                        {address.address}, {address.city}, {address.state} -{" "}
-                        {address.pincode}
-                      </Typography>
-                      <Typography variant="body2" color="gray">
-                        Phone: {address.mobileNumber}
-                      </Typography>
-                      <Box display="flex" justifyContent="flex-end" mt={2}>
-                        <IconButton
-                          sx={{
-                            color: "#222",
-                            "&:hover": { color: "#444" },
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleDeleteAddress(address._id)}
-                          sx={{
-                            color: "red",
-                            "&:hover": { color: "#d32f2f" },
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                    <Typography variant="h6">
+                      No addresses found. Add your first address.
+                    </Typography>
+                  </Box>
                 </Grid>
-              ))
-            )}
-          </Grid>
+              ) : (
+                addresses.map((address) => (
+                  <Grid item xs={12} key={address._id}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
+                        transition: "0.3s",
+                        "&:hover": {
+                          borderColor: "#1a1a1a",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        },
+                      }}
+                    >
+                      {/* Address Header */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mb: 2,
+                          pb: 2,
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 600, color: "#1a1a1a" }}
+                          >
+                            {address.fullName}
+                          </Typography>
+                          <Chip
+                            label={address.addressType}
+                            size="small"
+                            sx={{
+                              mt: 1,
+                              backgroundColor: "#1a1a1a",
+                              color: "white",
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <IconButton
+                            onClick={() => handleEditAddress(address)}
+                            sx={{
+                              color: "#1a1a1a",
+                              mr: 1,
+                              "&:hover": { backgroundColor: "#f5f5f5" },
+                            }}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleDeleteAddress(address._id)}
+                            sx={{
+                              color: "#d32f2f",
+                              "&:hover": {
+                                backgroundColor: "#fff5f5",
+                                color: "#b71c1c",
+                              },
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+                      </Box>
+
+                      {/* Address Details */}
+                      <Grid container spacing={2}>
+                        {/* Contact Information */}
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Mobile Number
+                          </Typography>
+                          <Typography variant="body1">
+                            {address.mobileNumber}
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            PIN Code
+                          </Typography>
+                          <Typography variant="body1">
+                            {address.pincode}
+                          </Typography>
+                        </Grid>
+
+                        {/* Full Address */}
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Address
+                          </Typography>
+                          <Box
+                            sx={{
+                              backgroundColor: "#f8f9fa",
+                              p: 2,
+                              mt: 1,
+                              borderRadius: 1,
+                              border: "1px solid #eee",
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{ lineHeight: 1.6 }}
+                            >
+                              {address.address}
+                            </Typography>
+                          </Box>
+                        </Grid>
+
+                        {/* City and State */}
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            City
+                          </Typography>
+                          <Typography variant="body1">
+                            {address.city}
+                          </Typography>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            State
+                          </Typography>
+                          <Typography variant="body1">
+                            {address.state}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                ))
+              )}
+            </Grid>
+          </Box>
         );
 
       case "orders":
@@ -532,18 +759,21 @@ const UserProfilePage = () => {
         );
       case "wallet":
         return (
-          <Card sx={{ bgcolor: '#1a1a1a', color: 'white', borderRadius: 2 }}>
+          <Card sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2 }}>
             <CardContent>
               {/* Wallet Balance */}
-              <Box sx={{ 
-                p: 3, 
-                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                borderRadius: 2,
-                mb: 3,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
+              <Box
+                sx={{
+                  p: 3,
+                  background:
+                    "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                  borderRadius: 2,
+                  mb: 3,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Box>
                   <Typography variant="h6" gutterBottom>
                     Wallet Balance
@@ -559,46 +789,59 @@ const UserProfilePage = () => {
               <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
                 Order History
               </Typography>
-              <TableContainer sx={{ 
-                maxHeight: 400,
-                bgcolor: '#262626',
-                borderRadius: 2,
-                '& .MuiTableCell-root': { 
-                  borderColor: '#404040',
-                  color: 'white'
-                }
-              }}>
+              <TableContainer
+                sx={{
+                  maxHeight: 400,
+                  bgcolor: "#262626",
+                  borderRadius: 2,
+                  "& .MuiTableCell-root": {
+                    borderColor: "#404040",
+                    color: "white",
+                  },
+                }}
+              >
                 <Table stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ bgcolor: '#333' }}>Order Date</TableCell>
-                      <TableCell sx={{ bgcolor: '#333' }}>Product</TableCell>
-                      <TableCell sx={{ bgcolor: '#333' }}>Amount</TableCell>
-                      <TableCell sx={{ bgcolor: '#333' }}>Status</TableCell>
+                      <TableCell sx={{ bgcolor: "#333" }}>Order Date</TableCell>
+                      <TableCell sx={{ bgcolor: "#333" }}>Product</TableCell>
+                      <TableCell sx={{ bgcolor: "#333" }}>Amount</TableCell>
+                      <TableCell sx={{ bgcolor: "#333" }}>Status</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {[...walletData.returnedOrders, ...walletData.cancelledOrders]
-                      .sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))
-                      .map((order) => (
+                    {[
+                      ...walletData.returnedOrders,
+                      ...walletData.cancelledOrders,
+                    ]
+                      .sort(
+                        (a, b) => new Date(b.orderDate) - new Date(a.orderDate)
+                      )
+                      .map((order) =>
                         order.items.map((item, index) => (
-                          <TableRow 
+                          <TableRow
                             key={`${order.orderId}-${index}`}
-                            sx={{ '&:hover': { bgcolor: '#333' } }}
+                            sx={{ "&:hover": { bgcolor: "#333" } }}
                           >
                             <TableCell>
                               {new Date(order.orderDate).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <img 
-                                  src={item.image} 
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 2,
+                                }}
+                              >
+                                <img
+                                  src={item.image}
                                   alt={item.productName}
-                                  style={{ 
-                                    width: 40, 
-                                    height: 40, 
+                                  style={{
+                                    width: 40,
+                                    height: 40,
                                     borderRadius: 4,
-                                    objectFit: 'cover'
+                                    objectFit: "cover",
                                   }}
                                 />
                                 <Typography variant="body2">
@@ -610,18 +853,21 @@ const UserProfilePage = () => {
                             <TableCell>
                               <Chip
                                 label={item.status}
-                                color={item.status === "Returned" ? "info" : "error"}
+                                color={
+                                  item.status === "Returned" ? "info" : "error"
+                                }
                                 size="small"
-                                sx={{ 
-                                  bgcolor: item.status === "Returned" 
-                                    ? 'rgba(33, 150, 243, 0.2)' 
-                                    : 'rgba(244, 67, 54, 0.2)'
+                                sx={{
+                                  bgcolor:
+                                    item.status === "Returned"
+                                      ? "rgba(33, 150, 243, 0.2)"
+                                      : "rgba(244, 67, 54, 0.2)",
                                 }}
                               />
                             </TableCell>
                           </TableRow>
                         ))
-                    ))}
+                      )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -635,33 +881,40 @@ const UserProfilePage = () => {
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ minHeight: "100vh", backgroundColor: "#ffffff", p: 6 }}
+      maxWidth="xl"
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: "#f0f2f5",
+        p: { xs: 2, sm: 4, md: 6 },
+      }}
     >
       <Header />
-      <Box display="flex" mt={4}>
+      <Box
+        display="flex"
+        mt={4}
+        gap={3}
+        flexDirection={{ xs: "column", md: "row" }}
+      >
         {/* Sidebar */}
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
-            width: 250,
-            height: "80vh",
+            width: { xs: "100%", md: 280 },
+            backgroundColor: "#1a1a1a",
+            borderRadius: 2,
             p: 2,
-            mr: 3,
-            backgroundColor: "#1e1e1e",
-            color: "#ffffff",
           }}
         >
           <List>
             <ListItem
               button
               onClick={() => setSelectedSection("profile")}
-              sx={{ cursor: "pointer" }}
+              sx={{ cursor: "pointer", color: "#ffffff" }}
             >
               <ListItemIcon sx={{ color: "#ffffff" }}>
                 <PersonIcon />
               </ListItemIcon>
-              <ListItemText primary="Profile" />
+              <ListItemText primary="Profile" sx={{ color: "#ffffff" }} />
             </ListItem>
             <ListItem
               button
@@ -671,7 +924,7 @@ const UserProfilePage = () => {
               <ListItemIcon sx={{ color: "#ffffff" }}>
                 <LocationOnIcon />
               </ListItemIcon>
-              <ListItemText primary="Addresses" />
+              <ListItemText primary="Addresses" sx={{ color: "#ffffff" }} />
             </ListItem>
             <ListItem
               button
@@ -681,7 +934,7 @@ const UserProfilePage = () => {
               <ListItemIcon sx={{ color: "#ffffff" }}>
                 <ReceiptIcon />
               </ListItemIcon>
-              <ListItemText primary="Orders" />
+              <ListItemText primary="Orders" sx={{ color: "#ffffff" }} />
             </ListItem>
             <ListItem
               button
@@ -691,7 +944,7 @@ const UserProfilePage = () => {
               <ListItemIcon sx={{ color: "#ffffff" }}>
                 <ShoppingCartIcon />
               </ListItemIcon>
-              <ListItemText primary="Cart" />
+              <ListItemText primary="Cart" sx={{ color: "#ffffff" }} />
             </ListItem>
             <ListItem
               button
@@ -701,7 +954,7 @@ const UserProfilePage = () => {
               <ListItemIcon sx={{ color: "#ffffff" }}>
                 <AccountBalanceWalletIcon />
               </ListItemIcon>
-              <ListItemText primary="Wallet" />
+              <ListItemText primary="Wallet" sx={{ color: "#ffffff" }} />
             </ListItem>
           </List>
         </Paper>

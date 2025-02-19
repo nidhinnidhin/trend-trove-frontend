@@ -182,7 +182,7 @@ const Products = ({ products, loading }) => {
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        All Products
+        Latest Products
       </Typography>
 
       {loading ? (

@@ -101,20 +101,41 @@ const CheckoutPage = () => {
     return discount;
   };
 
-  const handleCouponChange = (event) => {
+  const handleCouponChange = async (event) => {
     const couponCode = event.target.value;
     setSelectedCoupon(couponCode);
 
     if (couponCode) {
-      const discount = calculatePreviewDiscount(
-        couponCode,
-        checkoutData.totalPrice
-      );
-      setPreviewDiscount(discount);
-      setSnackbarMessage(
-        `Coupon selected! You'll save ₹${discount} at checkout`
-      );
-      setSnackbarOpen(true);
+      try {
+        const token = localStorage.getItem("usertoken");
+        const response = await fetch("http://localhost:9090/api/coupon/apply", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            couponCode,
+            totalPrice: checkoutData.totalPrice,
+            userId: localStorage.getItem("userId")
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to apply coupon");
+        }
+
+        const data = await response.json();
+        setPreviewDiscount(data.discountAmount);
+        setSnackbarMessage(`Coupon applied! You'll save ₹${data.discountAmount} at checkout`);
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Error applying coupon:", error);
+        setSnackbarMessage("Failed to apply coupon");
+        setSnackbarOpen(true);
+        setSelectedCoupon("");
+        setPreviewDiscount(0);
+      }
     } else {
       setPreviewDiscount(0);
     }
@@ -308,7 +329,6 @@ const CheckoutPage = () => {
         throw new Error("Checkout failed");
       }
 
-      // Clear cart after successful order
       await clearCart();
       
       setSnackbarMessage("Order placed successfully!");

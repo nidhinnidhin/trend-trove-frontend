@@ -374,7 +374,7 @@ const DetailProduct = () => {
                 borderRadius: "8px",
                 overflow: "hidden",
                 backgroundColor: "#f8f9fa",
-                height: "500px",
+                height: "700px",
               }}
             >
               <Box
