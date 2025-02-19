@@ -21,6 +21,7 @@
     "axios": "^1.7.9",
     "connect-mongo": "^5.1.0",
     "cropperjs": "^1.6.2",
+    "crypto": "^1.0.1",
     "dayjs": "^1.11.13",
     "express-session": "^1.18.1",
     "framer-motion": "^12.4.1",

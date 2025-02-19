@@ -434,7 +434,7 @@ function Cart() {
     const checkoutData = {
       cartId: cart._id,
       cartItems: cart.items,
-      totalPrice: totals.totalPrice,
+      totalPrice: totals.finalTotal,
       finalTotal: totals.finalTotal + shippingCost,
       deliveryCharge: shippingCost,
       discountAmount: totals.discountAmount,

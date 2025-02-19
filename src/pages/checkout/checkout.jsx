@@ -25,7 +25,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { LocationOn, LocalShipping, Payment } from "@mui/icons-material";
+import { LocationOn, LocalShipping, Payment, CreditCard, MonetizationOn } from "@mui/icons-material";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import DeliveryLoader from "@/loaders/deliveryLoader";
@@ -41,6 +41,7 @@ const CheckoutPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showLoader, setShowLoader] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
 
   useEffect(() => {
     if (router.query.data) {
@@ -150,7 +151,187 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePlaceOrder = async () => {
+  const handleOnlinePayment = async () => {
+    try {
+      setLoading(true);
+      
+      // Load Razorpay SDK
+      const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      // Create order
+      const token = localStorage.getItem("usertoken");
+      const response = await fetch(
+        "http://localhost:9090/api/payment/create-order",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount: Math.round(previewTotal * 100), // amount in paise
+            currency: "INR",
+          }),
+        }
+      );
+
+      const orderData = await response.json();
+
+      // Initialize Razorpay payment
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: Math.round(previewTotal * 100),
+        currency: "INR",
+        name: "TREND TROVE",
+        description: "Purchase Payment",
+        order_id: orderData.id,
+        prefill: {
+          name: selectedAddress?.fullName || "",
+          contact: selectedAddress?.mobileNumber || "",
+        },
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch(
+              "http://localhost:9090/api/payment/verify",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.status === "success") {
+              // Create order with payment details
+              const checkoutPayload = {
+                cartId: checkoutData.cartId,
+                addressId: selectedAddress._id,
+                shippingMethod: "Standard",
+                paymentMethod: "online",
+                transactionId: response.razorpay_payment_id,
+                paymentStatus: "completed",
+                couponCode: selectedCoupon,
+                finalTotal: previewTotal,
+                items: cartItems.map((item) => ({
+                  ...item,
+                  finalPrice: item.sizeVariant.discountPrice * item.quantity,
+                })),
+              };
+
+              await handlePlaceOrder(checkoutPayload);
+              
+              // Clear cart and redirect
+              await clearCart();
+              router.push("/orders/orders");
+            }
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            setSnackbarMessage("Payment verification failed");
+            setSnackbarOpen(true);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          },
+        },
+        theme: {
+          color: "#333",
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+
+    } catch (error) {
+      console.error("Payment initiation failed:", error);
+      setSnackbarMessage(error.message);
+      setSnackbarOpen(true);
+      setLoading(false);
+    }
+  };
+
+  const handleCashOnDelivery = async () => {
+    try {
+      setLoading(true);
+      const checkoutPayload = {
+        cartId: checkoutData.cartId,
+        addressId: selectedAddress._id,
+        shippingMethod: "Standard",
+        paymentMethod: "cod",
+        transactionId: "COD_" + Date.now(),
+        paymentStatus: "pending",
+        couponCode: selectedCoupon,
+        finalTotal: previewTotal,
+        items: cartItems.map((item) => ({
+          ...item,
+          finalPrice: item.sizeVariant.discountPrice * item.quantity,
+        })),
+      };
+
+      const token = localStorage.getItem("usertoken");
+      const response = await fetch(
+        "http://localhost:9090/api/checkout/create-checkout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(checkoutPayload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Checkout failed");
+      }
+
+      // Clear cart after successful order
+      await clearCart();
+      
+      setSnackbarMessage("Order placed successfully!");
+      setSnackbarOpen(true);
+      router.push("/orders/orders");
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      setSnackbarMessage("Failed to place order: " + error.message);
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentClick = () => {
+    if (paymentMethod === "online") {
+      handleOnlinePayment();
+    } else {
+      handleCashOnDelivery();
+    }
+  };
+
+  const handlePlaceOrder = async (checkoutPayload) => {
     if (!checkoutData) return;
 
     setShowLoader(true);
@@ -202,21 +383,6 @@ const CheckoutPage = () => {
         return;
       }
     }
-
-    const checkoutPayload = {
-      cartId: checkoutData.cartId,
-      addressId: selectedAddress._id,
-      shippingMethod: "Standard",
-      paymentMethod: "Cash On Delivery",
-      transactionId: "txn_1234567890",
-      paymentStatus: "completed",
-      couponCode: selectedCoupon,
-      finalTotal: finalTotal,
-      items: cartItems.map((item) => ({
-        ...item,
-        finalPrice: item.sizeVariant.discountPrice * item.quantity,
-      })),
-    };
 
     try {
       const response = await fetch(
@@ -404,23 +570,46 @@ const CheckoutPage = () => {
               <Payment sx={{ mr: 1, color: "#333" }} />
               <Typography variant="h6">Payment Method</Typography>
             </Box>
-            <RadioGroup defaultValue="cod">
+
+            <RadioGroup
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
               <FormControlLabel
                 value="cod"
                 control={<Radio />}
                 label={
-                  <Box>
-                    <Typography variant="subtitle1">
-                      Cash on Delivery
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Pay when you receive
-                    </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <MonetizationOn sx={{ mr: 1 }} />
+                    <Box>
+                      <Typography variant="subtitle1">Cash on Delivery</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Pay when you receive
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ mb: 2 }}
+              />
+
+              <FormControlLabel
+                value="online"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <CreditCard sx={{ mr: 1 }} />
+                    <Box>
+                      <Typography variant="subtitle1">Pay Online</Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Credit/Debit Card, UPI, Net Banking
+                      </Typography>
+                    </Box>
                   </Box>
                 }
                 sx={{ mb: 2 }}
               />
             </RadioGroup>
+
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel id="coupon-select-label">Select Coupon</InputLabel>
               <Select
@@ -441,6 +630,7 @@ const CheckoutPage = () => {
                 ))}
               </Select>
             </FormControl>
+
             <Button
               variant="contained"
               fullWidth
@@ -452,10 +642,10 @@ const CheckoutPage = () => {
                 },
                 py: 1.5,
               }}
-              onClick={handlePlaceOrder}
+              onClick={handlePaymentClick}
               disabled={loading}
             >
-              {loading ? "Placing Order..." : "Place Order"}
+              {loading ? "Processing..." : `Pay ₹${previewTotal}`}
             </Button>
             <Typography
               variant="body2"
@@ -474,7 +664,7 @@ const CheckoutPage = () => {
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="success"
+          severity="info"
           sx={{ width: "100%" }}
         >
           {snackbarMessage}

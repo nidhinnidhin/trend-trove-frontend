@@ -35,6 +35,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   LockReset,
+  AccountBalanceWallet as WalletIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import Header from "../components/header";
@@ -57,6 +58,8 @@ const UserProfilePage = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
     useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletTransactions, setWalletTransactions] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -499,10 +502,120 @@ const UserProfilePage = () => {
             </Table>
           </TableContainer>
         );
+      case "wallet":
+        return (
+          <Card
+            sx={{
+              backgroundColor: "#ffffff",
+              borderRadius: 3,
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
+              maxWidth: 800,
+              mx: "auto",
+            }}
+          >
+            <Box
+              sx={{
+                background: "linear-gradient(45deg, #222 30%, #444 90%)",
+                color: "white",
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <WalletIcon sx={{ fontSize: 48, mb: 2 }} />
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Wallet Balance
+              </Typography>
+              <Typography variant="h3" sx={{ mb: 2 }}>
+                ₹{walletBalance.toFixed(2)}
+              </Typography>
+            </Box>
+
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+                Transaction History
+              </Typography>
+              {walletTransactions.length === 0 ? (
+                <Typography variant="body1" color="text.secondary" textAlign="center">
+                  No transactions yet
+                </Typography>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Type</TableCell>
+                        <TableCell align="right">Amount</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {walletTransactions.map((transaction) => (
+                        <TableRow key={transaction._id}>
+                          <TableCell>
+                            {new Date(transaction.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={transaction.type}
+                              color={transaction.type === 'credit' ? 'success' : 'error'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography
+                              color={transaction.type === 'credit' ? 'success.main' : 'error.main'}
+                            >
+                              {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toFixed(2)}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
+          </Card>
+        );
       default:
         return null;
     }
   };
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      if (selectedSection === 'wallet') {
+        try {
+          const token = localStorage.getItem('usertoken');
+          const response = await fetch('http://localhost:9090/api/wallet/details', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch wallet data');
+          }
+
+          const data = await response.json();
+          setWalletBalance(data.balance);
+          setWalletTransactions(data.transactions);
+        } catch (error) {
+          console.error('Error fetching wallet data:', error);
+          setSnackbarMessage('Failed to load wallet data');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
+      }
+    };
+
+    fetchWalletData();
+  }, [selectedSection]);
 
   return (
     <Container
@@ -563,6 +676,16 @@ const UserProfilePage = () => {
                 <ShoppingCartIcon />
               </ListItemIcon>
               <ListItemText primary="Cart" />
+            </ListItem>
+            <ListItem
+              button
+              onClick={() => setSelectedSection("wallet")}
+              sx={{ cursor: "pointer" }}
+            >
+              <ListItemIcon sx={{ color: "#ffffff" }}>
+                <WalletIcon />
+              </ListItemIcon>
+              <ListItemText primary="Wallet" />
             </ListItem>
           </List>
         </Paper>
