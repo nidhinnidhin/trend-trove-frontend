@@ -25,7 +25,6 @@ export default function Explore() {
         );
 
         if (!response.ok) {
-          // Handle error responses
           const errorData = await response.json();
           console.error("API error:", errorData);
           throw new Error(errorData.message || "Error fetching products");
@@ -93,7 +92,6 @@ export default function Explore() {
                   discountedPrice = originalPrice * (1 - discountPercentage / 100);
                 }
               } else {
-                // If the offer is inactive, revert to the original price
                 discountedPrice = originalPrice;
               }
             }
@@ -107,12 +105,12 @@ export default function Explore() {
             rating: product.ratings || 0,
             price: discountedPrice,
             originalPrice: originalPrice,
-            discountPercentage: isOfferActive ? discountPercentage : 0, // Set to 0 if offer is inactive
+            discountPercentage: isOfferActive ? discountPercentage : 0,
             variantsCount: product.variants?.length || 0,
             category: product.category?.name || "Uncategorized",
             gender: product.gender || "Unisex",
             isDeleted: product.isDeleted || false,
-            isOfferActive, // Add a flag to indicate if the offer is active
+            isOfferActive, 
           };
         });
         

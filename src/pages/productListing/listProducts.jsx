@@ -21,20 +21,51 @@ import CategoryCarousel from "../components/categoryCarousal";
 // Styled offer badge using emotion
 const OfferBadge = styled(Chip)`
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: rgb(56, 56, 56);
+  top: 12px;
+  left: -6px;
+  background-color: #212121; /* Standard black */
   color: white;
   font-weight: 600;
-  padding: 0 8px;
+  font-size: 13px;
+  padding: 0 10px;
   height: 24px;
   z-index: 1;
   font-family: "Poppins", sans-serif;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 6px;
+    height: 6px;
+    background-color: #1a1a1a; /* Slightly lighter black */
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: 0;
+    width: 6px;
+    height: 24px;
+    background-color: #212121;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
 
   &:hover {
-    background-color: #ff385c;
+    background-color: #333333; /* Slightly lighter black on hover */
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
   }
 `;
+
+
+
 
 const StyledWrapper = styled.div`
   .group {
@@ -339,6 +370,13 @@ const ListProducts = ({
                         product.discountPercentage > 0 && (
                           <OfferBadge
                             label={`${product.discountPercentage}% OFF`}
+                            sx={{
+                              "& .MuiChip-label": {
+                                padding: "0 4px",
+                                fontSize: "0.575rem",
+                                lineHeight: "1.2",
+                              },
+                            }}
                           />
                         )}
 

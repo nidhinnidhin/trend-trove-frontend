@@ -23,6 +23,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Chip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -43,6 +44,8 @@ const Orders = () => {
     message: "",
     severity: "success",
   });
+  const [isReturnApprovalModalOpen, setIsReturnApprovalModalOpen] =
+    useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -118,14 +121,59 @@ const Orders = () => {
         message: "Cannot edit status of a cancelled order",
         severity: "warning",
       });
-      return; 
+      return;
     }
-  
+
     setSelectedOrder(order);
     setSelectedItem(item);
     setNewStatus(item.status);
     setIsEditModalOpen(true);
   };
+
+  const handleReturnApproval = async (orderId, itemId, approved) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/checkout/approve-return/${orderId}/${itemId}`,
+        { approved }
+      );
+
+      if (response.data.success) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.orderId === orderId
+              ? {
+                  ...order,
+                  items: order.items.map((item) =>
+                    item.itemId === itemId
+                      ? {
+                          ...item,
+                          status: approved ? "Returned" : item.status,
+                          returnStatus: approved
+                            ? "Return Approved"
+                            : "Return Rejected",
+                        }
+                      : item
+                  ),
+                }
+              : order
+          )
+        );
+        setSnackbar({
+          open: true,
+          message: `Return ${approved ? "approved" : "rejected"} successfully`,
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Error processing return request",
+        severity: "error",
+      });
+    }
+    setIsReturnApprovalModalOpen(false);
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -233,18 +281,53 @@ const Orders = () => {
                           <TableCell>₹{item.price}</TableCell>
                           <TableCell>{item.status || "Pending"}</TableCell>
                           <TableCell>
-                            <Button
-                              variant="contained"
-                              startIcon={<EditIcon />}
-                              onClick={() => handleEditClick(order, item)}
-                              sx={{
-                                backgroundColor: "#ff9800",
-                                color: "white",
-                                "&:hover": { backgroundColor: "#ffb74d" },
-                              }}
-                            >
-                              Edit Status
-                            </Button>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              {/* Show Return Request button if return is pending */}
+                              {item.returnRequested && item.returnStatus === "Return Pending" ? (
+                                <Button
+                                  variant="contained"
+                                  color="warning"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setSelectedItem(item);
+                                    setIsReturnApprovalModalOpen(true);
+                                  }}
+                                  sx={{ minWidth: '160px' }}
+                                >
+                                  View Return Request
+                                </Button>
+                              ) : null}
+                              
+                              {/* Show Edit Status button only if:
+                                  1. No return request exists OR return was rejected
+                                  2. AND item is not already returned/approved */}
+                              {(!item.returnRequested || item.returnStatus === "Return Rejected") && 
+                               item.status !== "Returned" && 
+                               item.returnStatus !== "Return Approved" && (
+                                <Button
+                                  variant="contained"
+                                  startIcon={<EditIcon />}
+                                  onClick={() => handleEditClick(order, item)}
+                                  sx={{
+                                    backgroundColor: "#ff9800",
+                                    color: "white",
+                                    "&:hover": { backgroundColor: "#ffb74d" },
+                                    minWidth: '160px'
+                                  }}
+                                >
+                                  Edit Status
+                                </Button>
+                              )}
+
+                              {/* Show return status chip if return was requested */}
+                              {item.returnRequested && item.returnStatus !== "Return Pending" && (
+                                <Chip
+                                  label={item.returnStatus}
+                                  color={item.returnStatus === "Return Approved" ? "success" : "error"}
+                                  sx={{ ml: 1 }}
+                                />
+                              )}
+                            </Box>
                           </TableCell>
                         </TableRow>
                       );
@@ -278,6 +361,7 @@ const Orders = () => {
             >
               <MenuItem value="pending">Pending</MenuItem>
               <MenuItem value="Processing">Processing</MenuItem>
+              <MenuItem value="Shiped">Shiped</MenuItem>
               <MenuItem value="Delivered">Delivered</MenuItem>
               <MenuItem value="Cancelled">Cancelled</MenuItem>
             </Select>
@@ -399,6 +483,58 @@ const Orders = () => {
         <DialogActions>
           <Button onClick={() => setIsOrderDetailModalOpen(false)}>
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isReturnApprovalModalOpen}
+        onClose={() => setIsReturnApprovalModalOpen(false)}
+      >
+        <DialogTitle sx={{ backgroundColor: "#3f51b5", color: "#ffffff" }}>
+          Return Request Details
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          {selectedItem && (
+            <Box>
+              <Typography variant="h6">
+                Return Reason: {selectedItem.returnReason}
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                Additional Details: {selectedItem.additionalDetails}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsReturnApprovalModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() =>
+              handleReturnApproval(
+                selectedOrder?.orderId,
+                selectedItem?.itemId,
+                false
+              )
+            }
+            color="error"
+            variant="contained"
+          >
+            Reject Return
+          </Button>
+          <Button
+            onClick={() =>
+              handleReturnApproval(
+                selectedOrder?.orderId,
+                selectedItem?.itemId,
+                true
+              )
+            }
+            color="success"
+            variant="contained"
+          >
+            Approve Return
           </Button>
         </DialogActions>
       </Dialog>

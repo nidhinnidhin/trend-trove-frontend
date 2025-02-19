@@ -206,6 +206,15 @@ const Offers = () => {
                   fontWeight: "bold",
                 }}
               >
+                Offer Type
+              </TableCell>
+              <TableCell
+                sx={{
+                  backgroundColor: "#212121",
+                  color: "#FF9800",
+                  fontWeight: "bold",
+                }}
+              >
                 Discount
               </TableCell>
               <TableCell
@@ -244,6 +253,9 @@ const Offers = () => {
                   {offer.offerName}
                 </TableCell>
                 <TableCell sx={{ color: "#ffffff" }}>
+                  {offer.offerType}
+                </TableCell>
+                <TableCell sx={{ color: "#ffffff" }}>
                   {offer.discountPercentage}%
                 </TableCell>
                 <TableCell sx={{ color: "#ffffff" }}>
@@ -270,7 +282,6 @@ const Offers = () => {
                       setIsEditModalOpen(true);
                     }}
                   >
-                    Edit
                   </Button>
 
                   <Button
@@ -282,7 +293,6 @@ const Offers = () => {
                     }}
                   >
                     <DeleteIcon />
-                    Delete
                   </Button>
                   <Button
                     onClick={() => handleResetOffer(offer._id)}
@@ -293,7 +303,6 @@ const Offers = () => {
                     }}
                   >
                     <RefreshIcon />
-                    Reset
                   </Button>
                 </TableCell>
               </TableRow>
