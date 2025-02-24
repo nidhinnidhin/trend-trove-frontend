@@ -25,10 +25,17 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { LocationOn, LocalShipping, Payment, CreditCard, MonetizationOn } from "@mui/icons-material";
+import {
+  LocationOn,
+  LocalShipping,
+  Payment,
+  CreditCard,
+  MonetizationOn,
+} from "@mui/icons-material";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import DeliveryLoader from "@/loaders/deliveryLoader";
+import axiosInstance from "@/utils/axiosInstance";
 
 const CheckoutPage = () => {
   const router = useRouter();
@@ -52,27 +59,14 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     const fetchCoupons = async () => {
-      const token = localStorage.getItem("usertoken");
       try {
-        const response = await fetch(
-          `http://localhost:9090/api/coupon/get?totalPrice=${
-            checkoutData?.totalPrice || 0
-          }`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await axiosInstance.get(`/coupon/get`, {
+          params: {
+            totalPrice: checkoutData?.totalPrice || 0,
+          },
+        });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch coupons");
-        }
-
-        const data = await response.json();
-        setCoupons(data.coupons);
+        setCoupons(response.data.coupons);
       } catch (error) {
         console.error("Error fetching coupons:", error);
       }
@@ -83,7 +77,6 @@ const CheckoutPage = () => {
     }
   }, [checkoutData]);
 
-  // Calculate preview discount when coupon is selected
   const calculatePreviewDiscount = (couponCode, totalPrice) => {
     const selectedCouponDetails = coupons.find(
       (coupon) => coupon.couponCode === couponCode
@@ -107,27 +100,16 @@ const CheckoutPage = () => {
 
     if (couponCode) {
       try {
-        const token = localStorage.getItem("usertoken");
-        const response = await fetch("http://localhost:9090/api/coupon/apply", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            couponCode,
-            totalPrice: checkoutData.totalPrice,
-            userId: localStorage.getItem("userId")
-          }),
+        const response = await axiosInstance.post(`/coupon/apply`, {
+          couponCode,
+          totalPrice: checkoutData.totalPrice,
+          userId: localStorage.getItem("userId"),
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to apply coupon");
-        }
-
-        const data = await response.json();
-        setPreviewDiscount(data.discountAmount);
-        setSnackbarMessage(`Coupon applied! You'll save ₹${data.discountAmount} at checkout`);
+        setPreviewDiscount(response.data.discountAmount);
+        setSnackbarMessage(
+          `Coupon applied! You'll save ₹${response.data.discountAmount} at checkout`
+        );
         setSnackbarOpen(true);
       } catch (error) {
         console.error("Error applying coupon:", error);
@@ -146,26 +128,10 @@ const CheckoutPage = () => {
   };
 
   const clearCart = async () => {
-    const token = localStorage.getItem("usertoken");
-
     try {
-      const response = await fetch(
-        `http://localhost:9090/api/cart/clear-cart`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axiosInstance.delete(`/cart/clear-cart`);
 
-      if (!response.ok) {
-        throw new Error("Failed to clear cart");
-      }
-
-      const data = await response.json();
-      console.log("Cart cleared successfully:", data);
+      console.log("Cart cleared successfully:", response.data);
     } catch (error) {
       console.error("Error clearing cart:", error);
       throw error;
@@ -175,8 +141,7 @@ const CheckoutPage = () => {
   const handleOnlinePayment = async () => {
     try {
       setLoading(true);
-      
-      // Load Razorpay SDK
+
       const loadRazorpayScript = () => {
         return new Promise((resolve) => {
           const script = document.createElement("script");
@@ -192,26 +157,14 @@ const CheckoutPage = () => {
         throw new Error("Razorpay SDK failed to load");
       }
 
-      // Create order
       const token = localStorage.getItem("usertoken");
-      const response = await fetch(
-        "http://localhost:9090/api/payment/create-order",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            amount: Math.round(previewTotal * 100), // amount in paise
-            currency: "INR",
-          }),
-        }
-      );
+      const response = await axiosInstance.post(`/payment/create-order`, {
+        amount: Math.round(previewTotal * 100),
+        currency: "INR",
+      });
 
-      const orderData = await response.json();
+      const orderData = response.data;
 
-      // Initialize Razorpay payment
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: Math.round(previewTotal * 100),
@@ -225,27 +178,15 @@ const CheckoutPage = () => {
         },
         handler: async function (response) {
           try {
-            // Verify payment
-            const verifyResponse = await fetch(
-              "http://localhost:9090/api/payment/verify",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              }
-            );
+            const verifyResponse = await axiosInstance.post(`/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
 
-            const verifyData = await verifyResponse.json();
+            const verifyData = verifyResponse.data;
 
             if (verifyData.status === "success") {
-              // Create order with payment details
               const checkoutPayload = {
                 cartId: checkoutData.cartId,
                 addressId: selectedAddress._id,
@@ -262,8 +203,7 @@ const CheckoutPage = () => {
               };
 
               await handlePlaceOrder(checkoutPayload);
-              
-              // Clear cart and redirect
+
               await clearCart();
               router.push("/orders/orders");
             }
@@ -273,6 +213,7 @@ const CheckoutPage = () => {
             setSnackbarOpen(true);
           }
         },
+
         modal: {
           ondismiss: function () {
             setLoading(false);
@@ -285,7 +226,6 @@ const CheckoutPage = () => {
 
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
-
     } catch (error) {
       console.error("Payment initiation failed:", error);
       setSnackbarMessage(error.message);
@@ -330,7 +270,7 @@ const CheckoutPage = () => {
       }
 
       await clearCart();
-      
+
       setSnackbarMessage("Order placed successfully!");
       setSnackbarOpen(true);
       router.push("/orders/orders");
@@ -368,7 +308,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Apply coupon at checkout
     let finalTotal = checkoutData.totalPrice;
     if (selectedCoupon) {
       try {
@@ -602,7 +541,9 @@ const CheckoutPage = () => {
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <MonetizationOn sx={{ mr: 1 }} />
                     <Box>
-                      <Typography variant="subtitle1">Cash on Delivery</Typography>
+                      <Typography variant="subtitle1">
+                        Cash on Delivery
+                      </Typography>
                       <Typography variant="body2" color="textSecondary">
                         Pay when you receive
                       </Typography>

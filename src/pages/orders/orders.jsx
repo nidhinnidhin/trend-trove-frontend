@@ -22,6 +22,7 @@ import {
   FormControl,
   FormHelperText,
   Divider,
+  Rating,
 } from "@mui/material";
 import {
   LocalShipping,
@@ -32,9 +33,11 @@ import {
   ShoppingBag,
   Replay,
 } from "@mui/icons-material";
+import { RateReview } from "@mui/icons-material";
 import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
+import AddReviewModal from "@/components/modals/addReview";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -47,6 +50,15 @@ const OrdersPage = () => {
   const [returnReason, setReturnReason] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [error, setError] = useState("");
+  const [openReviewModal, setOpenReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -71,7 +83,82 @@ const OrdersPage = () => {
     fetchOrders();
   }, []);
 
+  const handleOpenReviewModal = (orderId, itemId) => {
+    setSelectedOrder(orderId);
+    setSelectedItem(itemId);
+    setOpenReviewModal(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    setOpenReviewModal(false);
+  };
+
+  // const handleSubmitReview = async () => {
+  //   if (reviewRating === 0) {
+  //     setReviewError("Please select a rating");
+  //     return;
+  //   }
+
+  //   if (!reviewComment.trim()) {
+  //     setReviewError("Please provide a review comment");
+  //     return;
+  //   }
+
+  //   try {
+  //     const token = localStorage.getItem("usertoken");
+  //     const selectedOrderItem = orders
+  //       .find((order) => order.orderId === selectedOrder)
+  //       ?.items.find((item) => item.itemId === selectedItem);
+
+  //     const response = await axios.post(
+  //       "http://localhost:9090/api/user/review/add",
+  //       {
+  //         productId: selectedOrderItem.productId,
+  //         variantId: selectedOrderItem.variantId,
+  //         sizeVariantId: selectedOrderItem.sizeVariantId,
+  //         rating: reviewRating,
+  //         comment: reviewComment,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     if (response.data.message) {
+  //       setSnackbar({
+  //         open: true,
+  //         message: "Review added successfully!",
+  //         severity: "success",
+  //       });
+  //       handleCloseReviewModal();
+
+  //       // Update the orders state to show review has been added
+  //       setOrders((prevOrders) =>
+  //         prevOrders.map((order) => ({
+  //           ...order,
+  //           items: order.items.map((item) =>
+  //             item.itemId === selectedItem
+  //               ? { ...item, hasReviewed: true }
+  //               : item
+  //           ),
+  //         }))
+  //       );
+  //     }
+  //   } catch (error) {
+  //     setSnackbar({
+  //       open: true,
+  //       message: error.response?.data?.message || "Failed to add review",
+  //       severity: "error",
+  //     });
+  //   }
+  // };
+
   const handleOpenModal = (orderId, itemId, type) => {
+    console.log("OrderId:", orderId, "ItemId: ", itemId);
+
     setSelectedOrder(orderId);
     setSelectedItem(itemId);
     setModalType(type);
@@ -240,7 +327,6 @@ const OrdersPage = () => {
                 order.items.map((item, index) => {
                   return (
                     <TableRow key={`${order.orderId}-${index}`}>
-                      {/* Order Details Column */}
                       <TableCell>
                         <Box
                           sx={{
@@ -330,7 +416,7 @@ const OrdersPage = () => {
                             Mobile: {order.shippingAddress.mobileNumber}
                           </Typography>
                         </Box>
-                      </TableCell> */}
+                      </TableCell>  */}
 
                       {/* Payment Info Column */}
                       <TableCell>
@@ -398,16 +484,22 @@ const OrdersPage = () => {
 
                       {/* Actions Column */}
                       <TableCell>
-                        {/* Show Cancel button for pending/processing orders */}
-                        {(item.status === "pending" || item.status === "Processing") && (
+                        {(item.status === "pending" ||
+                          item.status === "Processing") && (
                           <Button
-                            variant="outlined"
+                            variant="contained"
                             color="error"
                             startIcon={<Cancel />}
-                            onClick={() => handleOpenModal(order.orderId, item.itemId, "cancel")}
+                            onClick={() =>
+                              handleOpenModal(
+                                order.orderId,
+                                item.itemId,
+                                "cancel"
+                              )
+                            }
                             sx={{ width: "150px", mb: 1 }}
                           >
-                            Cancel Order
+                            Cancel
                           </Button>
                         )}
 
@@ -415,7 +507,13 @@ const OrdersPage = () => {
                         {item.status === "Delivered" && (
                           <>
                             {item.returnRequested ? (
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 1,
+                                }}
+                              >
                                 <Chip
                                   label={`Return ${item.returnStatus}`}
                                   color={
@@ -425,7 +523,7 @@ const OrdersPage = () => {
                                       ? "error"
                                       : "warning"
                                   }
-                                  sx={{ minWidth: '150px' }}
+                                  sx={{ minWidth: "150px" }}
                                 />
                                 {item.returnStatus === "Return Rejected" && (
                                   <Typography variant="caption" color="error">
@@ -435,16 +533,43 @@ const OrdersPage = () => {
                               </Box>
                             ) : (
                               <Button
-                                variant="outlined"
+                                variant="contained"
                                 color="primary"
                                 startIcon={<Replay />}
-                                onClick={() => handleOpenModal(order.orderId, item.itemId, "return")}
+                                onClick={() =>
+                                  handleOpenModal(
+                                    order.orderId,
+                                    item.itemId,
+                                    "return"
+                                  )
+                                }
                                 sx={{ width: "150px" }}
                               >
                                 Return
                               </Button>
                             )}
                           </>
+                        )}
+
+                        {(item.status === "Delivered" ||
+                          item.status === "Returned") && (
+                          <Button
+                            variant="outlined"
+                            color="success"
+                            onClick={() =>
+                              handleOpenReviewModal(order.orderId, item.itemId)
+                            }
+                            sx={{
+                              width: "150px",
+                              margin:"10px 0px",
+                              backgroundColor: "rgba(0, 0, 0, 0.05)",
+                              "&:hover": {
+                                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                              },
+                            }}
+                          >
+                            Add Review
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -454,6 +579,15 @@ const OrdersPage = () => {
           </TableBody>
         </Table>
       </Paper>
+
+      <AddReviewModal
+        openReviewModal={openReviewModal}
+        handleCloseReviewModal={handleCloseReviewModal}
+        selectedOrder={selectedOrder}
+        selectedItem={selectedItem}
+        orders={orders}
+        setOrders={setOrders}
+      />
 
       {/* Return Product Modal */}
       <Dialog open={openModal} onClose={handleCloseModal}>
@@ -509,7 +643,9 @@ const OrdersPage = () => {
         <DialogActions>
           <Button onClick={handleCloseModal}>Close</Button>
           <Button
-            onClick={modalType === "return" ? handleReturnProduct : handleCancelOrder}
+            onClick={
+              modalType === "return" ? handleReturnProduct : handleCancelOrder
+            }
             variant="contained"
             color="primary"
           >

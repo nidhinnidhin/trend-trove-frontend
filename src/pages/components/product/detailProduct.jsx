@@ -1,4 +1,5 @@
 import { FaCartPlus } from "react-icons/fa";
+import React from "react";
 import {
   Grid,
   Button,
@@ -17,6 +18,7 @@ import {
   Snackbar,
   Alert,
   Chip,
+  IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
@@ -35,6 +37,13 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import axiosInstance from "@/utils/axiosInstance";
+import ProductReviews from "../productReviews/review";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -50,6 +59,32 @@ const DetailProduct = () => {
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const settings = {
+    dots: false, // Hide default dots
+    infinite: true,
+    speed: 500,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    arrows: false, // Hide default arrows
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
+  };
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -127,6 +162,48 @@ const DetailProduct = () => {
     }
   }, [id]);
 
+  const itemsPerView = {
+    xs: 1, // mobile
+    sm: 2, // tablet
+    md: 3, // desktop
+  };
+
+  // Calculate total number of slides needed
+  const totalProductCount = relatedProducts.reduce(
+    (count, product) => count + product.variants.length,
+    0
+  );
+  const maxVisibleItems = 3; // Maximum number of items to show at once
+  const totalSlides = Math.max(
+    1,
+    Math.ceil(totalProductCount / maxVisibleItems)
+  );
+
+  // Navigation handlers
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
+  };
+
+  // Get current visible products
+  const getCurrentProducts = () => {
+    let flattenedProducts = [];
+    relatedProducts.forEach((product) => {
+      product.variants.forEach((variant) => {
+        flattenedProducts.push({
+          productId: product._id,
+          variant: variant,
+        });
+      });
+    });
+
+    const startIndex = currentIndex * maxVisibleItems;
+    return flattenedProducts.slice(startIndex, startIndex + maxVisibleItems);
+  };
+
   const handleQuantityChange = (action) => {
     if (action === "increment" && quantity < 4 && quantity < product.stockCount)
       setQuantity(quantity + 1);
@@ -200,28 +277,16 @@ const DetailProduct = () => {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/cart/add-to-cart",
-        productData,
-        {
-          headers: {
-            Authorization: `Bearer ${isLoggedIn}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/cart/add-to-cart",
+        productData
       );
       if (response.status === 201) {
         setSnackbarMessage("Product added to cart successfully!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
 
-        const cartResponse = await axios.get(
-          "http://localhost:9090/api/cart/get-cart",
-          {
-            headers: {
-              Authorization: `Bearer ${isLoggedIn}`,
-            },
-          }
-        );
+        const cartResponse = await axiosInstance.get("/cart/get-cart");
 
         dispatch(setCartLength(cartResponse.data.cart.items.length));
       }
@@ -238,12 +303,12 @@ const DetailProduct = () => {
       router.push("/authentication/loginSignup");
       return;
     }
-  
+
     if (!selectedSize || !selectedColor) {
       alert("Please select a size and color before adding to the wishlist.");
       return;
     }
-  
+
     const wishlistData = {
       productId: product.id,
       variantId: variants[variantIndex]._id,
@@ -251,18 +316,13 @@ const DetailProduct = () => {
         (size) => size.size === selectedSize
       )?._id,
     };
-  
+
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/user/wishlist/add",
-        wishlistData,
-        {
-          headers: {
-            Authorization: `Bearer ${isLoggedIn}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/user/wishlist/add",
+        wishlistData
       );
-  
+
       if (response.status === 201) {
         setSnackbarMessage("Product added to wishlist successfully!");
         setSnackbarSeverity("success");
@@ -276,40 +336,12 @@ const DetailProduct = () => {
     }
   };
 
-  const [zoomStyle, setZoomStyle] = useState({});
-  const theme = useTheme();
-
-  const handleMouseMove = (e) => {
-    if (!product?.image) return;
-
-    const image = e.currentTarget;
-    const { left, top, width, height } = image.getBoundingClientRect();
-    const x = (e.clientX - left) / width;
-    const y = (e.clientY - top) / height;
-
-    // Calculate the background position
-    const backgroundX = x * 100;
-    const backgroundY = y * 100;
-
-    setIsZoomed(true);
-    setZoomStyle({
-      transform: "scale(2)",
-      transformOrigin: `${backgroundX}% ${backgroundY}%`,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setIsZoomed(false);
-    setZoomStyle({});
-  };
-
   const handleImageHover = (e) => {
     if (!product?.image) return;
 
     const image = e.currentTarget;
     const { left, top, width, height } = image.getBoundingClientRect();
 
-    // Calculate relative mouse position
     const x = ((e.clientX - left) / width) * 100;
     const y = ((e.clientY - top) / height) * 100;
 
@@ -325,6 +357,8 @@ const DetailProduct = () => {
   const handleProductDetail = (id) => {
     router.push(`/product/${id}`);
   };
+
+  const sliderRef = React.useRef(null);
 
   return (
     <motion.div
@@ -456,8 +490,6 @@ const DetailProduct = () => {
                 />
               </Box>
             )}
-
-            {/* Thumbnail Images */}
             <Box
               sx={{
                 display: "flex",
@@ -509,8 +541,6 @@ const DetailProduct = () => {
                 </motion.div>
               ))}
             </Box>
-
-            {/* Additional Product Details Section */}
             {product?.stockCount === 0 && (
               <Box
                 sx={{
@@ -860,7 +890,6 @@ const DetailProduct = () => {
           </motion.div>
         </Grid>
 
-        {/* Related Products Section */}
         <Grid item xs={12}>
           <motion.div {...fadeIn}>
             <Typography
@@ -873,47 +902,103 @@ const DetailProduct = () => {
               }}
             >
               {relatedProducts.length !== 0
-                ? "Related Products"
+                ? "You may like"
                 : "No Related Products"}
             </Typography>
-            <Grid container spacing={3}>
-              {relatedProducts.map((relatedProduct) =>
-                relatedProduct.variants.map((variant) => (
-                  <Grid item xs={12} sm={6} md={4} key={variant._id}>
-                    <motion.div
-                      whileHover={{ y: -10 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Card
-                        sx={{
-                          height: "100%",
-                          borderRadius: "12px",
-                          overflow: "hidden",
-                          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleProductDetail(relatedProduct._id)}
-                      >
-                        <CardMedia
-                          component="img"
-                          image={variant.mainImage}
-                          alt={variant.name}
-                          sx={{
-                            height: 300,
-                            objectFit: "contain",
-                            transition: "transform 0.3s ease",
-                            "&:hover": {
-                              transform: "scale(1.05)",
-                            },
-                          }}
-                        />
-                      </Card>
-                    </motion.div>
-                  </Grid>
-                ))
-              )}
-            </Grid>
+
+            {relatedProducts.length > 0 && (
+              <Box sx={{ position: "relative", width: "100%", px: 4 }}>
+                {/* Left Navigation Button */}
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    left: -40,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,1)",
+                    },
+                    zIndex: 2,
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                  }}
+                  onClick={() => sliderRef.current.slickPrev()}
+                >
+                  <ArrowBackIosNewIcon />
+                </IconButton>
+
+                {/* Slider */}
+                <Slider ref={sliderRef} {...settings}>
+                  {relatedProducts.map((product) =>
+                    product.variants.map((variant) => (
+                      <Box key={variant._id} sx={{ padding: "0 10px" }}>
+                        <motion.div
+                          whileHover={{ y: -10 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Box
+                            sx={{
+                              height: "100%",
+                              overflow: "hidden",
+                              // boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => handleProductDetail(product._id)}
+                          >
+                            <CardMedia
+                              component="img"
+                              image={variant.mainImage}
+                              alt={variant.name}
+                              sx={{
+                                height: 400,
+                                padding:"10px 0px",
+                                objectFit: "contain",
+                                transition: "transform 0.3s ease",
+                                "&:hover": {
+                                  transform: "scale(1.05)",
+                                },
+                              }}
+                            />
+                          </Box>
+                        </motion.div>
+                      </Box>
+                    ))
+                  )}
+                </Slider>
+
+                {/* Right Navigation Button */}
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    right: -40,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,1)",
+                    },
+                    zIndex: 2,
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                  }}
+                  onClick={() => sliderRef.current.slickNext()}
+                >
+                  <ArrowForwardIosIcon />
+                </IconButton>
+              </Box>
+            )}
           </motion.div>
+        </Grid>
+
+        <Grid item xs={12}>
+          <ProductReviews
+            productId={id}
+            selectedVariantId={variants[variantIndex]?._id}
+            selectedSizeVariantId={
+              variants[variantIndex]?.sizes.find(
+                (size) => size.size === selectedSize
+              )?._id
+            }
+          />
         </Grid>
       </Grid>
 

@@ -1,5 +1,12 @@
 import React from "react";
-import { Box, Typography, Link, Grid, Divider, IconButton } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Link,
+  Grid,
+  Divider,
+  IconButton,
+} from "@mui/material";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import TwitterIcon from "@mui/icons-material/Twitter";
@@ -15,9 +22,7 @@ const Footer = () => {
         fontSize: "14px",
       }}
     >
-      {/* Links Section */}
       <Grid container spacing={4} columns={{ xs: 2, sm: 4, md: 12 }}>
-        {/* Column 1 */}
         <Grid item xs={1} sm={2} md={3}>
           <Typography variant="h6" gutterBottom>
             Men
@@ -54,7 +59,6 @@ const Footer = () => {
           </Link>
         </Grid>
 
-        {/* Column 2 */}
         <Grid item xs={1} sm={2} md={3}>
           <Typography variant="h6" gutterBottom>
             Women
@@ -91,7 +95,6 @@ const Footer = () => {
           </Link>
         </Grid>
 
-        {/* Column 3 */}
         <Grid item xs={1} sm={2} md={3}>
           <Typography variant="h6" gutterBottom>
             Kids
@@ -128,7 +131,6 @@ const Footer = () => {
           </Link>
         </Grid>
 
-        {/* Column 4 */}
         <Grid item xs={1} sm={2} md={3}>
           <Typography variant="h6" gutterBottom>
             Accessories
@@ -166,10 +168,7 @@ const Footer = () => {
         </Grid>
       </Grid>
 
-      {/* Divider */}
       <Divider sx={{ marginY: "20px" }} />
-
-      {/* Footer Bottom Section */}
       <Box
         sx={{
           display: "flex",
@@ -178,12 +177,9 @@ const Footer = () => {
           flexWrap: "wrap",
         }}
       >
-        {/* Left Section */}
         <Typography variant="body2" color="text.secondary">
-          © 2025 Clothing Store. All rights reserved.
+          © 2025 Tren Trove. All rights reserved.
         </Typography>
-
-        {/* Social Icons */}
         <Box>
           <IconButton href="#" color="inherit">
             <FacebookIcon />

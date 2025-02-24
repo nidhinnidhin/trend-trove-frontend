@@ -70,14 +70,7 @@ const Header = () => {
       const token = localStorage.getItem("usertoken");
       if (token) {
         try {
-          const response = await axios.get(
-            "http://localhost:9090/api/cart/get-cart",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          const response = await axiosInstance.get("/cart/get-cart");
 
           if (response.data.cart) {
             dispatch(setCartLength(response.data.cart.items.length));
@@ -109,7 +102,7 @@ const Header = () => {
     const fetchProfile = async () => {
       if (token) {
         try {
-          const response = await axiosInstance.get("users/profile", {
+          const response = await axiosInstance.get("/users/profile", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -189,12 +182,9 @@ const Header = () => {
 
     if (query.length > 2) {
       try {
-        const response = await axios.get(
-          `http://localhost:9090/api/products/product/search`,
-          {
-            params: { query },
-          }
-        );
+        const response = await axiosInstance.get(`/products/product/search`, {
+          params: { query },
+        });
         setSearchResults(response.data.products);
       } catch (error) {
         console.error("Error searching products:", error);
@@ -215,7 +205,7 @@ const Header = () => {
       <AppBar
         position="fixed"
         sx={{
-          width:"100%",
+          width: "100%",
           backgroundColor: "#ffffff",
           color: "#333",
           boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
@@ -232,7 +222,6 @@ const Header = () => {
             paddingX: isMobile ? 2 : 0,
           }}
         >
-          {/* Logo with Animation */}
           <motion.div
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
@@ -314,7 +303,9 @@ const Header = () => {
                 <IconButton size="large" color="inherit">
                   <Link href="/cart/cartpage">
                     <Badge badgeContent={cartLength} color="error">
-                      <ShoppingCartIcon sx={{fontSize: "30px", color: "#ff6f61" }} />
+                      <ShoppingCartIcon
+                        sx={{ fontSize: "30px", color: "#ff6f61" }}
+                      />
                     </Badge>
                   </Link>
                 </IconButton>
@@ -379,8 +370,6 @@ const Header = () => {
             )}
           </Box>
         </Toolbar>
-
-        {/* Search Bar */}
         <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit>
           <Box
             sx={{
@@ -441,7 +430,6 @@ const Header = () => {
         </Slide>
       </AppBar>
 
-      {/* Drawer for Mobile */}
       <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerToggle}>
         <Box
           sx={{ width: 250 }}
@@ -460,7 +448,6 @@ const Header = () => {
         </Box>
       </Drawer>
 
-      {/* Logout Dialog */}
       <Dialog
         open={openLogoutDialog}
         onClose={handleLogoutCancel}
@@ -500,7 +487,6 @@ const Header = () => {
         </Grid>
       </Dialog>
 
-      {/* Snackbar for Logout */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

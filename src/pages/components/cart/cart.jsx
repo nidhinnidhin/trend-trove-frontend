@@ -57,6 +57,7 @@ import { Delete } from "lucide-react";
 import { Router, useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
+import axiosInstance from "@/utils/axiosInstance";
 
 const EditButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
@@ -129,14 +130,7 @@ function Cart() {
 
     const fetchAddresses = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9090/api/address/get-address",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axiosInstance.get("/address/get-address");
         setAddresses(response.data.addresses || []);
       } catch (error) {
         if (error.response?.status === 404) {
@@ -151,18 +145,9 @@ function Cart() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("usertoken");
-
     const fetchCartData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9090/api/cart/get-cart",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axiosInstance.get("/cart/get-cart");
         setCart(response.data.cart);
       } catch (error) {
         if (error.response?.status === 404) {
@@ -185,8 +170,8 @@ function Cart() {
   };
 
   const handleCloseModal = () => {
-    setOpenModal(false); // Close the modal
-    setItemToDelete(null); // Clear the item to delete
+    setOpenModal(false);
+    setItemToDelete(null);
   };
 
   const handleDeleteProduct = async () => {
@@ -196,29 +181,18 @@ function Cart() {
     const { product, variant, sizeVariant } = itemToDelete;
 
     try {
-      // Call the API to delete the product
-      const response = await axios.delete(
-        "http://localhost:9090/api/cart/delete-product",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            productId: product._id,
-            variantId: variant._id,
-            sizeVariantId: sizeVariant._id,
-          },
-        }
-      );
+      const response = await axiosInstance.delete("/cart/delete-product", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          productId: product._id,
+          variantId: variant._id,
+          sizeVariantId: sizeVariant._id,
+        },
+      });
 
-      const cartResponse = await axios.get(
-        "http://localhost:9090/api/cart/get-cart",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const cartResponse = await axiosInstance.get("/cart/get-cart");
 
       dispatch(setCartLength(cartResponse.data.cart.items.length));
 
@@ -260,8 +234,6 @@ function Cart() {
       setQuantityError("Minimum quantity allowed is 1 item");
       return;
     }
-
-    const token = localStorage.getItem("usertoken");
     const { product, variant, sizeVariant } = item;
 
     const updatedItems = cart.items.map((cartItem) =>
@@ -284,29 +256,14 @@ function Cart() {
     });
 
     try {
-      await axios.put(
-        "http://localhost:9090/api/cart/update-quantity",
-        {
-          productId: product._id,
-          variantId: variant._id,
-          sizeVariantId: sizeVariant._id,
-          quantity: newQuantity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axiosInstance.put("/cart/update-quantity", {
+        productId: product._id,
+        variantId: variant._id,
+        sizeVariantId: sizeVariant._id,
+        quantity: newQuantity,
+      });
 
-      const cartResponse = await axios.get(
-        "http://localhost:9090/api/cart/get-cart",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const cartResponse = await axiosInstance.get("/cart/get-cart");
 
       dispatch(setCartLength(cartResponse.data.cart.items.length));
     } catch (error) {
@@ -362,16 +319,9 @@ function Cart() {
   };
 
   const handleDeleteAddress = async () => {
-    const token = localStorage.getItem("usertoken");
-
     try {
-      await axios.delete(
-        `http://localhost:9090/api/address/delete-address/${selectedAddressToDelete}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await axiosInstance.delete(
+        `/address/delete-address/${selectedAddressToDelete}`
       );
 
       setAddresses((prevAddresses) =>

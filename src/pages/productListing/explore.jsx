@@ -6,7 +6,7 @@ import Filter from "../components/filter";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Slider from "../components/slider";
-import { Box } from "@mui/material";
+import { Box, colors } from "@mui/material";
 import ListProducts from "./listProducts";
 
 export default function Explore() {
@@ -37,14 +37,14 @@ export default function Explore() {
         //   let originalPrice = 0;
         //   let discountedPrice = 0;
         //   let discountPercentage = 0;
-        
+
         //   if (product.variants && product.variants.length > 0) {
         //     const variant = product.variants[0];
         //     if (variant.sizes && variant.sizes.length > 0) {
         //       const firstSize = variant.sizes[0];
         //       originalPrice = firstSize.price || 0;
         //       discountedPrice = firstSize.discountPrice || originalPrice;
-        
+
         //       // Check for active offer (either product or category)
         //       if (product.activeOffer) {
         //         discountPercentage = product.activeOffer._id.discountPercentage || 0;
@@ -54,7 +54,7 @@ export default function Explore() {
         //       }
         //     }
         //   }
-        
+
         //   return {
         //     id: product._id,
         //     image: product.variants?.[0]?.mainImage || "",
@@ -76,27 +76,32 @@ export default function Explore() {
           let discountedPrice = 0;
           let discountPercentage = 0;
           let isOfferActive = false;
-        
+          let colorImages = [];
+
           if (product.variants && product.variants.length > 0) {
             const variant = product.variants[0];
             if (variant.sizes && variant.sizes.length > 0) {
               const firstSize = variant.sizes[0];
               originalPrice = firstSize.price || 0;
               discountedPrice = firstSize.discountPrice || originalPrice;
-        
-              // Check if the offer is active
+
               if (product.activeOffer && product.activeOffer._id.isActive) {
-                discountPercentage = product.activeOffer._id.discountPercentage || 0;
+                discountPercentage =
+                  product.activeOffer._id.discountPercentage || 0;
                 isOfferActive = true;
                 if (!firstSize.discountPrice) {
-                  discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                  discountedPrice =
+                    originalPrice * (1 - discountPercentage / 100);
                 }
               } else {
                 discountedPrice = originalPrice;
               }
             }
+            colorImages = product.variants
+              .map((variant) => variant.colorImage)
+              .filter(Boolean);
           }
-        
+
           return {
             id: product._id,
             image: product.variants?.[0]?.mainImage || "",
@@ -107,13 +112,14 @@ export default function Explore() {
             originalPrice: originalPrice,
             discountPercentage: isOfferActive ? discountPercentage : 0,
             variantsCount: product.variants?.length || 0,
+            colorImages: colorImages,
             category: product.category?.name || "Uncategorized",
             gender: product.gender || "Unisex",
             isDeleted: product.isDeleted || false,
-            isOfferActive, 
+            isOfferActive,
           };
         });
-        
+
         setProducts(transformedProducts);
         setTotalPages(data.totalPages || 1);
       } catch (error) {

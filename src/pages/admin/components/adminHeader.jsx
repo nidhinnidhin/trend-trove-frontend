@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 
 const AdminHeader = () => {
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'orange' }}>
+    <AppBar position="static" sx={{ backgroundColor: 'gray' }}>
       <Toolbar>
         <Box 
           sx={{ 

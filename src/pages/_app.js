@@ -23,7 +23,7 @@ export default function App({ Component, pageProps }) {
   //   }
   //   if (storedToken && (router.pathname === "/authentication/loginSignup" || router.pathname === "/authentication/login")) {
   //     router.push("/");
-  //   }
+  //   }                                   cv
   // }, [router.pathname, router.query.token]);
 
   return (

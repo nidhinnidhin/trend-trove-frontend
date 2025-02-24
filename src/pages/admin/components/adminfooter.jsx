@@ -6,7 +6,7 @@ const AdminFooter = () => {
     <Box
       component="footer"
       sx={{
-        backgroundColor: "orange",
+        backgroundColor: "gray",
         color: "white",
         textAlign: "center",
         padding: 2,

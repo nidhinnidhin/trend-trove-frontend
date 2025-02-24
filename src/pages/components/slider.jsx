@@ -20,16 +20,6 @@ const slides = [
     image: banner4,
     alt: "Slide 2",
   },
-  // {
-  //   id: 3,
-  //   image: banner2,
-  //   alt: "Slide 3",
-  // },
-  // {
-  //   id: 4,
-  //   image: banner3,
-  //   alt: "Slide 4",
-  // },
 ];
 
 const Slider = () => {
@@ -62,7 +52,6 @@ const Slider = () => {
     <Box
       sx={{
         position: "relative",
-        // width: "100%",
         height: {
           xs: "50vh",
           sm: "60vh",
@@ -92,9 +81,6 @@ const Slider = () => {
               height: "100%",
               position: "relative",
             }}
-            // animate={{
-            //   filter: hovered ? "blur(4px)" : "blur(0px)",
-            // }}
             transition={{ duration: 0.5 }}
           >
             <Image
@@ -107,8 +93,6 @@ const Slider = () => {
           </motion.div>
         </Box>
       ))}
-
-      {/* Navigation Arrows */}
       <IconButton
         onClick={handlePrevClick}
         sx={{
@@ -178,8 +162,6 @@ const Slider = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Pagination Dots */}
       <Box
         sx={{
           position: "absolute",

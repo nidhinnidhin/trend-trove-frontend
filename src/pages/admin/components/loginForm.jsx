@@ -49,7 +49,7 @@ const LoginForm = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
+        height: "85vh",
         backgroundColor: "#f4f6f8",
       }}
     >

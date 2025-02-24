@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const Wishlist = () => {
   const [items, setItems] = useState([]);
@@ -34,16 +35,9 @@ const Wishlist = () => {
           return;
         }
 
-        const response = await axios.get(
-          "http://localhost:9090/api/user/wishlist/get",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axiosInstance.get("/user/wishlist/get");
 
-        if (response.data.Wishlist) {
+        if (response.data.Wishlist !== 0) {
           setItems(response.data.Wishlist);
         }
       } catch (error) {
@@ -58,21 +52,13 @@ const Wishlist = () => {
     if (!selectedItem) return;
 
     try {
-      const token = localStorage.getItem("usertoken");
-
-      await axios.delete(
-        "http://localhost:9090/api/user/wishlist/remove/wishlist",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            productId: selectedItem.product._id,
-            variantId: selectedItem.variant._id,
-            sizeVariantId: selectedItem.sizeVariant._id,
-          },
-        }
-      );
+      await axiosInstance.delete("/user/wishlist/remove/wishlist", {
+        data: {
+          productId: selectedItem.product._id,
+          variantId: selectedItem.variant._id,
+          sizeVariantId: selectedItem.sizeVariant._id,
+        },
+      });
 
       setItems((prevItems) =>
         prevItems.filter((i) => i._id !== selectedItem._id)
@@ -104,100 +90,122 @@ const Wishlist = () => {
         alignItems: "center",
       }}
     >
-      <Typography
-        variant="h4"
-        align="center"
-        gutterBottom
-        style={{ color: "#333333", marginBottom: "30px" }}
-      >
-        Your Wishlist
-      </Typography>
-      <TableContainer
-        component={Paper}
-        style={{ overflowX: "auto", width: "90%" }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: "#FF6F61" }}>
-              <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                Image
-              </TableCell>
-              <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                Product Name
-              </TableCell>
-              <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                Price
-              </TableCell>
-              <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <AnimatePresence>
-              {items.map((item) => (
-                <motion.tr
-                  key={item._id}
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 50 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <TableCell>
-                    {item.variant.mainImage ? (
-                      <img
-                        src={item.variant.mainImage}
-                        alt={item.product.name}
-                        style={{
-                          width: "70px",
-                          height: "100px",
-                          objectFit: "contain",
-                          borderRadius: "5px",
-                        }}
-                      />
-                    ) : (
-                      <Typography variant="body2" style={{ color: "#777777" }}>
-                        No Image Available
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body1" style={{ color: "#333333" }}>
-                      {item.product.name}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body1" style={{ color: "#777777" }}>
-                      {item.sizeVariant.price}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      startIcon={<ShoppingCartIcon />}
-                      style={{
-                        backgroundColor: "#FF6F61",
-                        color: "#FFFFFF",
-                        marginRight: "10px",
-                      }}
-                      onClick={() => handleMoveToCart(item)}
+      {items.length !== 0 ? (
+        items.map((item) => (
+          <>
+            <Typography
+              variant="h4"
+              align="center"
+              gutterBottom
+              style={{ color: "#333333", marginBottom: "30px" }}
+            >
+              Your Wishlist
+            </Typography>
+            <TableContainer
+              component={Paper}
+              style={{ overflowX: "auto", width: "90%" }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow style={{ backgroundColor: "#FF6F61" }}>
+                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                      Image
+                    </TableCell>
+                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                      Product Name
+                    </TableCell>
+                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                      Price
+                    </TableCell>
+                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <AnimatePresence>
+                    <motion.tr
+                      key={item._id}
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 50 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      Move to Cart
-                    </Button>
-                    <IconButton
-                      aria-label="delete"
-                      style={{ color: "#FF6F61" }}
-                      onClick={() => handleOpenDialog(item)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </TableBody>
-        </Table>
-      </TableContainer>
+                      <TableCell>
+                        {item.variant.mainImage ? (
+                          <img
+                            src={item.variant.mainImage}
+                            alt={item.product.name}
+                            style={{
+                              width: "70px",
+                              height: "100px",
+                              objectFit: "contain",
+                              borderRadius: "5px",
+                            }}
+                          />
+                        ) : (
+                          <Typography
+                            variant="body2"
+                            style={{ color: "#777777" }}
+                          >
+                            No Image Available
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body1"
+                          style={{ color: "#333333" }}
+                        >
+                          {item.product.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body1"
+                          style={{ color: "#777777" }}
+                        >
+                          {item.sizeVariant.price}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          startIcon={<ShoppingCartIcon />}
+                          style={{
+                            backgroundColor: "#FF6F61",
+                            color: "#FFFFFF",
+                            marginRight: "10px",
+                          }}
+                          onClick={() => handleMoveToCart(item)}
+                        >
+                          Move to Cart
+                        </Button>
+                        <IconButton
+                          aria-label="delete"
+                          style={{ color: "#FF6F61" }}
+                          onClick={() => handleOpenDialog(item)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </motion.tr>
+                  </AnimatePresence>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        ))
+      ) : (
+        <Typography
+          variant="h4"
+          align="center"
+          gutterBottom
+          style={{ color: "#333333", marginBottom: "30px" }}
+        >
+          Your Wishlist Is Empty
+        </Typography>
+      )}
 
       {/* Confirmation Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

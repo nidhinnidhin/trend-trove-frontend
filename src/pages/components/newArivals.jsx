@@ -51,18 +51,18 @@ const NewArrival = () => {
     },
   ];
 
-  const isMobile = useMediaQuery("(max-width:600px)"); // For mobile view
-  const itemsToShow = isMobile ? 1 : 5; // Show 1 item on mobile, 5 items otherwise
+  const isMobile = useMediaQuery("(max-width:600px)");
+  const itemsToShow = isMobile ? 1 : 5; 
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Auto-slide logic
+  
   useEffect(() => {
     const interval = setInterval(() => {
       handleNext();
-    }, 3000); // 3-second interval
+    }, 3000); 
 
-    return () => clearInterval(interval); // Clear interval on unmount
+    return () => clearInterval(interval); 
   }, [currentIndex, itemsToShow]);
 
   const handleNext = () => {
@@ -81,7 +81,6 @@ const NewArrival = () => {
 
   return (
     <Box sx={{ width: "100%", padding: 2, margin: "20px 0px" }}>
-      {/* New Arrivals Header */}
       <Typography variant="h4" align="center" gutterBottom>
         New Arrivals
       </Typography>
@@ -95,7 +94,6 @@ const NewArrival = () => {
           alignItems: "center",
         }}
       >
-        {/* Previous Button */}
         <Button
           onClick={handlePrev}
           sx={{
@@ -111,15 +109,13 @@ const NewArrival = () => {
         >
           <ArrowBack />
         </Button>
-
-        {/* Carousel */}
         <Box
           sx={{
             display: "flex",
             gap: 2,
             transform: `translateX(-${currentIndex * (100 / itemsToShow)}%)`,
             transition: "transform 0.5s ease-in-out",
-            width: "calc(100% - 100px)", // Adjust for button width
+            width: "calc(100% - 100px)",
             margin: "0 auto",
           }}
         >
@@ -127,22 +123,22 @@ const NewArrival = () => {
             <Card
             key={product.id}
             sx={{
-              flex: `0 0 calc(100% / ${itemsToShow} - 16px)`, // Responsive layout
+              flex: `0 0 calc(100% / ${itemsToShow} - 16px)`,
               boxShadow: 1,
               overflow: "hidden",
               border: "0.5px solid lightgray",
               cursor: "pointer",
               transition: "box-shadow 0.3s ease",
               "&:hover": {
-                boxShadow: "0 8px 16px rgba(0,0,0,0.2)", // Slightly elevated shadow
+                boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
               },
             }}
           >
             <Box
               sx={{
                 position: "relative",
-                overflow: "hidden", // Clip the image on hover
-                height: "200px", // Fixed height for the image container
+                overflow: "hidden", 
+                height: "200px", 
               }}
             >
               <CardMedia
@@ -151,9 +147,9 @@ const NewArrival = () => {
                 image={product.image}
                 alt={product.name}
                 sx={{
-                  transition: "transform 0.3s ease", // Smooth transition for zoom
+                  transition: "transform 0.3s ease",
                   "&:hover": {
-                    transform: "scale(1.1)", // Slight zoom effect
+                    transform: "scale(1.1)",
                   },
                 }}
               />
@@ -170,8 +166,6 @@ const NewArrival = () => {
           
           ))}
         </Box>
-
-        {/* Next Button */}
         <Button
           onClick={handleNext}
           sx={{
@@ -188,8 +182,6 @@ const NewArrival = () => {
           <ArrowForward />
         </Button>
       </Box>
-
-      {/* Show More Button */}
       <Box
         sx={{
           display: "flex",

@@ -255,7 +255,7 @@ const Dashboard = () => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "start", // Align items to the start
+                alignItems: "start",
               }}
             >
               {[
@@ -275,23 +275,23 @@ const Dashboard = () => {
                   sx={{
                     width: "100%",
                     cursor: "pointer",
-                    justifyContent: "flex-start", // Align items to the start horizontally
-                    padding: "10px 20px", // Adjust padding
-                    borderBottom: "1px solid #444", // Subtle border between items
+                    justifyContent: "flex-start", 
+                    padding: "10px 20px",
+                    borderBottom: "1px solid #444", 
                     "&:hover": {
-                      backgroundColor: "#FF9800", // Highlight on hover with orange
+                      backgroundColor: "#FF9800", 
                     },
                     backgroundColor:
-                      selectedTopic === text ? "#FF9800" : "transparent", // Highlight selected item with orange
-                    color: selectedTopic === text ? "#212121" : "#ffffff", // White text, orange on selected
-                    fontWeight: selectedTopic === text ? "bold" : "normal", // Bold the selected item
+                      selectedTopic === text ? "#FF9800" : "transparent", 
+                    color: selectedTopic === text ? "#212121" : "#ffffff", 
+                    fontWeight: selectedTopic === text ? "bold" : "normal", 
                   }}
                 >
                   <ListItemText
                     primary={text}
                     sx={{
-                      textAlign: "start", // Align text horizontally to the start
-                      color: selectedTopic === text ? "#212121" : "#ffffff", // White for unselected, dark for selected
+                      textAlign: "start", 
+                      color: selectedTopic === text ? "#212121" : "#ffffff",
                     }}
                   />
                 </ListItem>

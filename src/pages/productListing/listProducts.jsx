@@ -17,8 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import styled from "@emotion/styled";
 import axios from "axios";
 import CategoryCarousel from "../components/categoryCarousal";
+import axiosInstance from "@/utils/axiosInstance";
 
-// Styled offer badge using emotion
 const OfferBadge = styled(Chip)`
   position: absolute;
   top: 12px;
@@ -64,59 +64,30 @@ const OfferBadge = styled(Chip)`
   }
 `;
 
-
-
-
 const StyledWrapper = styled.div`
-  .group {
-    display: flex;
-    line-height: 28px;
-    align-items: center;
-    position: relative;
-    max-width: 250px;
-    margin: 10px 0px;
-  }
-
+  width: 100%; // Full width for the search bar
+  margin: 15px 0px;
   .input {
-    font-family: "Montserrat", sans-serif;
-    width: 100%;
+    width: 100%; // Full width for the input
     height: 45px;
     padding-left: 2.5rem;
-    box-shadow: 0 0 0 1.5px #2b2c37, 0 0 25px -17px #000;
-    border: 0;
-    border-radius: 12px;
+    border: 1px solid #ccc; // Standard border
+    border-radius: 5px;
     background-color: #fff;
     outline: none;
     color: black;
     transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
-    cursor: text;
-    z-index: 0;
+    font-family: "Montserrat", sans-serif;
   }
-
   .input::placeholder {
-    color: black;
+    color: #aaa; // Placeholder color
   }
-
   .input:hover {
-    box-shadow: 0 0 0 2.5px #2f303d, 0px 0px 25px -15px #000;
+    border: 2px solid #ff6f61; // Change border color on hover
   }
-
-  .input:active {
-    transform: scale(0.95);
-  }
-
   .input:focus {
-    box-shadow: 0 0 0 2.5px #2f303d;
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 1rem;
-    fill: rgb(3, 3, 3);
-    width: 1rem;
-    height: 1rem;
-    pointer-events: none;
-    z-index: 1;
+    border-color: #ff6f61; // Change border color on focus
+    box-shadow: 0 0 0 2px rgba(255, 111, 97, 0.5); // Shadow on focus
   }
 `;
 
@@ -130,14 +101,12 @@ const ListProducts = ({
   const router = useRouter();
   const { filterState, updateFilters } = useFilter();
   const [categories, setCategories] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9090/api/categories"
-        );
+        const response = await axiosInstance.get("categories");
         setCategories(response.data.categories.map((cat) => cat.name));
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -151,12 +120,11 @@ const ListProducts = ({
   };
 
   const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value); // Update search query as the user types
+    setSearchQuery(event.target.value);
   };
 
   const filterProducts = (products) => {
     return products.filter((product) => {
-      // Filter by search query
       if (
         searchQuery &&
         !product.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -164,7 +132,6 @@ const ListProducts = ({
         return false;
       }
 
-      // Filter by price range
       const price = product.price;
       if (
         price < filterState.priceRange[0] ||
@@ -173,7 +140,6 @@ const ListProducts = ({
         return false;
       }
 
-      // Filter by categories
       if (
         filterState.categories.length > 0 &&
         !filterState.categories.includes(product.category)
@@ -181,7 +147,6 @@ const ListProducts = ({
         return false;
       }
 
-      // Filter by gender
       if (
         filterState.selectedGenders.length > 0 &&
         !filterState.selectedGenders.includes(product.gender)
@@ -189,7 +154,6 @@ const ListProducts = ({
         return false;
       }
 
-      // Filter by ratings
       if (
         filterState.selectedRatings.length > 0 &&
         !filterState.selectedRatings.includes(Math.floor(product.rating))
@@ -197,7 +161,6 @@ const ListProducts = ({
         return false;
       }
 
-      // Filter by discounts
       if (filterState.selectedDiscounts.length > 0) {
         const discount =
           ((product.originalPrice - product.price) / product.originalPrice) *
@@ -281,66 +244,23 @@ const ListProducts = ({
         </Box>
       ) : (
         <>
-          {/* Search Input Field with Animation */}
           <CategoryCarousel
             categories={categories}
             onCategoryClick={handleCategoryClick}
           />
-          {/* <Box
-            sx={{
-              display: "flex",
-              justifyContent: "end",
-              marginBottom: "20px",
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <TextField
-                label="Search Products"
-                variant="outlined"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                sx={{
-                  width: "300px",
-                  backgroundColor: "white",
-                  borderRadius: "4px",
-                }}
-              />
-            </motion.div>
-          </Box> */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "end",
-              marginBottom: "20px",
-            }}
-          >
-            <StyledWrapper>
-              <div className="group">
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="search-icon"
-                >
-                  <g>
-                    <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z" />
-                  </g>
-                </svg>
-                <input
-                  id="query"
-                  className="input"
-                  type="search"
-                  placeholder="Search products..."
-                  name="searchbar"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </StyledWrapper>
-          </Box>
+
+          <StyledWrapper>
+            <input
+              id="query"
+              className="input"
+              type="search"
+              placeholder="Search products..."
+              name="searchbar"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </StyledWrapper>
+
           <Grid container spacing={1}>
             {filteredAndSortedProducts.map((product, index) => {
               console.log("Productttttttt", product);
@@ -355,15 +275,12 @@ const ListProducts = ({
                   >
                     <Grid
                       sx={{
-                        height: "650px",
+                        height: "550px",
                         display: "flex",
                         flexDirection: "column",
                         border: "0.5px solid lightgray",
                         position: "relative",
-                        "&:hover": {
-                          transform: "translateY(-5px)",
-                          boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
-                        },
+                       
                       }}
                     >
                       {product.isOfferActive &&
@@ -388,6 +305,10 @@ const ListProducts = ({
                           height: 450,
                           objectFit: "cover",
                           cursor: "pointer",
+                          transition: "transform 0.3s ease",
+                          "&:hover": {
+                            transform: "scale(1.02)",
+                          },
                         }}
                         onClick={() => handleProductDetail(product.id)}
                       />
@@ -400,22 +321,11 @@ const ListProducts = ({
                             fontWeight: "600",
                             fontFamily: "'Poppins', sans-serif",
                             color: "#333",
+                            fontSize: "15px",
                           }}
                         >
-                          {product.title.slice(0, 30)}...
+                          {product.title.slice(0, 20)}...
                         </Typography>
-                        <Chip
-                          label={`${product.rating || "No"} Rating`}
-                          size="small"
-                          sx={{
-                            backgroundColor: "#ff6f61",
-                            color: "white",
-                            fontSize: "0.75rem",
-                            margin: "5px 0",
-                            borderRadius: "4px",
-                            fontFamily: "'Poppins', sans-serif",
-                          }}
-                        />
                         <Box
                           sx={{
                             display: "flex",
@@ -445,13 +355,28 @@ const ListProducts = ({
                                 </Typography>
                               )}
                           </Box>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontFamily: "'Open Sans', sans-serif" }}
-                          >
-                            Variants: {product.variantsCount}
-                          </Typography>
+                          <Box sx={{ display: "flex", gap: "5px" }}>
+                            {product.colorImages.map((colorVariant) => {
+                              console.log("COLORRRR", colorVariant);
+
+                              return (
+                                <img
+                                  key={colorVariant.color}
+                                  src={colorVariant}
+                                  alt={colorVariant.color}
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    borderRadius: "50%",
+                                    border: "2px solid black",
+                                    cursor: "pointer",
+                                    objectFit: "contain",
+                                  }}
+                                  title={colorVariant.color}
+                                />
+                              );
+                            })}
+                          </Box>
                         </Box>
                       </CardContent>
                     </Grid>

@@ -35,18 +35,27 @@ const SearchResults = () => {
         .then((response) => {
           const products = response.data.productsWithRelated;
           if (Array.isArray(products)) {
-            const transformedProducts = products.map((item) => ({
-              id: item.product._id,
-              image: item.product.variants[0]?.mainImage,
-              title: item.product.name,
-              description: item.product.description,
-              rating: item.product.ratings || 0,
-              price: item.product.variants[0]?.sizes[0]?.price || 0,
-              originalPrice: item.product.variants[0]?.sizes[0]?.price || 0,
-              variantsCount: item.product.variants.length,
-              category: item.product.category?.name,
-              gender: item.product.gender,
-            }));
+            const transformedProducts = products.map((item) => {
+              // Collect color images from variants
+              const colorImages = item.product.variants.map(variant => ({
+                color: variant.color,
+                colorImage: variant.colorImage,
+              }));
+
+              return {
+                id: item.product._id,
+                image: item.product.variants[0]?.mainImage,
+                title: item.product.name,
+                description: item.product.description,
+                rating: item.product.ratings || 0,
+                price: item.product.variants[0]?.sizes[0]?.price || 0,
+                originalPrice: item.product.variants[0]?.sizes[0]?.price || 0,
+                variantsCount: item.product.variants.length,
+                category: item.product.category?.name,
+                gender: item.product.gender,
+                colorImages, // Add color images to the product data
+              };
+            });
             setProducts(transformedProducts);
           }
           setLoading(false);
@@ -173,6 +182,7 @@ const SearchResults = () => {
                       sx={{
                         margin:"0px 10px",
                         height: "600px",
+                        width:"300px",
                         display: "flex",
                         flexDirection: "column",
                         transition: "transform 0.3s, box-shadow 0.3s",
@@ -234,13 +244,23 @@ const SearchResults = () => {
                           >
                             ₹{product.price}
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontFamily: "'Open Sans', sans-serif" }}
-                          >
-                            Variants: {product.variantsCount}
-                          </Typography>
+                          <Box sx={{ display: "flex", gap: "5px" }}>
+                            {product.colorImages.map((colorVariant) => (
+                              <img
+                                key={colorVariant.color}
+                                src={colorVariant.colorImage}
+                                alt={colorVariant.color}
+                                style={{
+                                  width: "30px",
+                                  height: "30px",
+                                  borderRadius: "50%",
+                                  border: "2px solid #ff6f61",
+                                  cursor: "pointer",
+                                }}
+                                title={colorVariant.color}
+                              />
+                            ))}
+                          </Box>
                         </Box>
                       </CardContent>
                     </Grid>
