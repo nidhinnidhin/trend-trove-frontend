@@ -16,6 +16,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
+import GenderFilter from '../components/genderFilter';
 
 const Filter = () => {
   const { filterState, updateFilters } = useFilter();
@@ -184,6 +185,8 @@ const Filter = () => {
           </AccordionDetails>
         </Accordion>
       ))}
+
+      <GenderFilter />
     </Box>
   );
 };

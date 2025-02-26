@@ -28,26 +28,25 @@ const StyledWrapper = styled("div")`
 
 const StyledButton = styled(Button)`
   width: 100%;
-  height: 60px;
+  height: 56px;
   display: flex;
-  padding: 0.5rem 1.4rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
   text-align: center;
-  text-transform: uppercase;
-  vertical-align: middle;
+  text-transform: none;
   align-items: center;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  gap: 0.75rem;
-  color: rgb(65, 63, 63);
+  border-radius: 8px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  gap: 1rem;
+  color: #1f2937;
   background-color: #fff;
   cursor: pointer;
-  transition: all 0.6s ease;
+  transition: all 0.2s ease;
 
   &:hover {
-    transform: scale(1.02);
+    background-color: #f3f4f6;
+    border-color: rgba(0, 0, 0, 0.2);
   }
 `;
 
@@ -153,38 +152,37 @@ const LoginDrawer = ({ onClose }) => {
     <Box
       sx={{
         display: "flex",
-        justifyContent: "center", 
-        alignItems: "center", 
-        width: 800,
+        justifyContent: "center",
+        alignItems: "center",
+        width: 600,
         height: "100vh",
         position: "relative",
-        backgroundImage:
-          "url('https://images.pexels.com/photos/3353621/pexels-photo-3353621.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        padding: "10px",
+        backgroundColor: "#ffffff",
+        padding: "2rem",
         textAlign: "center",
       }}
       role="presentation"
     >
       <Box
         sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.8)", 
-          padding: "20px",
-          borderRadius: "8px",
           width: "100%",
-          maxWidth: "500px", 
+          maxWidth: "400px",
         }}
       >
         <form onSubmit={handleSubmit} noValidate>
           <Typography
             variant="h4"
             gutterBottom
-            style={{ color: "black", textAlign: "center" }}
+            sx={{
+              color: "#1f2937",
+              fontWeight: 600,
+              marginBottom: "2rem",
+              fontSize: "2rem",
+            }}
           >
-            Login
+            Welcome Back
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
                 label="Email"
@@ -193,24 +191,25 @@ const LoginDrawer = ({ onClose }) => {
                 fullWidth
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={(e) => setEmail(e.target.value)}
                 sx={{
                   "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
                     "& fieldset": {
-                      borderColor: "gray",
+                      borderColor: "rgba(0, 0, 0, 0.12)",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#2563eb",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#2563eb",
                     },
                   },
                   "& .MuiInputLabel-root": {
-                    color: "gray",
+                    color: "#6b7280",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
+                    color: "#2563eb",
                   },
                 }}
               />
@@ -223,12 +222,16 @@ const LoginDrawer = ({ onClose }) => {
                 type={showPassword ? "text" : "password"}
                 fullWidth
                 required
-                value={password} // Ensure correct binding
-                onChange={(e) => setPassword(e.target.value)} // Ensure correct binding
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 InputProps={{
                   endAdornment: password && (
                     <InputAdornment position="end">
-                      <IconButton onClick={togglePasswordVisibility} edge="end">
+                      <IconButton 
+                        onClick={togglePasswordVisibility}
+                        edge="end"
+                        sx={{ color: "#6b7280" }}
+                      >
                         {showPassword ? <Visibility /> : <VisibilityOff />}
                       </IconButton>
                     </InputAdornment>
@@ -236,21 +239,22 @@ const LoginDrawer = ({ onClose }) => {
                 }}
                 sx={{
                   "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
                     "& fieldset": {
-                      borderColor: "gray",
+                      borderColor: "rgba(0, 0, 0, 0.12)",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#2563eb",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
+                      borderColor: "#2563eb",
                     },
                   },
                   "& .MuiInputLabel-root": {
-                    color: "gray",
+                    color: "#6b7280",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
+                    color: "#2563eb",
                   },
                 }}
               />
@@ -263,44 +267,59 @@ const LoginDrawer = ({ onClose }) => {
                 fullWidth
                 disabled={loading}
                 sx={{
-                  backgroundColor: "#FFA500", // Orange background
+                  height: "56px",
+                  backgroundColor: "rgb(237, 161, 20)",
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  fontWeight: 500,
                   "&:hover": {
-                    backgroundColor: "#FF8C00", // Darker orange on hover
+                    backgroundColor: "rgb(237, 156, 7)",
                   },
                 }}
               >
                 {loading ? (
                   <>
-                    <CircularProgress size={20} sx={{ marginRight: 1 }} />
-                    Logging in...
+                    <CircularProgress size={24} sx={{ color: "white", marginRight: 1 }} />
+                    Signing in...
                   </>
                 ) : (
-                  "Login"
+                  "Sign in"
                 )}
               </Button>
             </Grid>
+
             <Grid item xs={12}>
               <Typography
                 variant="body2"
                 sx={{
                   textAlign: "right",
                   cursor: "pointer",
-                  color: "#FFA500",
+                  color: "#2563eb",
+                  fontWeight: 500,
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
                 }}
                 onClick={() => router.push("/forgotPassword/forgotpassword")}
               >
-                Forgot Password?
+                Forgot password?
               </Typography>
             </Grid>
 
-            {/* Google Login Button */}
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", alignItems: "center", margin: "1rem 0" }}>
+                <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
+                <Typography sx={{ margin: "0 1rem", color: "#6b7280" }}>or</Typography>
+                <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
+              </Box>
+            </Grid>
+
             <Grid item xs={12}>
               <StyledWrapper>
                 <StyledButton
-                  variant="outlined"
                   onClick={() => {
-                    window.location.href =
-                      "http://localhost:9090/api/users/auth/google"; // Replace with your backend Google auth URL
+                    window.location.href = "http://localhost:9090/api/users/auth/google";
                   }}
                   startIcon={<GoogleIcon />}
                 >

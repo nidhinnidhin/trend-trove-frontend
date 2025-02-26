@@ -65,50 +65,65 @@ const LoginSignup = () => {
             <div className={styles.logo}>
               <Image
                 src={logo}
-                height={90}
-                width={220}
-                alt=""
+                height={75}
+                width={180}
+                alt="Company Logo"
+                priority
+                className={styles.logoImage}
               />
             </div>
             <div className={styles.buttons}>
               <button
                 className={styles.loginbutton}
-                onClick={toggleDrawer("login", true)} // Open login drawer
+                onClick={toggleDrawer("login", true)}
               >
-                Login
+                Sign In
               </button>
               <button
                 className={styles.signupbutton}
-                onClick={toggleDrawer("right", true)} // Open signup drawer
+                onClick={toggleDrawer("right", true)}
               >
-                Signup
+                Get Started
               </button>
             </div>
           </div>
-          <div className={styles.text}>
+          
+          <div className={styles.heroSection}>
+            <h1 className={styles.mainHeading}>
+              Your Fashion Journey Starts Here
+            </h1>
             <p
               className={`${styles.changableTextDescription} ${
                 fade ? styles.fadeIn : styles.fadeOut
               }`}
             >
-              Order clothes from the nearest shop in {items[currentIndex]}
+              Discover local fashion in {items[currentIndex]}
             </p>
           </div>
+
           <div className={styles.searchWrapper}>
-            <input
-              type="text"
-              placeholder="Enter your delivery location"
-              className={styles.input}
-            />
-            <button className={styles.findButton}>Find cloth</button>
+            <div className={styles.searchContainer}>
+              <input
+                type="text"
+                placeholder="Enter your delivery location"
+                className={styles.input}
+              />
+              <button className={styles.findButton}>
+                Explore Stores
+              </button>
+            </div>
+            <p className={styles.searchHint}>
+              Popular cities: Kochi, Thiruvananthapuram, Kozhikode
+            </p>
           </div>
         </div>
+
         <div className={styles.right}>
-          <div className={styles.img}>
+          <div className={styles.imageWrapper}>
             <img
               className={styles.banner}
               src="https://images.pexels.com/photos/5709661/pexels-photo-5709661.jpeg?auto=compress&cs=tinysrgb&w=600"
-              alt=""
+              alt="Fashion Banner"
             />
           </div>
         </div>

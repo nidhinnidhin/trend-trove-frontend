@@ -16,6 +16,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemIcon,
   Divider,
   Menu,
   MenuItem,
@@ -29,6 +30,7 @@ import {
   Slide,
   TextField,
   Tooltip,
+  Container,
 } from "@mui/material";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -42,7 +44,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
 import { motion } from "framer-motion";
 import LocalMallIcon from "@mui/icons-material/LocalMall"; // Custom cart icon
-import { ShoppingCartIcon } from "lucide-react";
+import { ShoppingCartIcon, HeartIcon, HomeIcon, ShirtIcon, TagIcon } from "lucide-react";
 
 const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -61,6 +63,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [categories, setCategories] = useState([]);
 
   const dispatch = useDispatch();
   const cartLength = useSelector((state) => state.cart.cartLength);
@@ -125,6 +128,19 @@ const Header = () => {
 
     fetchProfile();
   }, [token]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get("/categories");
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleProfileClick = () => {
     router.push("/profile/userprofile");
@@ -200,17 +216,31 @@ const Header = () => {
     setIsSearchOpen(false);
   };
 
+  const handleCategoryClick = (category) => {
+    router.push(`/productListing/searchResults?category=${category._id}`);
+    setIsSearchOpen(false);
+  };
+
+  const menuItems = [
+    { text: 'Home', icon: <HomeIcon size={20} />, path: '/' },
+    { 
+      text: 'Men', 
+      icon: <ShirtIcon size={20} />, 
+      category: { _id: 'mensCategoryId', name: 'men' }  // Replace with actual category ID
+    },
+    { 
+      text: 'Women', 
+      icon: <ShirtIcon size={20} />, 
+      category: { _id: 'womensCategoryId', name: 'women' }  // Replace with actual category ID
+    },
+    { text: 'Brands', icon: <TagIcon size={20} />, path: '/brands' },
+    { text: 'Cart', icon: <ShoppingCartIcon size={20} />, path: '/cart' },
+    { text: 'Wishlist', icon: <HeartIcon size={20} />, path: '/wishlist' },
+  ];
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: "100%",
-          backgroundColor: "#ffffff",
-          color: "#333",
-          boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-        }}
-      >
+    <Box sx={{ flexGrow: 1, marginBottom:"50px"}}>
+      <AppBar position="fixed" sx={{ bgcolor: "#fff", boxShadow: 'none' }}>
         <Toolbar
           sx={{
             justifyContent: "space-between",
@@ -220,6 +250,7 @@ const Header = () => {
             },
             margin: "0 auto",
             paddingX: isMobile ? 2 : 0,
+            borderBottom: '1px solid #eee'
           }}
         >
           <motion.div
@@ -313,7 +344,7 @@ const Header = () => {
                 <IconButton size="large" color="inherit">
                   <Link href="/whishlist/whishlistPage">
                     <Badge badgeContent={cartLength} color="error">
-                      <FavoriteIcon
+                      <HeartIcon
                         sx={{ fontSize: "30px", color: "#ff6f61" }}
                       />
                     </Badge>
@@ -370,6 +401,49 @@ const Header = () => {
             )}
           </Box>
         </Toolbar>
+
+        {!isMobile && (
+          <Box 
+            sx={{ 
+              borderBottom: '1px solid #eee',
+              bgcolor: '#fff',
+              py: 1
+            }}
+          >
+            <Container maxWidth="xl">
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center',
+                  gap: 3,
+                  overflowX: 'auto',
+                  '&::-webkit-scrollbar': { display: 'none' },
+                  scrollbarWidth: 'none'
+                }}
+              >
+                {categories.map((category) => (
+                  <Button
+                    key={category._id}
+                    onClick={() => handleCategoryClick(category)}
+                    sx={{
+                      color: '#333',
+                      textTransform: 'none',
+                      minWidth: 'auto',
+                      px: 2,
+                      '&:hover': {
+                        color: '#ff6f61',
+                        bgcolor: 'transparent'
+                      }
+                    }}
+                  >
+                    {category.name}
+                  </Button>
+                ))}
+              </Box>
+            </Container>
+          </Box>
+        )}
+
         <Slide direction="down" in={isSearchOpen} mountOnEnter unmountOnExit>
           <Box
             sx={{
@@ -430,21 +504,105 @@ const Header = () => {
         </Slide>
       </AppBar>
 
-      <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerToggle}>
-        <Box
-          sx={{ width: 250 }}
-          role="presentation"
-          onClick={handleDrawerToggle}
-        >
+      <Drawer 
+        anchor="left" 
+        open={drawerOpen} 
+        onClose={handleDrawerToggle}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            boxSizing: 'border-box',
+          },
+        }}
+      >
+        <Box sx={{ width: '100%' }}>
+          <Box
+            sx={{
+              p: 2,
+              borderBottom: '1px solid #eaeaea',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Image src={logo} height={30} width={100} alt="Logo" />
+          </Box>
+
           <List>
-            {["Products", "Category", "Brands", "Cart", "Wishlist"].map(
-              (text, index) => (
-                <ListItem button key={text}>
-                  <ListItemText primary={text} />
-                </ListItem>
-              )
-            )}
+            <ListItem>
+              <ListItemText 
+                primary="Categories" 
+                sx={{ 
+                  '& .MuiTypography-root': {
+                    fontWeight: 600,
+                    color: '#333'
+                  }
+                }}
+              />
+            </ListItem>
+            {categories.map((category) => (
+              <ListItem
+                button
+                key={category._id}
+                onClick={() => {
+                  handleCategoryClick(category);
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  pl: 4,
+                  '&:hover': {
+                    bgcolor: '#f5f5f5'
+                  }
+                }}
+              >
+                <ListItemText primary={category.name} />
+              </ListItem>
+            ))}
+            <Divider />
+            {menuItems.map((item) => (
+              <MenuItem 
+                key={item.text} 
+                onClick={() => item.category ? handleCategoryClick(item.category) : router.push(item.path)}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text}
+                  sx={{
+                    '& .MuiTypography-root': {
+                      fontSize: '15px',
+                      fontWeight: 500,
+                    },
+                  }}
+                />
+              </MenuItem>
+            ))}
           </List>
+
+          {!isLoggedIn && (
+            <Box sx={{ p: 2 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': {
+                    bgcolor: '#333',
+                  },
+                  textTransform: 'none',
+                  py: 1,
+                }}
+                onClick={() => {
+                  router.push("/authentication/loginSignup");
+                  handleDrawerToggle();
+                }}
+              >
+                Login
+              </Button>
+            </Box>
+          )}
         </Box>
       </Drawer>
 

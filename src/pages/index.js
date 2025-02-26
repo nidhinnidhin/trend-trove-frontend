@@ -13,6 +13,8 @@ import latestProductsBanner from "../media/new arivals banner.png";
 import bannerFashion from "../media/bannerfashion.png";
 import CategoryCarousel from "./components/categoryCarousal";
 import NewArrival from "./components/newArivals";
+import TrendingWears from "./components/trendingWears";
+import GenderFilter from "./components/genderFilter";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -61,7 +63,9 @@ export default function Home() {
         >
           <Header />
           <Slider />
+          {/* <GenderFilter/> */}
           <NewArrival/>
+          <TrendingWears/>
           {/* <div
             style={{
               // marginTop:"100px",
@@ -105,6 +109,7 @@ export default function Home() {
             {/* <Filter /> */}
             <Products products={products} loading={loading} />
           </Box>
+          
           <Footer />
         </Box>
       </FilterProvider>

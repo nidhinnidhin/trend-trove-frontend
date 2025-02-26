@@ -4,197 +4,183 @@ import {
   Typography,
   Link,
   Grid,
+  Container,
+  TextField,
+  Button,
+  Checkbox,
+  FormControlLabel,
   Divider,
-  IconButton,
 } from "@mui/material";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import TwitterIcon from "@mui/icons-material/Twitter";
-import InstagramIcon from "@mui/icons-material/Instagram";
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  LinkedIn,
+  YouTube,
+} from "@mui/icons-material";
 
 const Footer = () => {
   return (
-    <Box
-      sx={{
-        backgroundColor: "#f5f5f5",
-        padding: "40px 20px",
-        marginTop: "40px",
-        fontSize: "14px",
-      }}
-    >
-      <Grid container spacing={4} columns={{ xs: 2, sm: 4, md: 12 }}>
-        <Grid item xs={1} sm={2} md={3}>
-          <Typography variant="h6" gutterBottom>
-            Men
-          </Typography>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            T-Shirts
-          </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Shirts
-          </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Jeans
-          </Link>
-          <Link href="#" color="inherit" underline="hover" display="block">
-            Jackets
-          </Link>
+    <Box sx={{ bgcolor: "#fff", pt: 8, pb: 4 }}>
+      <Divider sx={{marginBottom:"100px"}}/>
+      <Container maxWidth="lg">
+        <Grid container spacing={4}>
+          {/* Customer Information */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Customer Information
+            </Typography>
+            <Link href="/shipping" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Shipping
+            </Link>
+            <Link href="/payment" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Payment Information
+            </Link>
+            <Link href="/returns" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Returns
+            </Link>
+            <Link href="/contact" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Contact Us | Customer Care
+            </Link>
+            <Link href="/size-charts" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Sizing Charts
+            </Link>
+          </Grid>
+
+          {/* Company Info */}
+          <Grid item xs={12} sm={6} md={3} >
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Company Info
+            </Typography>
+            <Link href="/about" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              About
+            </Link>
+            <Link href="/blog" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Blog
+            </Link>
+            <Link href="/careers" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Careers
+            </Link>
+            <Link href="/faqs" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              FAQs
+            </Link>
+            <Link href="/fabric-innovation" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Fabric Innovation
+            </Link>
+          </Grid>
+
+          {/* Useful Links */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Useful Links
+            </Typography>
+            <Link href="/wholesale" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Wholesale Request
+            </Link>
+            <Link href="/medical-program" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Medical Professional Program
+            </Link>
+            <Link href="/catalogs" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Catalogs
+            </Link>
+            <Link href="/accessibility" color="inherit" sx={{ display: 'block', mb: 1 }}>
+              Accessibility Settings
+            </Link>
+          </Grid>
+
+          {/* Newsletter Subscription */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Subscribe to Trend Trove emails
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                placeholder="Your email address"
+                variant="outlined"
+                size="small"
+                sx={{
+                  backgroundColor: '#fff',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#e0e0e0',
+                    },
+                  },
+                }}
+              />
+            </Box>
+            <Button
+              variant="contained"
+              fullWidth
+              sx={{
+                bgcolor: '#000',
+                color: '#fff',
+                '&:hover': {
+                  bgcolor: '#333',
+                },
+                textTransform: 'none',
+                mb: 2,
+              }}
+            >
+              Subscribe
+            </Button>
+            <FormControlLabel
+              control={
+                <Checkbox size="small" />
+              }
+              label={
+                <Typography variant="body2">
+                  I agree with the{' '}
+                  <Link href="/terms" color="inherit" sx={{ textDecoration: 'underline' }}>
+                    terms and conditions
+                  </Link>
+                </Typography>
+              }
+            />
+          </Grid>
         </Grid>
 
-        <Grid item xs={1} sm={2} md={3}>
-          <Typography variant="h6" gutterBottom>
-            Women
-          </Typography>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Dresses
+        {/* Social Media Links */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, my: 4 }}>
+          <Link href="#" color="inherit">
+            <Facebook />
           </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Tops
+          <Link href="#" color="inherit">
+            <Twitter />
           </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Skirts
+          <Link href="#" color="inherit">
+            <Instagram />
           </Link>
-          <Link href="#" color="inherit" underline="hover" display="block">
-            Handbags
+          <Link href="#" color="inherit">
+            <LinkedIn />
           </Link>
-        </Grid>
-
-        <Grid item xs={1} sm={2} md={3}>
-          <Typography variant="h6" gutterBottom>
-            Kids
-          </Typography>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Boys' Clothing
+          <Link href="#" color="inherit">
+            <YouTube />
           </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Girls' Clothing
-          </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Baby Wear
-          </Link>
-          <Link href="#" color="inherit" underline="hover" display="block">
-            Toys
-          </Link>
-        </Grid>
-
-        <Grid item xs={1} sm={2} md={3}>
-          <Typography variant="h6" gutterBottom>
-            Accessories
-          </Typography>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Belts
-          </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Watches
-          </Link>
-          <Link
-            href="#"
-            color="inherit"
-            underline="hover"
-            display="block"
-            sx={{ marginBottom: "8px" }}
-          >
-            Sunglasses
-          </Link>
-          <Link href="#" color="inherit" underline="hover" display="block">
-            Footwear
-          </Link>
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ marginY: "20px" }} />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          © 2025 Tren Trove. All rights reserved.
-        </Typography>
-        <Box>
-          <IconButton href="#" color="inherit">
-            <FacebookIcon />
-          </IconButton>
-          <IconButton href="#" color="inherit">
-            <LinkedInIcon />
-          </IconButton>
-          <IconButton href="#" color="inherit">
-            <TwitterIcon />
-          </IconButton>
-          <IconButton href="#" color="inherit">
-            <InstagramIcon />
-          </IconButton>
         </Box>
-      </Box>
+
+        {/* Bottom Links */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 2 }}>
+          <Link href="/privacy" color="inherit" sx={{ fontSize: '0.875rem' }}>
+            Privacy Policy
+          </Link>
+          <Link href="/terms" color="inherit" sx={{ fontSize: '0.875rem' }}>
+            Terms & Conditions
+          </Link>
+          <Link href="/gift-card" color="inherit" sx={{ fontSize: '0.875rem' }}>
+            Gift Card Policy
+          </Link>
+        </Box>
+
+        {/* Copyright */}
+        <Typography 
+          variant="body2" 
+          align="center" 
+          sx={{ color: '#666', fontSize: '0.875rem' }}
+        >
+          © 2018-2025 Trend Trove
+        </Typography>
+      </Container>
     </Box>
   );
 };

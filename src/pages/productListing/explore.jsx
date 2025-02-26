@@ -146,10 +146,10 @@ export default function Explore() {
       </Head>
 
       <FilterProvider>
+        <Header />
         <Box
           sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
         >
-          <Header />
           <Box sx={{ display: "flex", flexGrow: 1 }}>
             <Filter />
             <ListProducts

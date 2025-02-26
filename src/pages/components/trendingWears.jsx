@@ -11,11 +11,11 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import styled from "@emotion/styled";
 import { useRouter } from "next/router";
 
+// Styled Components
 const CarouselContainer = styled(Box)`
   width: 100%;
   max-width: 1400px;
-  margin: 60px auto;
-  margin-bottom: 0px;
+  margin: 10px auto;
   padding: 0;
   position: relative;
 `;
@@ -23,7 +23,7 @@ const CarouselContainer = styled(Box)`
 const CarouselViewport = styled(Box)`
   position: relative;
   overflow: hidden;
-  padding: 0 40px; // Move padding here from container
+  padding: 0 40px;
 `;
 
 const ProductsWrapper = styled(Box)`
@@ -50,7 +50,6 @@ const ProductImage = styled(CardMedia)`
   object-fit: contain;
 `;
 
-// Fixed navigation button styling
 const NavigationButton = styled(IconButton)`
   position: absolute;
   top: 50%;
@@ -59,7 +58,7 @@ const NavigationButton = styled(IconButton)`
   border: 1px solid #e0e0e0;
   width: 40px;
   height: 40px;
-  z-index: 10; // Increased z-index
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,7 +84,7 @@ const PaginationDot = styled(Box)`
   transition: background-color 0.3s ease;
 `;
 
-const NewArrival = () => {
+const TrendingWears = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,10 +96,16 @@ const NewArrival = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          "http://localhost:9090/api/products/get?page=1&limit=12"
+          "http://localhost:9090/api/products/get?page=1&limit=8"
         );
         const data = await response.json();
-        const transformedProducts = data.products.map((product) => {
+        
+        // Filter products for trending wears category
+        const trendingProducts = data.products.filter(
+          product => product.category?.name === "Trending Wears"
+        );
+
+        const transformedProducts = trendingProducts.map((product) => {
           const variant = product.variants[0];
           const firstSize = variant.sizes[0];
           return {
@@ -145,6 +150,11 @@ const NewArrival = () => {
     );
   }
 
+  // Don't render if no products
+  if (products.length === 0) {
+    return null;
+  }
+
   return (
     <CarouselContainer>
       <Typography 
@@ -157,7 +167,7 @@ const NewArrival = () => {
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        New Arrivals
+        Trending Wears
       </Typography>
 
       <CarouselViewport>
@@ -230,9 +240,8 @@ const NewArrival = () => {
         </NavigationButton>
       </CarouselViewport>
 
-  
     </CarouselContainer>
   );
 };
 
-export default NewArrival;
+export default TrendingWears;

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import Image from "next/image";
 import styled from "@emotion/styled";
+import { useRouter } from "next/router";
+import axios from "axios";
 
 const CarouselContainer = styled(Box)`
   width: 100%;
@@ -96,45 +98,21 @@ const NavigationButton = styled(IconButton)`
 
 const TopBrands = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
-  const brands = [
-    {
-      id: 1,
-      name: "White",
-      image: "https://www.coolibar.com/cdn/shop/files/01418-111-1000-02_720x.jpg",
-      shopNow: "Shop Now"
-    },
-    {
-      id: 2,
-      name: "Navy",
-      image: "https://www.coolibar.com/cdn/shop/files/01482-001-1000-2-coolibar-wide-leg-pant-upf-50_14b5d1e2-d713-4c2d-98fb-5f7a6a34d0b2_720x.jpg",
-      shopNow: "Shop Now"
-    },
-    {
-      id: 3,
-      name: "Peony Pink",
-      image: "https://www.coolibar.com/cdn/shop/files/10322-509-1000-02_720x.jpg",
-      shopNow: "Shop Now"
-    },
-    {
-      id: 4,
-      name: "Tahitian Teal",
-      image: "https://www.coolibar.com/cdn/shop/files/10153-930-9001-02_720x.jpg",
-      shopNow: "Shop Now"
-    },
-    {
-      id: 5,
-      name: "Future Dusk",
-      image: "https://www.coolibar.com/cdn/shop/files/01262-001-1000-02_ad8ece1d-79f0-4ae8-a996-f93a9840eddc_720x.jpg",
-      shopNow: "Shop Now"
-    },
-    {
-      id: 6,
-      name: "Black",
-      image: "https://www.coolibar.com/cdn/shop/files/01496-509-1000-02_ec635664-00dd-403e-a2ca-2c83439fc2a0_720x.jpg",
-      shopNow: "Shop Now"
-    }
-  ];
+  const [brands, setBrands] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await axios.get('http://localhost:9090/api/brands');
+        setBrands(response.data);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+
+    fetchBrands();
+  }, []);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % (brands.length - 5));
@@ -144,8 +122,24 @@ const TopBrands = () => {
     setCurrentIndex((prev) => (prev - 1 + (brands.length - 5)) % (brands.length - 5));
   };
 
+  const handleBrandClick = (brandId) => {
+    router.push(`/productListing/searchResults?brand=${brandId}`);
+  };
+
   return (
     <CarouselContainer>
+    <Typography 
+        variant="h5" 
+        sx={{ 
+          textAlign: "center", 
+          marginBottom: 5,
+          fontWeight: 600,
+          color: "#333",
+          fontFamily: "'Poppins', sans-serif",
+        }}
+      >
+        Top Brands
+      </Typography>
       <Box sx={{ position: "relative", overflow: "hidden" }}>
         <ProductsWrapper
           sx={{
@@ -153,7 +147,7 @@ const TopBrands = () => {
           }}
         >
           {brands.map((brand) => (
-            <BrandCard key={brand.id}>
+            <BrandCard key={brand._id} onClick={() => handleBrandClick(brand._id)}>
               <ImageWrapper>
                 <Image
                   src={brand.image}
@@ -178,7 +172,7 @@ const TopBrands = () => {
                     {brand.name}
                   </Typography>
                   <ShopNowButton>
-                    {brand.shopNow}
+                    Shop Now
                   </ShopNowButton>
                 </Overlay>
               </ImageWrapper>

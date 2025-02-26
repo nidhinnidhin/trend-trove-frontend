@@ -236,7 +236,7 @@ const ListProducts = ({
     <Box
       sx={{
         width: "90%",
-        margin: "0 auto",
+        margin: "10 auto",
         padding: "20px",
         minHeight: "100vh",
         backgroundColor: "#f5f5f5",
@@ -269,10 +269,10 @@ const ListProducts = ({
         </Box>
       ) : (
         <>
-          <CategoryCarousel
+          {/* <CategoryCarousel
             categories={categories}
             onCategoryClick={handleCategoryClick}
-          />
+          /> */}
 
           <StyledWrapper>
             <input
@@ -333,6 +333,7 @@ const ListProducts = ({
                         >
                           <CardMedia
                             component="img"
+                            onClick={() => handleProductDetail(product.id)}
                             image={
                               hoveredProductId === product.id
                                 ? product.subImage 
@@ -347,21 +348,6 @@ const ListProducts = ({
                             onMouseEnter={() => handleMouseEnter(product.id)} 
                             onMouseLeave={handleMouseLeave} 
                           />
-                          <motion.div
-                            initial={{ bottom: -40 }}
-                            animate={{ bottom: hoveredProductId === product.id ? 20 : -40 }}
-                            transition={{ duration: 0.3 }}
-                            style={{ position: "absolute", width: "100%" }}
-                          >
-                            <Tooltip title="View Details">
-                              <StyledEyeIcon
-                                onClick={() => handleProductDetail(product.id)}
-                                size="large"
-                              >
-                                <EyeIcon />
-                              </StyledEyeIcon>
-                            </Tooltip>
-                          </motion.div>
                         </motion.div>
                       </Box>
 
@@ -370,13 +356,12 @@ const ListProducts = ({
                           variant="h6"
                           gutterBottom
                           sx={{
-                            fontWeight: "600",
-                            fontFamily: "'Poppins', sans-serif",
-                            color: "#333",
-                            fontSize: "15px",
+                            fontWeight: 600,
+                            color: '#333',
+                            fontSize: '16px',
                           }}
                         >
-                          {product.title.slice(0, 20)}...
+                          {product.title.slice(0, 40)}...
                         </Typography>
                         <Box
                           sx={{
@@ -389,7 +374,11 @@ const ListProducts = ({
                           <Box>
                             <Typography
                               variant="h6"
-                              sx={{ fontWeight: "bold", color: "#333" }}
+                              sx={{
+                                fontWeight: 600,
+                                color: '#333',
+                                fontSize: '16px',
+                              }}
                             >
                               ₹{product.price.toFixed(1)}
                             </Typography>

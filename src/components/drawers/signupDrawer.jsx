@@ -25,6 +25,33 @@ const FileInput = styled("input")({
   display: "none",
 });
 
+const StyledBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  width: 450,
+  height: '100vh',
+  backgroundColor: '#ffffff',
+  padding: '2rem',
+  position: 'relative',
+  overflowY: 'auto',
+  '&::-webkit-scrollbar': {
+    width: '6px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#cbd5e1',
+    borderRadius: '6px',
+  },
+}));
+
+const StyledForm = styled('form')({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1.5rem',
+  width: '100%',
+  maxWidth: '400px',
+  margin: '0 auto',
+});
+
 const SignupDrawer = ({ open, onClose }) => {
   const router = useRouter();
   const [image, setImage] = useState("");
@@ -42,12 +69,89 @@ const SignupDrawer = ({ open, onClose }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
 
+  const validateForm = () => {
+    // Check if all fields are filled
+    if (!image || !firstName || !lastName || !userName || !email || !password || !confirmPassword) {
+      setSnackbarMessage("All fields are required");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Validate image type
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(image.type)) {
+      setSnackbarMessage("Invalid file type. Only JPEG or PNG images are allowed.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Validate text fields (only letters)
+    const textRegex = /^[A-Za-z]+$/;
+    if (!textRegex.test(firstName)) {
+      setSnackbarMessage("First name should only contain letters and no spaces or special characters");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    if (!textRegex.test(lastName)) {
+      setSnackbarMessage("Last name should only contain letters and no spaces or special characters");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    if (!textRegex.test(userName)) {
+      setSnackbarMessage("Username should only contain letters and no spaces or special characters");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Username length validation
+    if (userName.length <= 3) {
+      setSnackbarMessage("Username must be more than 3 characters long");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Email validation
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      setSnackbarMessage("Please enter a valid email address");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Password validation
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (password.length < 8 || !specialCharRegex.test(password)) {
+      setSnackbarMessage("Password must be at least 8 characters long and contain at least one special character");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    // Password match validation
+    if (password !== confirmPassword) {
+      setSnackbarMessage("Passwords do not match");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
 
-    if (!form.checkValidity()) {
-      form.reportValidity();
+    // Validate form before submission
+    if (!validateForm()) {
       return;
     }
 
@@ -56,7 +160,9 @@ const SignupDrawer = ({ open, onClose }) => {
       await axios.post("http://localhost:9090/api/otp/send-otp", { email });
       setOtpModalOpen(true);
     } catch (err) {
-      setSnackbarMessage(err.response?.data?.message || "Failed to send OTP.");
+      // Handle specific error messages from backend
+      const errorMessage = err.response?.data?.message || "Failed to send OTP";
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
     } finally {
@@ -77,15 +183,17 @@ const SignupDrawer = ({ open, onClose }) => {
     setLoading(true);
     try {
       const response = await axiosInstance.post("/users/register", formData);
-      setSnackbarMessage(response.data.message);
-      localStorage.setItem("usertoken", response.data.token);
+      setSnackbarMessage("Registration successful!");
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
+      localStorage.setItem("usertoken", response.data.token);
       setTimeout(() => {
         router.push("/");
       }, 2000);
     } catch (err) {
-      setSnackbarMessage(err.response?.data?.message || "Registration failed");
+      // Handle specific backend error messages
+      const errorMessage = err.response?.data?.message || "Registration failed";
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
     } finally {
@@ -96,304 +204,205 @@ const SignupDrawer = ({ open, onClose }) => {
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  const toggleConfirmPasswordVisibility = () =>
-    setShowConfirmPassword(!showConfirmPassword);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 800,
-        position: "relative",
-        height: "100vh",
-        backgroundImage:
-          "url('https://images.pexels.com/photos/1233648/pexels-photo-1233648.jpeg?auto=compress&cs=tinysrgb&w=600')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        padding: "10px",
-      }}
-      role="presentation"
-    >
-      <Button
+    <StyledBox role="presentation" sx={{width:"600px"}}>
+      <IconButton
         onClick={onClose}
-        style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          zIndex: 10,
-          color: "black",
+        sx={{
+          position: 'absolute',
+          right: 16,
+          top: 16,
+          color: '#64748b',
+          '&:hover': {
+            backgroundColor: 'rgba(100, 116, 139, 0.08)',
+          },
         }}
       >
         <CloseIcon />
-      </Button>
-      <div
-        className="card"
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          padding: "20px",
-          borderRadius: "10px",
-          width: "100%",
-          maxWidth: "500px",
-          margin: "0 auto",
-        }}
-      >
-        <Typography variant="h4" align="center" gutterBottom>
-          Signup
+      </IconButton>
+
+      <Box sx={{ textAlign: 'center', mb: 4, mt: 2}}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: '#1e293b',
+            fontWeight: 600,
+            fontSize: '1.875rem',
+            lineHeight: 1.2,
+          }}
+        >
+          Create Account
         </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            color: '#64748b',
+            mt: 1,
+          }}
+        >
+          Fill in your details to get started
+        </Typography>
+      </Box>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <Grid container spacing={2} direction="column">
-            <Grid item xs={12}>
-              <label htmlFor="profileImage">
-                <FileInput
-                  id="profileImage"
-                  name="profileImage"
-                  type="file"
-                  accept="image/*"
-                  required
-                  onChange={(e) => setImage(e.target.files[0])}
-                />
-                <Button
-                  variant="outlined"
-                  component="span"
-                  fullWidth
-                  sx={{ mb: 1, border: "1px solid orange", color: "orange" }}
-                >
-                  Upload Profile Image
-                </Button>
-              </label>
-              {image && (
-                <Avatar
-                  src={URL.createObjectURL(image)}
-                  alt="Profile Preview"
-                  sx={{ width: 80, height: 80, mt: 2, mx: "auto" }}
-                />
-              )}
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="First Name"
-                name="firstName"
-                fullWidth
-                required
-                onChange={(e) => setFirstName(e.target.value)}
+      <StyledForm onSubmit={handleSubmit} noValidate>
+        <Box sx={{ width: '100%', textAlign: 'center' }}>
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="profile-image"
+            type="file"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
+          <label htmlFor="profile-image">
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Avatar
+                src={image ? URL.createObjectURL(image) : ''}
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
+                  width: 100,
+                  height: 100,
+                  cursor: 'pointer',
+                  border: '2px dashed #e2e8f0',
+                  backgroundColor: '#f8fafc',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    borderColor: '#2563eb',
                   },
                 }}
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Last Name"
-                name="lastName"
-                fullWidth
-                required
-                onChange={(e) => setLastName(e.target.value)}
+              <Typography
+                variant="body2"
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
-                  },
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  '&:hover': { color: '#2563eb' },
                 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Username"
-                name="username"
-                fullWidth
-                required
-                onChange={(e) => setUserName(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                fullWidth
-                required
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                fullWidth
-                required
-                onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  endAdornment: password && (
-                    <InputAdornment position="end">
-                      <IconButton onClick={togglePasswordVisibility} edge="end">
-                        {showPassword ? <Visibility /> : <VisibilityOff />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500",
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Confirm Password"
-                name="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                fullWidth
-                required
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                InputProps={{
-                  endAdornment: confirmPassword && (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={toggleConfirmPasswordVisibility}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? (
-                          <Visibility />
-                        ) : (
-                          <VisibilityOff />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "gray",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#FFA500",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "gray",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                disabled={loading}
-                sx={{
-                  backgroundColor: "#FFA500", // Orange background
-                  "&:hover": {
-                    backgroundColor: "#FF8C00", // Darker orange on hover
-                  },
-                }}
-                startIcon={
-                  loading && <CircularProgress size={20} color="orange" />
-                }
               >
-                {loading ? "Signing..." : "Signup"}
-              </Button>
-            </Grid>
+                {image ? 'Change Profile Picture' : 'Upload Profile Picture'}
+              </Typography>
+            </Box>
+          </label>
+        </Box>
+
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              label="First Name"
+              fullWidth
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              sx={textFieldStyle}
+            />
           </Grid>
-        </form>
-      </div>
+          <Grid item xs={6}>
+            <TextField
+              label="Last Name"
+              fullWidth
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              sx={textFieldStyle}
+            />
+          </Grid>
+        </Grid>
+
+        <TextField
+          label="Username"
+          fullWidth
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          sx={textFieldStyle}
+        />
+
+        <TextField
+          label="Email"
+          type="email"
+          fullWidth
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          sx={textFieldStyle}
+        />
+
+        <TextField
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          fullWidth
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                  sx={{ color: '#64748b' }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={textFieldStyle}
+        />
+
+        <TextField
+          label="Confirm Password"
+          type={showConfirmPassword ? "text" : "password"}
+          fullWidth
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  edge="end"
+                  sx={{ color: '#64748b' }}
+                >
+                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={textFieldStyle}
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={loading}
+          sx={{
+            height: '48px',
+            backgroundColor: 'rgb(237, 161, 20)',
+            fontSize: '1rem',
+            textTransform: 'none',
+            fontWeight: 500,
+            boxShadow: 'none',
+            '&:hover': {
+              backgroundColor: 'rgb(238, 169, 41)',
+              boxShadow: 'none',
+            },
+            '&:disabled': {
+              backgroundColor: '#94a3b8',
+            },
+          }}
+        >
+          {loading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={20} sx={{ color: 'white' }} />
+              <span>Creating Account...</span>
+            </Box>
+          ) : (
+            'Create Account'
+          )}
+        </Button>
+      </StyledForm>
 
       <OtpVerificationModal
         open={otpModalOpen}
@@ -406,23 +415,51 @@ const SignupDrawer = ({ open, onClose }) => {
         email={email}
       />
 
-      {/* Snackbar for Feedback */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        autoHideDuration={5000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert
-          onClose={handleCloseSnackbar}
+          onClose={() => setOpenSnackbar(false)}
           severity={snackbarSeverity}
-          sx={{ width: "100%" }}
+          sx={{
+            width: '100%',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+          }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+    </StyledBox>
   );
+};
+
+// Common TextField styling
+const textFieldStyle = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '8px',
+    backgroundColor: '#f8fafc',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+    },
+    '&:hover fieldset': {
+      borderColor: '#2563eb',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#2563eb',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: '#64748b',
+  },
+  '& .MuiInputLabel-root.Mui-focused': {
+    color: '#2563eb',
+  },
+  '& .MuiOutlinedInput-input': {
+    color: '#1e293b',
+  },
 };
 
 export default SignupDrawer;
