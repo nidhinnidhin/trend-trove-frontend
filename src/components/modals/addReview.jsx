@@ -13,6 +13,7 @@ import {
   Box,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const AddReviewModal = ({
   openReviewModal,
@@ -45,7 +46,6 @@ const AddReviewModal = ({
     }
 
     try {
-      const token = localStorage.getItem("usertoken");
       const selectedOrderItem = orders
         .find((order) => order.orderId === selectedOrder)
         ?.items.find((item) => item.itemId === selectedItem);
@@ -55,22 +55,13 @@ const AddReviewModal = ({
         return;
       }
 
-      const response = await axios.post(
-        "http://localhost:9090/api/user/review/add",
-        {
-          productId: selectedOrderItem.productId,
-          variantId: selectedOrderItem.variantId,
-          sizeVariantId: selectedOrderItem.sizeVariantId,
-          rating: reviewRating,
-          comment: reviewComment,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axiosInstance.post("/user/review/add", {
+        productId: selectedOrderItem.productId,
+        variantId: selectedOrderItem.variantId,
+        sizeVariantId: selectedOrderItem.sizeVariantId,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
 
       if (response.data.success) {
         setSnackbar({
@@ -79,7 +70,6 @@ const AddReviewModal = ({
           severity: "success",
         });
 
-        // Reset form
         setReviewRating(0);
         setReviewComment("");
         setReviewError("");

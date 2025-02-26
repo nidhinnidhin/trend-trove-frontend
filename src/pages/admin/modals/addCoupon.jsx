@@ -16,6 +16,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const AddCoupon = ({ open, handleClose, handleCouponAdded }) => {
   const [couponCode, setCouponCode] = useState("");
@@ -72,12 +73,9 @@ const AddCoupon = ({ open, handleClose, handleCouponAdded }) => {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/admin/coupon/add",
-        newCoupon,
-        {
-          withCredentials: true, 
-        }
+      const response = await axiosInstance.post(
+        "/coupon/add",
+        newCoupon
       );
       handleCouponAdded(response.data.coupon)
       setSnackbar({

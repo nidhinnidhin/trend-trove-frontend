@@ -17,6 +17,7 @@ import Footer from "../components/footer";
 import Filter from "../components/filter";
 import { useFilter } from "@/context/filterContext";
 import { motion } from "framer-motion";
+import axiosInstance from "@/utils/axiosInstance";
 
 const SearchResults = () => {
   const router = useRouter();
@@ -28,15 +29,14 @@ const SearchResults = () => {
   useEffect(() => {
     if (search) {
       setLoading(true);
-      axios
+      axiosInstance
         .get(
-          `http://localhost:9090/api/products/product/search/related?query=${search}`
+          `/products/product/search/related?query=${search}`
         )
         .then((response) => {
           const products = response.data.productsWithRelated;
           if (Array.isArray(products)) {
             const transformedProducts = products.map((item) => {
-              // Collect color images from variants
               const colorImages = item.product.variants.map(variant => ({
                 color: variant.color,
                 colorImage: variant.colorImage,
@@ -53,7 +53,7 @@ const SearchResults = () => {
                 variantsCount: item.product.variants.length,
                 category: item.product.category?.name,
                 gender: item.product.gender,
-                colorImages, // Add color images to the product data
+                colorImages, 
               };
             });
             setProducts(transformedProducts);

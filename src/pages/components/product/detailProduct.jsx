@@ -114,8 +114,8 @@ const DetailProduct = () => {
     if (id) {
       const fetchProduct = async () => {
         try {
-          const response = await axios.get(
-            `http://localhost:9090/api/products/${id}/details`
+          const response = await axiosInstance.get(
+            `/products/${id}/details`
           );
           const productData = response.data.product;
           setVariants(productData.variants);
@@ -149,8 +149,8 @@ const DetailProduct = () => {
             gender: productData.gender,
           });
 
-          const relatedResponse = await axios.get(
-            `http://localhost:9090/api/products/related/${productData.category._id}/${id}`
+          const relatedResponse = await axiosInstance.get(
+            `/products/related/${productData.category._id}/${id}`
           );
           setRelatedProducts(relatedResponse.data.relatedProducts);
         } catch (error) {
@@ -163,17 +163,16 @@ const DetailProduct = () => {
   }, [id]);
 
   const itemsPerView = {
-    xs: 1, // mobile
-    sm: 2, // tablet
-    md: 3, // desktop
+    xs: 1,
+    sm: 2, 
+    md: 3, 
   };
 
-  // Calculate total number of slides needed
   const totalProductCount = relatedProducts.reduce(
     (count, product) => count + product.variants.length,
     0
   );
-  const maxVisibleItems = 3; // Maximum number of items to show at once
+  const maxVisibleItems = 3; 
   const totalSlides = Math.max(
     1,
     Math.ceil(totalProductCount / maxVisibleItems)
@@ -908,7 +907,6 @@ const DetailProduct = () => {
 
             {relatedProducts.length > 0 && (
               <Box sx={{ position: "relative", width: "100%", px: 4 }}>
-                {/* Left Navigation Button */}
                 <IconButton
                   sx={{
                     position: "absolute",
@@ -940,7 +938,6 @@ const DetailProduct = () => {
                             sx={{
                               height: "100%",
                               overflow: "hidden",
-                              // boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                               cursor: "pointer",
                             }}
                             onClick={() => handleProductDetail(product._id)}

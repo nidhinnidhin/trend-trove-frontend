@@ -157,7 +157,6 @@ const CheckoutPage = () => {
         throw new Error("Razorpay SDK failed to load");
       }
 
-      const token = localStorage.getItem("usertoken");
       const response = await axiosInstance.post(`/payment/create-order`, {
         amount: Math.round(previewTotal * 100),
         currency: "INR",

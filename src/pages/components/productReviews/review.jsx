@@ -9,6 +9,7 @@ import {
   Avatar,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const ProductReviews = ({
   productId,
@@ -22,11 +23,10 @@ const ProductReviews = ({
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:9090/api/user/review/get/${productId}`
+        const response = await axiosInstance.get(
+          `/user/review/get/${productId}`
         );
 
-        // Filter reviews based on selected variant and size
         const filteredReviews = response.data.reviews.filter(
           (review) =>
             review.variant._id === selectedVariantId &&

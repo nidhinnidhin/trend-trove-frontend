@@ -10,11 +10,16 @@ import {
   Modal,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const OtpVerificationModal = ({ open, onClose, email }) => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "" });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    type: "",
+  });
   const [timer, setTimer] = useState(60);
   const [timerExpired, setTimerExpired] = useState(false);
 
@@ -38,17 +43,32 @@ const OtpVerificationModal = ({ open, onClose, email }) => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.length !== 6 || isNaN(otp)) {
-      setSnackbar({ open: true, message: "Please enter a valid 6-digit OTP.", type: "error" });
+      setSnackbar({
+        open: true,
+        message: "Please enter a valid 6-digit OTP.",
+        type: "error",
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:9090/api/otp/verify-otp", { otp, email });
-      setSnackbar({ open: true, message: response.data.message, type: "success" });
-      onClose(true); // Close modal and indicate success
+      const response = await axiosInstance.post("/otp/verify-otp", {
+        otp,
+        email,
+      });
+      setSnackbar({
+        open: true,
+        message: response.data.message,
+        type: "success",
+      });
+      onClose(true);
     } catch (error) {
-      setSnackbar({ open: true, message: error.response?.data?.message || "Failed to verify OTP.", type: "error" });
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Failed to verify OTP.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -57,12 +77,20 @@ const OtpVerificationModal = ({ open, onClose, email }) => {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:9090/api/otp/resend-otp", { email });
-      setSnackbar({ open: true, message: response.data.message, type: "success" });
+      const response = await axiosInstance.post("/otp/resend-otp", { email });
+      setSnackbar({
+        open: true,
+        message: response.data.message,
+        type: "success",
+      });
       setTimer(60);
       setTimerExpired(false);
     } catch (error) {
-      setSnackbar({ open: true, message: error.response?.data?.message || "Failed to resend OTP.", type: "error" });
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Failed to resend OTP.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }

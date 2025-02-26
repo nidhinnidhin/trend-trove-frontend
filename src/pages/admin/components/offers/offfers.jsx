@@ -50,7 +50,6 @@ const Offers = () => {
 
   useEffect(() => {
     fetchOffers();
-    // return () => clearInterval(interval);
   }, [page, rowsPerPage, search]);
 
   const handleResetOffer = async (offerId) => {
@@ -122,7 +121,6 @@ const Offers = () => {
 
   return (
     <Box sx={{ padding: 3, backgroundColor: "#212121" }}>
-      {/* Header */}
       <Box
         sx={{
           display: "flex",

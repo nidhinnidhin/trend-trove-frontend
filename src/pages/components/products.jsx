@@ -11,10 +11,111 @@ import {
   IconButton,
   Chip,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
+  Button,
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/FavoriteBorder";
 import ShareIcon from "@mui/icons-material/Share";
 import { motion } from "framer-motion";
+import styled from "@emotion/styled";
+import Image from "next/image";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+
+const ProductsContainer = styled(Box)`
+  width: 100%;
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 20px;
+
+  @media (min-width: 600px) {
+    padding: 0 40px;
+  }
+`;
+
+const ProductGrid = styled(Box)`
+  display: grid;
+  gap: 16px;
+  margin-top: 30px;
+
+  // Mobile (1 column)
+  grid-template-columns: repeat(1, 1fr);
+  
+  // Small tablets (2 columns)
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  // Tablets (3 columns)
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  // Small laptops (4 columns)
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  // Desktops (6 columns)
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+`;
+
+const ProductCard = styled(Box)`
+  cursor: pointer;
+  text-align: center;
+  
+  &:hover {
+    .product-image {
+      transform: scale(1.05);
+    }
+  }
+`;
+
+const ImageWrapper = styled(Box)`
+  position: relative;
+  width: 100%;
+  padding-bottom: 133%; // 4:3 aspect ratio
+  margin-bottom: 12px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+`;
+
+const ProductImage = styled(Image)`
+  transition: transform 0.3s ease;
+`;
+
+const ProductTitle = styled(Typography)`
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 4px;
+  font-family: 'Poppins', sans-serif;
+  
+  // Line clamp for long titles
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 40px;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    height: 36px;
+  }
+`;
+
+const ProductPrice = styled(Typography)`
+  color: #666;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
 
 const styles = {
   container: {
@@ -100,9 +201,47 @@ const styles = {
   },
 };
 
+const LoadMoreButton = styled(Button)`
+  background-color: #00a69c;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  text-transform: none;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: #008c82;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .MuiButton-endIcon {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .MuiButton-endIcon {
+    transform: translateX(4px);
+  }
+`;
+
+const ButtonWrapper = styled(Box)`
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 40px;
+  padding-right: 20px;
+`;
+
 const Products = ({ products, loading }) => {
   const router = useRouter();
   const { filterState } = useFilter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const filterProducts = (products) => {
     return products.filter((product) => {
@@ -164,22 +303,30 @@ const Products = ({ products, loading }) => {
     router.push(`/product/${id}`);
   };
 
+  const handleLoadMore = () => {
+    router.push('/productListing/explore');
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
 
   return (
-    <Box sx={styles.container}>
+    <ProductsContainer>
       <Typography
-        variant="h4"
-        align="center"
-        gutterBottom
+        variant={isMobile ? "h6" : "h5"}
         sx={{
-          fontWeight: "bold",
+          textAlign: "center",
+          fontWeight: 600,
           color: "#333",
-          marginBottom: "30px",
+          marginBottom: isMobile ? 2 : 3,
           fontFamily: "'Poppins', sans-serif",
+          fontSize: {
+            xs: '1.25rem',
+            sm: '1.5rem',
+            md: '1.75rem'
+          }
         }}
       >
         Latest Products
@@ -191,74 +338,58 @@ const Products = ({ products, loading }) => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "50vh",
+            minHeight: "300px"
           }}
         >
-          <CircularProgress sx={{ color: "#ff6f61" }} />
+          <Typography>Loading...</Typography>
         </Box>
       ) : (
-        <Grid container spacing={2}>
-          {filteredAndSortedProducts.map((product, index) => (
-            <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-              <motion.div
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: index * 0.1, duration: 0.5 }}
+        <>
+          <ProductGrid>
+            {filteredAndSortedProducts.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                onClick={() => handleProductDetail(product.id)}
               >
-                <Grid sx={styles.card} onClick={() => handleProductDetail(product.id)}>
-                  {/* Number Badge */}
-                  <Box sx={styles.numberBadge}>
-                    <Typography variant="body2" fontWeight={500}>
-                      {index + 1}
-                    </Typography>
-                  </Box>
+                <ImageWrapper>
+                  <ProductImage
+                    src={product.image}
+                    alt={product.title}
+                    fill
+                    sizes="(max-width: 480px) 100vw, 
+                           (max-width: 768px) 50vw, 
+                           (max-width: 1024px) 33vw, 
+                           (max-width: 1280px) 25vw, 
+                           16.666vw"
+                    style={{
+                      objectFit: 'cover',
+                    }}
+                    className="product-image"
+                    priority={true}
+                  />
+                </ImageWrapper>
+                <ProductTitle>
+                  {product.title}
+                </ProductTitle>
+                <ProductPrice>
+                  ₹{product.price.toLocaleString('en-IN')}
+                </ProductPrice>
+              </ProductCard>
+            ))}
+          </ProductGrid>
 
-                  <Box sx={styles.imageContainer}>
-                    <CardMedia
-                      component="img"
-                      image={product.image}
-                      alt={product.title}
-                      sx={styles.productImage}
-                    />
-                  </Box>
-
-                  <CardContent sx={styles.contentArea}>
-                    <Box sx={styles.priceTag}>
-                      <Typography sx={styles.price}>
-                        ₹{product.price}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={styles.metaContainer}>
-                      <Box>
-                        <Chip
-                          label={`${product.rating || "No"} Rating`}
-                          size="small"
-                          sx={styles.ratingChip}
-                        />
-                        <Typography variant="body2" sx={styles.variantText}>
-                          Variants: {product.variantsCount}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={styles.actionButtons}>
-                        <IconButton size="small" color="inherit" >
-                          <FavoriteIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="inherit">
-                          <ShareIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Grid>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+          <ButtonWrapper>
+            <LoadMoreButton
+              onClick={handleLoadMore}
+              endIcon={<ArrowForwardIcon />}
+              disableElevation
+            >
+              View All Products
+            </LoadMoreButton>
+          </ButtonWrapper>
+        </>
       )}
-    </Box>
+    </ProductsContainer>
   );
 };
 

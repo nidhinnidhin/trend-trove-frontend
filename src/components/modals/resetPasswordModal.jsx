@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,16 +7,17 @@ import {
   TextField,
   Button,
   Box,
-  Alert
-} from '@mui/material';
+  Alert,
+} from "@mui/material";
+import axiosInstance from "@/utils/axiosInstance";
 
 const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
   const [formData, setFormData] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const validatePassword = (password) => {
     const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
@@ -26,49 +27,45 @@ const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async () => {
     try {
-      // Validate passwords
-      if (!formData.oldPassword || !formData.newPassword || !formData.confirmPassword) {
-        setError('All fields are required');
+      if (
+        !formData.oldPassword ||
+        !formData.newPassword ||
+        !formData.confirmPassword
+      ) {
+        setError("All fields are required");
         return;
       }
 
       if (!validatePassword(formData.newPassword)) {
-        setError('Password must be at least 8 characters long and contain at least one special character');
+        setError(
+          "Password must be at least 8 characters long and contain at least one special character"
+        );
         return;
       }
 
       if (formData.newPassword !== formData.confirmPassword) {
-        setError('New passwords do not match');
+        setError("New passwords do not match");
         return;
       }
 
-      const token = localStorage.getItem('usertoken');
-      const response = await fetch('http://localhost:9090/api/users/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          oldPassword: formData.oldPassword,
-          newPassword: formData.newPassword
-        })
+      const response = await axiosInstance.post("/users/reset-password", {
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword,
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to reset password');
+      const data = response.data;
+      if (response.status !== 200) {
+        throw new Error(data.message || "Failed to reset password");
       }
 
-      onPasswordReset('Password reset successfully');
+      onPasswordReset("Password reset successfully");
       handleClose();
     } catch (err) {
       setError(err.message);
@@ -77,7 +74,7 @@ const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ backgroundColor: '#222', color: 'white' }}>
+      <DialogTitle sx={{ backgroundColor: "#222", color: "white" }}>
         Reset Password
       </DialogTitle>
       <DialogContent sx={{ mt: 2 }}>
@@ -86,7 +83,7 @@ const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
             {error}
           </Alert>
         )}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, my: 2 }}>
           <TextField
             name="oldPassword"
             label="Current Password"
@@ -118,12 +115,12 @@ const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
         <Button onClick={handleClose} variant="outlined">
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           variant="contained"
-          sx={{ 
-            backgroundColor: '#222',
-            '&:hover': { backgroundColor: '#444' }
+          sx={{
+            backgroundColor: "#222",
+            "&:hover": { backgroundColor: "#444" },
           }}
         >
           Reset Password
@@ -133,4 +130,4 @@ const ResetPasswordModal = ({ open, handleClose, onPasswordReset }) => {
   );
 };
 
-export default ResetPasswordModal; 
+export default ResetPasswordModal;

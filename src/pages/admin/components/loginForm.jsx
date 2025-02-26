@@ -12,6 +12,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -29,10 +30,9 @@ const LoginForm = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/admin/adminlogin",
+      const response = await axiosInstance.post(
+        "/adminlogin",
         { email, password },
-        { withCredentials: true }
       );
       Cookies.set("adminToken", response.data.token, { expires: 1 });
       router.push("/admin/dashboard/dashboard");

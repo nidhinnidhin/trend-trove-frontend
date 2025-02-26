@@ -51,11 +51,8 @@ const Coupons = () => {
     const fetchCoupons = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          "http://localhost:9090/api/admin/coupon/get",
-          {
-            withCredentials: true,
-          },
+        const response = await axiosInstance.get(
+          "/coupon/get",
           {
             params: { page: page + 1, limit: rowsPerPage, search },
           }

@@ -18,6 +18,7 @@ import { useRouter } from "next/router";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { styled } from "@mui/system";
+import axiosInstance from "@/utils/axiosInstance";
 
 const StyledWrapper = styled("div")`
   display: flex;
@@ -27,7 +28,7 @@ const StyledWrapper = styled("div")`
 
 const StyledButton = styled(Button)`
   width: 100%;
-  height: 60px; 
+  height: 60px;
   display: flex;
   padding: 0.5rem 1.4rem;
   font-size: 0.875rem;
@@ -125,10 +126,7 @@ const LoginDrawer = ({ onClose }) => {
 
     setTimeout(async () => {
       try {
-        const response = await axios.post(
-          "http://localhost:9090/api/users/login",
-          datas
-        );
+        const response = await axiosInstance.post("/users/login", datas);
         setSnackbarMessage(response.data.message);
         setSnackbarSeverity("success");
         setOpenSnackbar(true);
@@ -154,11 +152,11 @@ const LoginDrawer = ({ onClose }) => {
   return (
     <Box
       sx={{
-        display: "flex", // Flexbox to center
-        justifyContent: "center", // Horizontal centering
-        alignItems: "center", // Vertical centering
+        display: "flex",
+        justifyContent: "center", 
+        alignItems: "center", 
         width: 800,
-        height: "100vh", // Full height
+        height: "100vh",
         position: "relative",
         backgroundImage:
           "url('https://images.pexels.com/photos/3353621/pexels-photo-3353621.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')",
@@ -169,18 +167,16 @@ const LoginDrawer = ({ onClose }) => {
       }}
       role="presentation"
     >
-      {/* Form with slight white transparent background */}
       <Box
         sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.8)", // Light white with slight transparency
+          backgroundColor: "rgba(255, 255, 255, 0.8)", 
           padding: "20px",
           borderRadius: "8px",
           width: "100%",
-          maxWidth: "500px", // Limit form width for better mobile handling
+          maxWidth: "500px", 
         }}
       >
         <form onSubmit={handleSubmit} noValidate>
-          {/* Centered Login Text */}
           <Typography
             variant="h4"
             gutterBottom
@@ -197,24 +193,24 @@ const LoginDrawer = ({ onClose }) => {
                 fullWidth
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)} // Ensure correct binding
+                onChange={(e) => setEmail(e.target.value)} 
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", // Orange border on hover
+                      borderColor: "#FFA500", 
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", // Orange border on focus
+                      borderColor: "#FFA500", 
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", // Orange placeholder on focus
+                    color: "#FFA500",
                   },
                 }}
               />

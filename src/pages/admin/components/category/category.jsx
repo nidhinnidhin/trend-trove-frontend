@@ -103,10 +103,9 @@ const Category = () => {
     setIsEditModalOpen(false);
   };
 
-  // Open confirmation modal before blocking category
   const handleBlockCategory = (categoryId) => {
     setCategoryToBlock(categoryId);
-    setIsConfirmationModalOpen(true); // Open confirmation modal
+    setIsConfirmationModalOpen(true); 
   };
 
   const handleConfirmBlock = async () => {
@@ -172,7 +171,6 @@ const Category = () => {
   return (
     <>
       <Box sx={{ padding: 3, backgroundColor: "#212121" }}>
-        {/* Header */}
         <Box
           sx={{
             display: "flex",

@@ -17,6 +17,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
   const [addressData, setAddressData] = useState({
@@ -79,7 +80,6 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
     "Puducherry",
   ];
 
-  // Form validation method
   const validateForm = () => {
     const newErrors = {};
 
@@ -150,16 +150,9 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("usertoken");
-      const response = await axios.post(
-        "http://localhost:9090/api/address/add-address",
-        addressData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const response = await axiosInstance.post(
+        "/address/add-address",
+        addressData
       );
 
       setSnackbar({
@@ -207,18 +200,18 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
         maxWidth="md"
         fullWidth
         sx={{
-          '& .MuiDialog-paper': {
+          "& .MuiDialog-paper": {
             borderRadius: 3,
-            backgroundColor: '#f7f7f7', // Very light gray background
-            boxShadow: '0 8px 24px rgba(0,0,0,0.1)', // Subtle shadow
-          }
+            backgroundColor: "#f7f7f7",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          },
         }}
       >
-        <DialogTitle 
-          sx={{ 
-            backgroundColor: '#1a1a1a', 
-            color: 'white', 
-            py: 2, 
+        <DialogTitle
+          sx={{
+            backgroundColor: "#1a1a1a",
+            color: "white",
+            py: 2,
             px: 3,
             borderTopLeftRadius: 12,
             borderTopRightRadius: 12,
@@ -227,10 +220,10 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
         >
           Add New Address
         </DialogTitle>
-        <DialogContent 
-          sx={{ 
-            backgroundColor: '#ffffff', 
-            py: 3, 
+        <DialogContent
+          sx={{
+            backgroundColor: "#ffffff",
+            py: 3,
             px: 3,
           }}
         >
@@ -247,16 +240,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.fullName}
                 required
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0', // Slightly darker input background
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a', // Dark focus border
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a', // Dark label when focused
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -274,16 +267,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 required
                 inputProps={{ maxLength: 10 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -299,16 +292,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.pincode}
                 required
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -324,16 +317,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.locality}
                 required
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -351,16 +344,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.address}
                 required
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -376,21 +369,26 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.city}
                 required
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth variant="outlined" required error={!!errors.state}>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                required
+                error={!!errors.state}
+              >
                 <InputLabel>State</InputLabel>
                 <Select
                   name="state"
@@ -418,16 +416,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 onChange={handleChange}
                 variant="outlined"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -443,16 +441,16 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
                 helperText={errors.alternatePhone}
                 inputProps={{ maxLength: 10 }}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#f0f0f0',
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#f0f0f0",
                     borderRadius: 2,
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#1a1a1a',
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#1a1a1a",
                     },
                   },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#1a1a1a',
-                  }
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#1a1a1a",
+                  },
                 }}
               />
             </Grid>
@@ -472,28 +470,28 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions 
-          sx={{ 
-            backgroundColor: '#f7f7f7', 
-            py: 2, 
+        <DialogActions
+          sx={{
+            backgroundColor: "#f7f7f7",
+            py: 2,
             px: 3,
-            borderTop: '1px solid #e0e0e0', // Subtle separator
-            display: 'flex',
-            justifyContent: 'space-between'
+            borderTop: "1px solid #e0e0e0",
+            display: "flex",
+            justifyContent: "space-between",
           }}
         >
           <Button
             onClick={onClose}
             sx={{
-              color: '#1a1a1a',
-              borderColor: '#1a1a1a',
-              textTransform: 'none',
+              color: "#1a1a1a",
+              borderColor: "#1a1a1a",
+              textTransform: "none",
               px: 3,
               py: 1,
               borderRadius: 2,
-              '&:hover': {
-                backgroundColor: 'rgba(26,26,26,0.05)',
-              }
+              "&:hover": {
+                backgroundColor: "rgba(26,26,26,0.05)",
+              },
             }}
             variant="outlined"
           >
@@ -505,22 +503,26 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
             variant="contained"
             disabled={loading}
             sx={{
-              backgroundColor: '#1a1a1a',
-              color: 'white',
-              textTransform: 'none',
+              backgroundColor: "#1a1a1a",
+              color: "white",
+              textTransform: "none",
               px: 3,
               py: 1,
               borderRadius: 2,
-              '&:hover': {
-                backgroundColor: '#333333',
+              "&:hover": {
+                backgroundColor: "#333333",
               },
-              '&.Mui-disabled': {
-                backgroundColor: '#666666',
-                color: '#cccccc'
-              }
+              "&.Mui-disabled": {
+                backgroundColor: "#666666",
+                color: "#cccccc",
+              },
             }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Add Address"}
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Add Address"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
@@ -534,13 +536,13 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ 
+          sx={{
             width: "100%",
-            backgroundColor: '#1a1a1a',
-            color: 'white',
-            '& .MuiAlert-icon': {
-              color: 'white'
-            }
+            backgroundColor: "#1a1a1a",
+            color: "white",
+            "& .MuiAlert-icon": {
+              color: "white",
+            },
           }}
         >
           {snackbar.message}

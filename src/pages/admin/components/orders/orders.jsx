@@ -24,6 +24,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Chip,
+  TextField,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -46,6 +47,8 @@ const Orders = () => {
   });
   const [isReturnApprovalModalOpen, setIsReturnApprovalModalOpen] =
     useState(false);
+  const [isRejectReasonModalOpen, setIsRejectReasonModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -172,6 +175,53 @@ const Orders = () => {
       });
     }
     setIsReturnApprovalModalOpen(false);
+  };
+
+  const handleReturnRejection = async () => {
+    try {
+      const response = await axiosInstance.patch(
+        `/checkout/approve-return/${selectedOrder?.orderId}/${selectedItem?.itemId}`,
+        { 
+          approved: false,
+          rejectionReason: rejectReason 
+        }
+      );
+
+      if (response.data.success) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.orderId === selectedOrder?.orderId
+              ? {
+                  ...order,
+                  items: order.items.map((item) =>
+                    item.itemId === selectedItem?.itemId
+                      ? {
+                          ...item,
+                          returnStatus: "Return Rejected",
+                          returnRequested: false,
+                        }
+                      : item
+                  ),
+                }
+              : order
+          )
+        );
+        setSnackbar({
+          open: true,
+          message: "Return rejected successfully",
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Error processing return rejection",
+        severity: "error",
+      });
+    }
+    setIsRejectReasonModalOpen(false);
+    setIsReturnApprovalModalOpen(false);
+    setRejectReason("");
   };
 
   const handleChangePage = (event, newPage) => {
@@ -461,7 +511,7 @@ const Orders = () => {
                   </TableHead>
                   <TableBody>
                     {selectedOrder.items.map((item) => {
-                      console.log("Orderrrrr", item);
+                      console.log("Orderrrrrrrrrrrrrrrrrrrrrrrrrr", item);
 
                       return (
                         <TableRow key={item.itemId}>
@@ -470,7 +520,7 @@ const Orders = () => {
                           </TableCell>
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>₹{item.price}</TableCell>
-                          <TableCell>{selectedOrder.orderStatus}</TableCell>
+                          <TableCell>{item.status}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -511,13 +561,9 @@ const Orders = () => {
             Cancel
           </Button>
           <Button
-            onClick={() =>
-              handleReturnApproval(
-                selectedOrder?.orderId,
-                selectedItem?.itemId,
-                false
-              )
-            }
+            onClick={() => {
+              setIsRejectReasonModalOpen(true);
+            }}
             color="error"
             variant="contained"
           >
@@ -535,6 +581,41 @@ const Orders = () => {
             variant="contained"
           >
             Approve Return
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isRejectReasonModalOpen}
+        onClose={() => setIsRejectReasonModalOpen(false)}
+      >
+        <DialogTitle sx={{ backgroundColor: "#3f51b5", color: "#ffffff" }}>
+          Return Rejection Reason
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, minWidth: 400 }}>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Please provide a reason for rejecting the return request:
+          </Typography>
+          <TextField
+            multiline
+            rows={4}
+            fullWidth
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Enter rejection reason..."
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsRejectReasonModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleReturnRejection}
+            color="primary"
+            variant="contained"
+            disabled={!rejectReason.trim()}
+          >
+            Submit
           </Button>
         </DialogActions>
       </Dialog>

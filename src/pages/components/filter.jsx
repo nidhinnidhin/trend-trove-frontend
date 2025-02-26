@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const Filter = () => {
   const { filterState, updateFilters } = useFilter();
@@ -32,8 +33,8 @@ const Filter = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9090/api/categories"
+        const response = await axiosInstance.get(
+          "/categories"
         );
         setCategories(response.data.categories.map((cat) => cat.name));
       } catch (error) {
@@ -129,7 +130,6 @@ const Filter = () => {
         </Select>
       </Box>
 
-      {/* Categories, Gender, Rating, Discount sections */}
       {[
         {
           title: "Categories",

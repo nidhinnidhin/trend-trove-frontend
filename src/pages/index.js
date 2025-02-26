@@ -6,21 +6,24 @@ import Filter from "./components/filter";
 import Header from "./components/header";
 import Footer from "./components/footer";
 import Slider from "./components/slider";
-import { Box, Container } from "@mui/material";
+import { Box, Container, Grid } from "@mui/material";
 import TopBrands from "./components/topBrands";
 import Image from "next/image";
 import latestProductsBanner from "../media/new arivals banner.png";
 import bannerFashion from "../media/bannerfashion.png";
 import CategoryCarousel from "./components/categoryCarousal";
+import NewArrival from "./components/newArivals";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoading(true);
         const response = await fetch(
-          "http://localhost:9090/api/products/get?page=1&limit=8"
+          "http://localhost:9090/api/products/get?page=1&limit=12"
         );
         const data = await response.json();
         const transformedProducts = data.products.map((product) => {
@@ -30,19 +33,14 @@ export default function Home() {
             id: product._id,
             image: variant.mainImage,
             title: product.name,
-            description: product.description,
-            rating: product.ratings || 0,
             price: firstSize.discountPrice || firstSize.price,
-            originalPrice: firstSize.price,
-            variantsCount: product.variants.length,
-            category: product.category?.name,
-            gender: product.gender,
-            isDeleted: product.isDeleted,
           };
         });
         setProducts(transformedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -50,7 +48,7 @@ export default function Home() {
   }, []);
 
   return (
-    <Container maxWidth="xl" sx={{ px: 2 }}>
+    <Grid maxWidth="xl">
 
       <Head>
         <title>E-Commerce Store</title>
@@ -63,6 +61,7 @@ export default function Home() {
         >
           <Header />
           <Slider />
+          <NewArrival/>
           {/* <div
             style={{
               // marginTop:"100px",
@@ -82,8 +81,8 @@ export default function Home() {
               alt="Latest Products Banner"
             />
           </div> */}
-          {/* <TopBrands /> */}
-          <div
+          <TopBrands />
+          {/* <div
             style={{
               width: "100%",
               height: "100vh",
@@ -100,15 +99,15 @@ export default function Home() {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
               alt="Latest Products Banner"
             />
-          </div>
+          </div> */}
 
           <Box sx={{ display: "flex", flexGrow: 1 }}>
             {/* <Filter /> */}
-            <Products products={products} />
+            <Products products={products} loading={loading} />
           </Box>
           <Footer />
         </Box>
       </FilterProvider>
-    </Container>
+    </Grid>
   );
 }

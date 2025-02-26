@@ -116,12 +116,10 @@ const Dashboard = () => {
 
   const calculateStats = (orders) => {
     const newStats = orders.reduce((acc, order) => {
-      // Total Revenue (excluding cancelled orders)
       if (order.orderStatus !== 'Cancelled') {
         acc.totalRevenue += order.totalAmount;
       }
 
-      // Order counts
       acc.totalOrders++;
       
       switch (order.orderStatus.toLowerCase()) {
@@ -133,12 +131,10 @@ const Dashboard = () => {
           break;
       }
 
-      // Check for returns in items
       if (order.items.some(item => item.status === 'Returned')) {
         acc.returnedOrders++;
       }
 
-      // Calculate total discount
       order.items.forEach(item => {
         const originalPrice = item.price * item.quantity;
         const finalPrice = order.totalAmount;
@@ -174,16 +170,13 @@ const Dashboard = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     
-    // Add title
     doc.setFontSize(20);
     doc.setTextColor(40, 40, 40);
     doc.text("Order Summary Report", 14, 22);
     
-    // Add period
     doc.setFontSize(12);
     doc.text(`Period: ${filterType.replace(/([A-Z])/g, ' $1').toLowerCase()}`, 14, 32);
     
-    // Add stats table
     doc.autoTable({
       startY: 40,
       head: [['Metric', 'Value']],
@@ -196,10 +189,9 @@ const Dashboard = () => {
         ['Total Discount', `₹${stats.totalDiscount.toLocaleString('en-IN')}`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [255, 152, 0] }, // Orange header
+      headStyles: { fillColor: [255, 152, 0] },
     });
 
-    // Add orders table
     doc.autoTable({
       startY: doc.lastAutoTable.finalY + 10,
       head: [['Order ID', 'Date', 'Customer', 'Items', 'Amount', 'Status', 'Payment']],
@@ -216,11 +208,10 @@ const Dashboard = () => {
       headStyles: { fillColor: [255, 152, 0] },
       styles: { overflow: 'linebreak' },
       columnStyles: {
-        3: { cellWidth: 50 }, // Wider column for items
+        3: { cellWidth: 50 }, 
       },
     });
 
-    // Save the PDF
     const fileName = `order_summary_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   };
@@ -300,7 +291,6 @@ const Dashboard = () => {
           </Box>
         </Drawer>
 
-        {/* Main content area (75% width) */}
         <Box
           sx={{
             flexGrow: 1,
@@ -311,7 +301,6 @@ const Dashboard = () => {
             overflow:"auto"
           }}
         >
-          {/* Sales Summary */}
           {selectedTopic === "Sales Summary" && (
             <Box>
               <Grid
@@ -361,7 +350,6 @@ const Dashboard = () => {
                 </Grid>
               </Grid>
 
-              {/* Download Summary Button */}
               <Box sx={{ marginTop: 2 }}>
                 <Button
                   variant="contained"
@@ -380,7 +368,6 @@ const Dashboard = () => {
 
               <Divider sx={{ marginY: 3, borderColor: "#444" }} />
 
-              {/* Stats Cards */}
               <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={6} md={4} lg={3}>
                   <RevenueCard
@@ -432,7 +419,6 @@ const Dashboard = () => {
                 </Grid>
               </Grid>
 
-              {/* Chart */}
               <Card sx={{ mb: 3, backgroundColor: '#333' }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>Sales Overview</Typography>
@@ -440,7 +426,6 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              {/* Orders Table */}
               <Card sx={{ backgroundColor: '#333' }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>Recent Orders</Typography>
@@ -501,7 +486,6 @@ const Dashboard = () => {
             </Box>
           )}
 
-          {/* Show other selected topics */}
           {selectedTopic === "Products" && <Products/>}
           {selectedTopic === "Users" && <Users />}
           {selectedTopic === "Categories" && <Category />}
@@ -512,7 +496,6 @@ const Dashboard = () => {
         </Box>
       </Box>
 
-      {/* Confirmation Modal */}
       <Dialog open={openLogoutDialog} onClose={handleCancelLogout}>
         <DialogTitle>Are you sure you want to log out?</DialogTitle>
         <DialogContent>

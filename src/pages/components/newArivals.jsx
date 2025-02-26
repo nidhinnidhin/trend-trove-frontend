@@ -1,199 +1,248 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Button,
-  Grid,
+  IconButton,
+  Typography,
   Card,
   CardMedia,
   CardContent,
-  Typography,
-  useMediaQuery,
 } from "@mui/material";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import styled from "@emotion/styled";
+
+const CarouselContainer = styled(Box)`
+  width: 100%;
+  max-width: 1400px;
+  margin: 60px auto;
+  padding: 0;
+  position: relative;
+`;
+
+const CarouselViewport = styled(Box)`
+  position: relative;
+  overflow: hidden;
+  padding: 0 40px; // Move padding here from container
+`;
+
+const ProductsWrapper = styled(Box)`
+  display: flex;
+  gap: 24px;
+  transition: transform 0.5s ease;
+`;
+
+const ProductCard = styled(Card)`
+  min-width: 260px;
+  border: none;
+  box-shadow: none;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ProductImage = styled(CardMedia)`
+  height: 360px;
+  width: 100%;
+  background-color: #f8f8f8;
+  transition: transform 0.3s ease;
+  object-fit: contain;
+`;
+
+// Fixed navigation button styling
+const NavigationButton = styled(IconButton)`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  width: 40px;
+  height: 40px;
+  z-index: 10; // Increased z-index
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  & .MuiSvgIcon-root {
+    font-size: 24px;
+    color: #666;
+  }
+`;
+
+const PaginationDot = styled(Box)`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: ${props => props.active ? '#333' : '#ddd'};
+  margin: 0 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+`;
 
 const NewArrival = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const itemsPerView = 4;
+
   const products = [
     {
       id: 1,
-      name: "Product 1",
-      image:
-        "https://images.pexels.com/photos/2491123/pexels-photo-2491123.jpeg?auto=compress&cs=tinysrgb&w=600",
+      name: "Women's Arcadian Packable Sunblock Jacket | White",
+      price: "Rs. 9,400.00",
+      image: "https://www.coolibar.com/cdn/shop/files/01418-111-1000-02_720x.jpg?v=1733867223"
     },
     {
       id: 2,
-      name: "Product 2",
-      image:
-        "https://images.pexels.com/photos/2491123/pexels-photo-2491123.jpeg?auto=compress&cs=tinysrgb&w=600",
+      name: "Women's Petra Wide Leg Pants | Black",
+      price: "Rs. 9,400.00",
+      image: "https://www.coolibar.com/cdn/shop/files/01482-001-1000-2-coolibar-wide-leg-pant-upf-50_14b5d1e2-d713-4c2d-98fb-5f7a6a34d0b2_720x.jpg?v=1723168749"
     },
     {
       id: 3,
-      name: "Product 3",
-      image:
-        "https://images.pexels.com/photos/2491123/pexels-photo-2491123.jpeg?auto=compress&cs=tinysrgb&w=600",
+      name: "Women's Rhodes Shirt | Future Dusk",
+      price: "Rs. 8,450.00",
+      image: "https://www.coolibar.com/cdn/shop/files/10322-509-1000-02_720x.jpg?v=1723655415"
     },
     {
       id: 4,
-      name: "Product 4",
-      image:
-        "https://images.pexels.com/photos/2068349/pexels-photo-2068349.jpeg?auto=compress&cs=tinysrgb&w=600",
+      name: "Women's Pellaro Travel Pants | Black",
+      price: "Rs. 9,400.00",
+      image: "https://www.coolibar.com/cdn/shop/files/10153-930-9001-02_720x.jpg?v=1737567768"
     },
     {
       id: 5,
-      name: "Product 5",
-      image:
-        "https://images.pexels.com/photos/2491123/pexels-photo-2491123.jpeg?auto=compress&cs=tinysrgb&w=600",
+      name: "Women's Sanibel Everyday Beach Shawl | White/Navy",
+      price: "Rs. 3,700.00",
+      image: "https://www.coolibar.com/cdn/shop/files/01262-001-1000-02_ad8ece1d-79f0-4ae8-a996-f93a9840eddc_720x.jpg?v=1727121195"
     },
     {
       id: 6,
-      name: "Product 6",
-      image:
-        "https://images.pexels.com/photos/2491123/pexels-photo-2491123.jpeg?auto=compress&cs=tinysrgb&w=600",
-    },
+      name: "Women's Morada Everyday Long Sleeve T-Shirt | Black",
+      price: "Rs. 4,650.00",
+      image: "https://www.coolibar.com/cdn/shop/files/01496-509-1000-02_ec635664-00dd-403e-a2ca-2c83439fc2a0_720x.jpg?v=1723168630"
+    }
   ];
 
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const itemsToShow = isMobile ? 1 : 5; 
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleNext();
-    }, 3000); 
-
-    return () => clearInterval(interval); 
-  }, [currentIndex, itemsToShow]);
-
   const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex + itemsToShow >= products.length ? 0 : prevIndex + itemsToShow
+    setCurrentIndex(prev => 
+      prev + itemsPerView >= products.length ? 0 : prev + 1
     );
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex - itemsToShow < 0
-        ? products.length - itemsToShow
-        : prevIndex - itemsToShow
+    setCurrentIndex(prev => 
+      prev === 0 ? products.length - itemsPerView : prev - 1
     );
   };
 
   return (
-    <Box sx={{ width: "100%", padding: 2, margin: "20px 0px" }}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <CarouselContainer>
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          textAlign: "center", 
+          marginBottom: 5,
+          fontWeight: 600,
+          color: "#333",
+          fontFamily: "'Poppins', sans-serif",
+        }}
+      >
         New Arrivals
       </Typography>
 
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <Button
+      <CarouselViewport>
+        {/* Left navigation button */}
+        <NavigationButton 
           onClick={handlePrev}
-          sx={{
-            backgroundColor: "orange",
-            height: "100%",
-            width: "80px",
-            position: "absolute",
+          sx={{ 
             left: 0,
-            zIndex: 1,
-            color: "white",
-            "&:hover": { backgroundColor: "darkorange" },
           }}
         >
-          <ArrowBack />
-        </Button>
-        <Box
+          <ChevronLeft />
+        </NavigationButton>
+
+        {/* Products wrapper */}
+        <ProductsWrapper
           sx={{
-            display: "flex",
-            gap: 2,
-            transform: `translateX(-${currentIndex * (100 / itemsToShow)}%)`,
-            transition: "transform 0.5s ease-in-out",
-            width: "calc(100% - 100px)",
-            margin: "0 auto",
+            transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`
           }}
         >
           {products.map((product) => (
-            <Card
-            key={product.id}
-            sx={{
-              flex: `0 0 calc(100% / ${itemsToShow} - 16px)`,
-              boxShadow: 1,
-              overflow: "hidden",
-              border: "0.5px solid lightgray",
-              cursor: "pointer",
-              transition: "box-shadow 0.3s ease",
-              "&:hover": {
-                boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
-              },
-            }}
-          >
-            <Box
-              sx={{
-                position: "relative",
-                overflow: "hidden", 
-                height: "200px", 
-              }}
-            >
-              <CardMedia
-                component="img"
-                height="200"
-                image={product.image}
-                alt={product.name}
-                sx={{
-                  transition: "transform 0.3s ease",
-                  "&:hover": {
-                    transform: "scale(1.1)",
-                  },
+            <ProductCard key={product.id}>
+              <Box sx={{ overflow: "hidden", position: "relative" }}>
+                <ProductImage
+                  component="img"
+                  image={product.image}
+                  alt={product.name}
+                />
+              </Box>
+              <CardContent 
+                sx={{ 
+                  textAlign: "center", 
+                  padding: "16px 12px",
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px"
                 }}
-              />
-            </Box>
-            <CardContent>
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 500, textAlign: "center" }}
               >
-                {product.name}
-              </Typography>
-            </CardContent>
-          </Card>
-          
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    fontWeight: 500,
+                    color: "#333",
+                    fontSize: "14px",
+                    lineHeight: 1.4,
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  {product.name}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: "#666",
+                    fontSize: "14px",
+                    fontFamily: "'Poppins', sans-serif",
+                  }}
+                >
+                  {product.price}
+                </Typography>
+              </CardContent>
+            </ProductCard>
           ))}
-        </Box>
-        <Button
+        </ProductsWrapper>
+
+        {/* Right navigation button */}
+        <NavigationButton 
           onClick={handleNext}
-          sx={{
-            backgroundColor: "orange",
-            height: "100%",
-            width: "80px",
-            position: "absolute",
+          sx={{ 
             right: 0,
-            zIndex: 1,
-            color: "white",
-            "&:hover": { backgroundColor: "darkorange" },
           }}
         >
-          <ArrowForward />
-        </Button>
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginTop: 3,
+          <ChevronRight />
+        </NavigationButton>
+      </CarouselViewport>
+
+      <Box 
+        sx={{ 
+          display: "flex", 
+          justifyContent: "center", 
+          marginTop: 3
         }}
       >
-        <Button variant="contained" color="primary">
-          Show More
-        </Button>
+        {[...Array(Math.ceil(products.length / itemsPerView))].map((_, idx) => (
+          <PaginationDot
+            key={idx}
+            active={Math.floor(currentIndex / itemsPerView) === idx}
+            onClick={() => setCurrentIndex(idx * itemsPerView)}
+          />
+        ))}
       </Box>
-    </Box>
+    </CarouselContainer>
   );
 };
 

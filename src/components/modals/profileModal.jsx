@@ -31,9 +31,9 @@ const ProfileModal = ({
     email: "",
   });
   const [selectedImage, setSelectedImage] = useState(null);
-  const [loading, setLoading] = useState(false); // for spinner
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // for snackbar
-  const [snackbarMessage, setSnackbarMessage] = useState(""); // snackbar message
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const ProfileModal = ({
 
   const handleSave = async () => {
     setEditMode(false);
-    setLoading(true); // Show spinner
+    setLoading(true);
     const form = new FormData();
     form.append("firstname", formData.firstName);
     form.append("lastname", formData.lastName);
@@ -77,12 +77,7 @@ const ProfileModal = ({
     try {
       const response = await axiosInstance.put(
         `users/editProfile/${user._id}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        form
       );
       setSnackbarMessage(response.data.message);
       setSnackbarSeverity("success");
@@ -131,7 +126,7 @@ const ProfileModal = ({
                   bgcolor: "white",
                 }}
               >
-                <PhotoCamera sx={{color:"#1e1e1e"}}/>
+                <PhotoCamera sx={{ color: "#1e1e1e" }} />
                 <input
                   type="file"
                   hidden
@@ -202,7 +197,7 @@ const ProfileModal = ({
               backgroundColor: "#1e1e1e",
               color: "white",
               "&:hover": {
-                backgroundColor: "#333333", 
+                backgroundColor: "#333333",
               },
             }}
           >
@@ -219,10 +214,10 @@ const ProfileModal = ({
             variant="contained"
             fullWidth
             sx={{
-              backgroundColor: "#1e1e1e", 
+              backgroundColor: "#1e1e1e",
               color: "white",
               "&:hover": {
-                backgroundColor: "black", 
+                backgroundColor: "black",
               },
             }}
           >
@@ -234,9 +229,9 @@ const ProfileModal = ({
           color="#1e1e1e"
           fullWidth
           sx={{
-            backgroundColor: "#eeeeee", 
+            backgroundColor: "#eeeeee",
             "&:hover": {
-              backgroundColor: "#cccccc", 
+              backgroundColor: "#cccccc",
             },
           }}
         >

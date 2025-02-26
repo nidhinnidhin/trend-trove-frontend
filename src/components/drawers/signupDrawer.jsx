@@ -19,6 +19,7 @@ import axios from "axios";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import OtpVerificationModal from "../modals/openOtpVerification";
+import axiosInstance from "@/utils/axiosInstance";
 
 const FileInput = styled("input")({
   display: "none",
@@ -53,7 +54,7 @@ const SignupDrawer = ({ open, onClose }) => {
     setLoading(true);
     try {
       await axios.post("http://localhost:9090/api/otp/send-otp", { email });
-      setOtpModalOpen(true); 
+      setOtpModalOpen(true);
     } catch (err) {
       setSnackbarMessage(err.response?.data?.message || "Failed to send OTP.");
       setSnackbarSeverity("error");
@@ -75,15 +76,7 @@ const SignupDrawer = ({ open, onClose }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/users/register",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axiosInstance.post("/users/register", formData);
       setSnackbarMessage(response.data.message);
       localStorage.setItem("usertoken", response.data.token);
       setSnackbarSeverity("success");
@@ -194,17 +187,17 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", 
+                    color: "#FFA500",
                   },
                 }}
               />
@@ -217,24 +210,24 @@ const SignupDrawer = ({ open, onClose }) => {
                 required
                 onChange={(e) => setLastName(e.target.value)}
                 sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "gray",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#FFA500", 
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#FFA500",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: "gray",
-              },
-              "& .MuiInputLabel-root.Mui-focused": {
-                color: "#FFA500", 
-              },
-            }}
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "gray",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#FFA500",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#FFA500",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "gray",
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#FFA500",
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -245,24 +238,24 @@ const SignupDrawer = ({ open, onClose }) => {
                 required
                 onChange={(e) => setUserName(e.target.value)}
                 sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "gray",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#FFA500",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#FFA500",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: "gray",
-              },
-              "& .MuiInputLabel-root.Mui-focused": {
-                color: "#FFA500", 
-              },
-            }}
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "gray",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#FFA500",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#FFA500",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "gray",
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#FFA500",
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -282,14 +275,14 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "#FFA500",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", 
+                    color: "#FFA500",
                   },
                 }}
               />
@@ -317,17 +310,17 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                     "&.Mui-focused fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                   },
                   "& .MuiInputLabel-root": {
                     color: "gray",
                   },
                   "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFA500", 
+                    color: "#FFA500",
                   },
                 }}
               />
@@ -362,7 +355,7 @@ const SignupDrawer = ({ open, onClose }) => {
                       borderColor: "gray",
                     },
                     "&:hover fieldset": {
-                      borderColor: "#FFA500", 
+                      borderColor: "#FFA500",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#FFA500", // Orange border on focus
@@ -391,7 +384,9 @@ const SignupDrawer = ({ open, onClose }) => {
                     backgroundColor: "#FF8C00", // Darker orange on hover
                   },
                 }}
-                startIcon={loading && <CircularProgress size={20} color="orange"/>}
+                startIcon={
+                  loading && <CircularProgress size={20} color="orange" />
+                }
               >
                 {loading ? "Signing..." : "Signup"}
               </Button>

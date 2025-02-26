@@ -43,6 +43,7 @@ import Footer from "../components/footer";
 import Image from "next/image";
 import ProfileModal from "@/components/modals/profileModal";
 import ResetPasswordModal from "@/components/modals/resetPasswordModal";
+import axiosInstance from "@/utils/axiosInstance";
 
 const UserProfilePage = () => {
   const [selectedSection, setSelectedSection] = useState("profile");
@@ -74,16 +75,12 @@ const UserProfilePage = () => {
       }
 
       try {
-        const axiosInstance = axios.create({
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
         const [userResponse, addressesResponse, ordersResponse, cartResponse] =
           await Promise.allSettled([
-            axiosInstance.get("http://localhost:9090/api/users/profile"),
-            axiosInstance.get("http://localhost:9090/api/address/get-address"),
-            axiosInstance.get("http://localhost:9090/api/checkout/get-orders"),
-            axiosInstance.get("http://localhost:9090/api/cart/get-cart"),
+            axiosInstance.get("/users/profile"),
+            axiosInstance.get("/address/get-address"),
+            axiosInstance.get("/checkout/get-orders"),
+            axiosInstance.get("/cart/get-cart"),
           ]);
 
         if (userResponse.status === "fulfilled" && userResponse.value.data) {
@@ -167,14 +164,8 @@ const UserProfilePage = () => {
   };
 
   const handleDeleteAddress = async (addressId) => {
-    const token = localStorage.getItem("usertoken");
     try {
-      await axios.delete(
-        `http://localhost:9090/api/address/delete-address/${addressId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axiosInstance.delete(`/address/delete-address/${addressId}`);
       setAddresses((prevAddresses) =>
         prevAddresses.filter((address) => address._id !== addressId)
       );
@@ -257,7 +248,6 @@ const UserProfilePage = () => {
               </CardContent>
             ) : (
               <>
-                {/* Profile Header */}
                 <Box
                   sx={{
                     backgroundColor: "#1a1a1a",
@@ -305,10 +295,8 @@ const UserProfilePage = () => {
                   </Typography>
                 </Box>
 
-                {/* Profile Content */}
                 <CardContent sx={{ p: 4 }}>
                   <Grid container spacing={4}>
-                    {/* Personal Information */}
                     <Grid item xs={12} md={6}>
                       <Box sx={{ mb: 4 }}>
                         <Typography
@@ -374,7 +362,6 @@ const UserProfilePage = () => {
                       </Box>
                     </Grid>
 
-                    {/* Account Settings */}
                     <Grid item xs={12} md={6}>
                       <Box sx={{ mb: 4 }}>
                         <Typography
@@ -444,7 +431,6 @@ const UserProfilePage = () => {
               p: 3,
             }}
           >
-            {/* Header */}
             <Box
               sx={{
                 display: "flex",
@@ -461,7 +447,6 @@ const UserProfilePage = () => {
               </Typography>
             </Box>
 
-            {/* Addresses List */}
             <Grid container spacing={3}>
               {addresses.length === 0 ? (
                 <Grid item xs={12}>
@@ -494,7 +479,6 @@ const UserProfilePage = () => {
                         },
                       }}
                     >
-                      {/* Address Header */}
                       <Box
                         sx={{
                           display: "flex",
@@ -548,9 +532,7 @@ const UserProfilePage = () => {
                         </Box>
                       </Box>
 
-                      {/* Address Details */}
                       <Grid container spacing={2}>
-                        {/* Contact Information */}
                         <Grid item xs={12} sm={6}>
                           <Typography variant="subtitle2" color="textSecondary">
                             Mobile Number

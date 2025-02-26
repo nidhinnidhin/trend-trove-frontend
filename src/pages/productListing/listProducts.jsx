@@ -12,12 +12,14 @@ import {
   CircularProgress,
   Chip,
   TextField,
+  IconButton, Tooltip
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "@emotion/styled";
 import axios from "axios";
 import CategoryCarousel from "../components/categoryCarousal";
 import axiosInstance from "@/utils/axiosInstance";
+import { Visibility as EyeIcon } from "@mui/icons-material"; 
 
 const OfferBadge = styled(Chip)`
   position: absolute;
@@ -41,7 +43,7 @@ const OfferBadge = styled(Chip)`
     bottom: -6px;
     width: 6px;
     height: 6px;
-    background-color: #1a1a1a; /* Slightly lighter black */
+    background-color: #1a1a1a; 
     clip-path: polygon(0 0, 100% 0, 100% 100%);
   }
 
@@ -91,6 +93,20 @@ const StyledWrapper = styled.div`
   }
 `;
 
+const StyledEyeIcon = styled(IconButton)`
+  position: absolute;
+  bottom: -40px; // Start below the image
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 111, 97, 0.9);
+  color: white;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(255, 111, 97, 1);
+  }
+`;
+
 const ListProducts = ({
   products,
   totalPages,
@@ -102,11 +118,12 @@ const ListProducts = ({
   const { filterState, updateFilters } = useFilter();
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredProductId, setHoveredProductId] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axiosInstance.get("categories");
+        const response = await axiosInstance.get("/categories");
         setCategories(response.data.categories.map((cat) => cat.name));
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -202,6 +219,14 @@ const ListProducts = ({
     onPageChange(value);
   };
 
+  const handleMouseEnter = (productId) => {
+    setHoveredProductId(productId);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredProductId(null);
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -275,12 +300,11 @@ const ListProducts = ({
                   >
                     <Grid
                       sx={{
-                        height: "550px",
+                        height: "520px",
                         display: "flex",
                         flexDirection: "column",
-                        border: "0.5px solid lightgray",
                         position: "relative",
-                       
+                        overflow: "hidden",
                       }}
                     >
                       {product.isOfferActive &&
@@ -297,21 +321,49 @@ const ListProducts = ({
                           />
                         )}
 
-                      <CardMedia
-                        component="img"
-                        image={product.image}
-                        alt={product.title}
-                        sx={{
-                          height: 450,
-                          objectFit: "cover",
-                          cursor: "pointer",
-                          transition: "transform 0.3s ease",
-                          "&:hover": {
-                            transform: "scale(1.02)",
-                          },
-                        }}
-                        onClick={() => handleProductDetail(product.id)}
-                      />
+                      <Box sx={{ position: "relative" }}>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }} 
+                          exit={{ opacity: 0 }} 
+                          transition={{
+                            duration: 0.6, 
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <CardMedia
+                            component="img"
+                            image={
+                              hoveredProductId === product.id
+                                ? product.subImage 
+                                : product.image 
+                            }
+                            alt={product.title}
+                            sx={{
+                              height: 400,
+                              objectFit: "cover",
+                              cursor: "pointer",
+                            }}
+                            onMouseEnter={() => handleMouseEnter(product.id)} 
+                            onMouseLeave={handleMouseLeave} 
+                          />
+                          <motion.div
+                            initial={{ bottom: -40 }}
+                            animate={{ bottom: hoveredProductId === product.id ? 20 : -40 }}
+                            transition={{ duration: 0.3 }}
+                            style={{ position: "absolute", width: "100%" }}
+                          >
+                            <Tooltip title="View Details">
+                              <StyledEyeIcon
+                                onClick={() => handleProductDetail(product.id)}
+                                size="large"
+                              >
+                                <EyeIcon />
+                              </StyledEyeIcon>
+                            </Tooltip>
+                          </motion.div>
+                        </motion.div>
+                      </Box>
 
                       <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
                         <Typography
@@ -368,7 +420,7 @@ const ListProducts = ({
                                     width: "30px",
                                     height: "30px",
                                     borderRadius: "50%",
-                                    border: "2px solid black",
+                                    border: "2px solid #ff6f61",
                                     cursor: "pointer",
                                     objectFit: "contain",
                                   }}

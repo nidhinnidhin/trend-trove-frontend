@@ -113,13 +113,12 @@ const Users = () => {
 
   return (
     <Box sx={{ padding: 3, backgroundColor: "#212121" }}>
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#333", // Dark background
+          backgroundColor: "#333", 
           borderRadius: 2,
           padding: 2,
           marginBottom: 2,

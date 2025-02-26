@@ -5,16 +5,6 @@ import LoginForm from "../components/loginForm";
 import AdminFooter from "../components/adminfooter";
 
 const Login = () => {
-  const router = useRouter();
-  useEffect(() => {
-    // Check if the admin token is present in localStorage
-    const token = localStorage.getItem("admintoken");
-
-    // If token exists, redirect to the dashboard
-    if (token) {
-      router.push("/admin/dashboard/dashboard");
-    }
-  }, [router]);
 
   return (
     <div>

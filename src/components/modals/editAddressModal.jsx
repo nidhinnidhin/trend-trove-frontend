@@ -17,6 +17,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
 
 const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
   const [addressData, setAddressData] = useState({
@@ -153,16 +154,9 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("usertoken");
-      const response = await axios.put(
-        `http://localhost:9090/api/address/edit-address/${address._id}`,
-        addressData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const response = await axiosInstance.put(
+        `/address/edit-address/${address._id}`,
+        addressData
       );
 
       onAddressUpdated(response.data.address || addressData);
@@ -220,8 +214,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#ffffff", py: 3, px: 3 }}>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            {/* Form fields */}
-            {/* Full Name and Mobile fields */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -266,7 +258,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
               />
             </Grid>
 
-            {/* Pincode and Locality fields */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -304,7 +295,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
               />
             </Grid>
 
-            {/* Address field */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -326,7 +316,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
               />
             </Grid>
 
-            {/* City and State fields */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -366,7 +355,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
               </FormControl>
             </Grid>
 
-            {/* Landmark and Alternate Phone fields */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -402,7 +390,6 @@ const EditAddressModal = ({ open, onClose, address, onAddressUpdated }) => {
               />
             </Grid>
 
-            {/* Address Type field */}
             <Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Address Type</InputLabel>

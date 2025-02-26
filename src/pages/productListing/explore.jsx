@@ -8,6 +8,7 @@ import Footer from "../components/footer";
 import Slider from "../components/slider";
 import { Box, colors } from "@mui/material";
 import ListProducts from "./listProducts";
+import axiosInstance from "@/utils/axiosInstance";
 
 export default function Explore() {
   const [products, setProducts] = useState([]);
@@ -20,17 +21,14 @@ export default function Explore() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `http://localhost:9090/api/products/get?page=${currentPage}&limit=8`
-        );
+        const response = await axiosInstance.get(`/products/get`, {
+          params: {
+            page: currentPage,
+            limit: 12,
+          },
+        });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API error:", errorData);
-          throw new Error(errorData.message || "Error fetching products");
-        }
-
-        const data = await response.json();
+        const data = response.data;
         console.log("API response:", data);
 
         // const transformedProducts = data.products.map((product) => {
@@ -105,6 +103,7 @@ export default function Explore() {
           return {
             id: product._id,
             image: product.variants?.[0]?.mainImage || "",
+            subImage: product.variants?.[0]?.subImages[1],
             title: product.name || "Unknown Product",
             description: product.description || "",
             rating: product.ratings || 0,

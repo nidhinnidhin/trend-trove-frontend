@@ -50,7 +50,6 @@ const RevenueCard = ({ title, amount = 0, percent = null, icon: IconComponent, c
           }
         </Typography>
         
-        {/* Only render percent if it exists */}
         {percent && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {percent.includes('+') ? 

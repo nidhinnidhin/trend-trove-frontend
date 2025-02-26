@@ -9,12 +9,13 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { useRouter } from "next/router"; // Import useRouter for navigation
+import { useRouter } from "next/router"; 
 import Header from "../components/header";
 import Footer from "../components/footer";
+import axiosInstance from "@/utils/axiosInstance";
 
 const SendOtp = () => {
-  const [email, setEmail] = useState(""); // Changed from mobileNumber to email
+  const [email, setEmail] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -23,7 +24,7 @@ const SendOtp = () => {
   });
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const handleCloseSnackbar = () => {
     setSnackbar({ open: false, message: "", type: "" });
@@ -32,10 +33,8 @@ const SendOtp = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
 
-    // Ensure the email is valid
     const trimmedEmail = email.trim();
 
-    // Validate email format
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!emailPattern.test(trimmedEmail)) {
@@ -44,37 +43,34 @@ const SendOtp = () => {
         message: "Please enter a valid email address.",
         type: "error",
       });
-      setIsFormSubmitted(true); // Trigger form validation
+      setIsFormSubmitted(true); 
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:9090/api/otp/send-otp",
+      const response = await axiosInstance.post(
+        "/otp/send-otp",
         {
-          email: trimmedEmail, // Send email instead of phoneNumber
+          email: trimmedEmail, 
         }
       );
 
       setLoading(false);
 
-      // Handle successful response
       if (response.status === 200) {
         setSnackbar({
           open: true,
           message: "OTP sent successfully!",
           type: "success",
         });
-        // Navigate to the verify OTP page
         router.push("/otplogin/verifyOtp");
-        localStorage.setItem("email", email); // Store email in localStorage
+        localStorage.setItem("email", email); 
       }
     } catch (error) {
       setLoading(false);
 
-      // Handle error response
       setSnackbar({
         open: true,
         message:
@@ -112,7 +108,7 @@ const SendOtp = () => {
             <TextField
               label="Email Address"
               variant="outlined"
-              type="email" // Use type="email" instead of number
+              type="email"
               fullWidth
               required
               value={email}
@@ -163,7 +159,6 @@ const SendOtp = () => {
             </Button>
           </form>
 
-          {/* Snackbar */}
           <Snackbar
             open={snackbar.open}
             autoHideDuration={3000}

@@ -244,15 +244,10 @@ function Cart() {
         : cartItem
     );
 
-    // const newTotalPrice = updatedItems.reduce(
-    //   (acc, item) => acc + item.price * item.quantity,
-    //   0
-    // );
 
     setCart({
       ...cart,
       items: updatedItems,
-      // totalPrice: newTotalPrice,
     });
 
     try {

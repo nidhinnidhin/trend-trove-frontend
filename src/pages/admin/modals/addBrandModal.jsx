@@ -85,7 +85,7 @@ const AddBrandModal = ({ open, handleClose }) => {
         throw new Error("Unexpected response status");
       }
     } catch (err) {
-      console.error("Error adding brand:", err); // Debugging log
+      console.error("Error adding brand:", err); 
       setSnackbar({
         open: true,
         message:

@@ -23,11 +23,11 @@ const LoginSignup = () => {
   };
 
   const onCloseLoginDrawer = () => {
-    setState({ ...state, login: false }); // Close the login drawer
+    setState({ ...state, login: false }); 
   };
 
   const onCloseSignupDrawer = () => {
-    setState({ ...state, right: false }); // Close the signup drawer
+    setState({ ...state, right: false });
   };
 
   const items = [

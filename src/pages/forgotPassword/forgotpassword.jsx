@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import axiosInstance from "@/utils/axiosInstance";
 
 const ForgotPassword = () => {
   const router = useRouter();
@@ -59,8 +60,8 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/users/forgot-password-send-otp",
+      const response = await axiosInstance.post(
+        "/users/forgot-password-send-otp",
         { email }
       );
       showMessage(response.data.message);
@@ -84,13 +85,10 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      await axios.post(
-        "http://localhost:9090/api/users/verify-forgot-password-otp",
-        {
-          email,
-          otp,
-        }
-      );
+      await axiosInstance.post("/users/verify-forgot-password-otp", {
+        email,
+        otp,
+      });
       setStep(3);
     } catch (error) {
       showMessage(error.response?.data?.message || "Invalid OTP", "error");
@@ -117,14 +115,11 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/users/reset-password",
-        {
-          email,
-          otp,
-          newPassword,
-        }
-      );
+      const response = await axiosInstance.post("/users/reset-password", {
+        email,
+        otp,
+        newPassword,
+      });
       showMessage(response.data.message);
       setTimeout(() => {
         router.push("/authentication/loginSignup");
@@ -144,11 +139,11 @@ const ForgotPassword = () => {
 
     setLoading(true);
     setCanResend(false);
-    setResendTimer(60); // 60 seconds cooldown
+    setResendTimer(60);
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/api/users/resend-forgot-password-otp",
+      const response = await axiosInstance.post(
+        "/users/resend-forgot-password-otp",
         { email }
       );
       showMessage(response.data.message);

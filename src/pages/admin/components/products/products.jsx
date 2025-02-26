@@ -129,7 +129,6 @@ const Product = () => {
     setSearchTerm(event.target.value);
   };
 
-  // Fetch sizes for a variant
   const handleSizesFetch = async (variantId) => {
     try {
       const response = await axios.get(
@@ -151,7 +150,6 @@ const Product = () => {
     }
   };
 
-  // Handle blocking/unblocking products
   const handleBlockProduct = async (productId, isBlocked) => {
     try {
       const url = isBlocked
@@ -214,7 +212,6 @@ const Product = () => {
   const snackbarOpen = snackbar.open;
   const snackbarMessage = snackbar.message;
 
-  // Handle product updates
   const handleProductUpdated = (updatedProduct) => {
     setProductsData((prevData) =>
       prevData.map((product) =>

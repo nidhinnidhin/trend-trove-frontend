@@ -38,6 +38,7 @@ import axios from "axios";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import AddReviewModal from "@/components/modals/addReview";
+import axiosInstance from "@/utils/axiosInstance";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -62,16 +63,8 @@ const OrdersPage = () => {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const token = localStorage.getItem("usertoken");
       try {
-        const response = await axios.get(
-          "http://localhost:9090/api/checkout/get-orders",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axiosInstance.get("/checkout/get-orders");
         setOrders(response.data.orders);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -92,69 +85,6 @@ const OrdersPage = () => {
   const handleCloseReviewModal = () => {
     setOpenReviewModal(false);
   };
-
-  // const handleSubmitReview = async () => {
-  //   if (reviewRating === 0) {
-  //     setReviewError("Please select a rating");
-  //     return;
-  //   }
-
-  //   if (!reviewComment.trim()) {
-  //     setReviewError("Please provide a review comment");
-  //     return;
-  //   }
-
-  //   try {
-  //     const token = localStorage.getItem("usertoken");
-  //     const selectedOrderItem = orders
-  //       .find((order) => order.orderId === selectedOrder)
-  //       ?.items.find((item) => item.itemId === selectedItem);
-
-  //     const response = await axios.post(
-  //       "http://localhost:9090/api/user/review/add",
-  //       {
-  //         productId: selectedOrderItem.productId,
-  //         variantId: selectedOrderItem.variantId,
-  //         sizeVariantId: selectedOrderItem.sizeVariantId,
-  //         rating: reviewRating,
-  //         comment: reviewComment,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-
-  //     if (response.data.message) {
-  //       setSnackbar({
-  //         open: true,
-  //         message: "Review added successfully!",
-  //         severity: "success",
-  //       });
-  //       handleCloseReviewModal();
-
-  //       // Update the orders state to show review has been added
-  //       setOrders((prevOrders) =>
-  //         prevOrders.map((order) => ({
-  //           ...order,
-  //           items: order.items.map((item) =>
-  //             item.itemId === selectedItem
-  //               ? { ...item, hasReviewed: true }
-  //               : item
-  //           ),
-  //         }))
-  //       );
-  //     }
-  //   } catch (error) {
-  //     setSnackbar({
-  //       open: true,
-  //       message: error.response?.data?.message || "Failed to add review",
-  //       severity: "error",
-  //     });
-  //   }
-  // };
 
   const handleOpenModal = (orderId, itemId, type) => {
     console.log("OrderId:", orderId, "ItemId: ", itemId);
@@ -178,19 +108,12 @@ const OrdersPage = () => {
       return;
     }
 
-    const token = localStorage.getItem("usertoken");
     try {
-      const response = await axios.patch(
-        `http://localhost:9090/api/checkout/return-product/${selectedOrder}/${selectedItem}`,
+      const response = await axiosInstance.patch(
+        `/checkout/return-product/${selectedOrder}/${selectedItem}`,
         {
           reason: returnReason,
           details: additionalDetails,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
         }
       );
 
@@ -216,9 +139,7 @@ const OrdersPage = () => {
           })
         );
         handleCloseModal();
-        // Show success message
         setError("");
-        // You might want to add a success notification here
       }
     } catch (error) {
       setError(
@@ -235,16 +156,9 @@ const OrdersPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("usertoken");
-      const response = await axios.patch(
-        `http://localhost:9090/api/checkout/cancel-order/${selectedOrder}/${selectedItem}`,
-        { reason: cancelReason },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      const response = await axiosInstance.patch(
+        `/checkout/cancel-order/${selectedOrder}/${selectedItem}`,
+        { reason: cancelReason }
       );
 
       if (response.data.success) {
@@ -268,9 +182,7 @@ const OrdersPage = () => {
           })
         );
         handleCloseModal();
-        // Show success message
         setError("");
-        // You might want to add a success notification here
       }
     } catch (error) {
       setError(
@@ -326,7 +238,7 @@ const OrdersPage = () => {
               orders.map((order) =>
                 order.items.map((item, index) => {
                   return (
-                    <TableRow key={`${order.orderId}-${index}`}>
+                    <TableRow key={`${order.orderId}-${item.itemId}-${index}`}>
                       <TableCell>
                         <Box
                           sx={{
@@ -395,28 +307,34 @@ const OrdersPage = () => {
                       </TableCell>
 
                       {/* Delivery Address Column */}
-                      {/* <TableCell>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 0.5,
-                          }}
-                        >
-                          <Typography variant="subtitle2">
-                            {order.shippingAddress.fullName}
+                      <TableCell>
+                        {order.shippingAddress ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.5,
+                            }}
+                          >
+                            <Typography variant="subtitle2">
+                              {order.shippingAddress.fullName}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              {order.shippingAddress.address},
+                              {order.shippingAddress.city},
+                              {order.shippingAddress.state} -{" "}
+                              {order.shippingAddress.pincode}
+                            </Typography>
+                            <Typography variant="body2">
+                              Mobile: {order.shippingAddress.mobileNumber}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="error">
+                            Address not available
                           </Typography>
-                          <Typography variant="body2" color="textSecondary">
-                            {order.shippingAddress.address},
-                            {order.shippingAddress.city},
-                            {order.shippingAddress.state} -{" "}
-                            {order.shippingAddress.pincode}
-                          </Typography>
-                          <Typography variant="body2">
-                            Mobile: {order.shippingAddress.mobileNumber}
-                          </Typography>
-                        </Box>
-                      </TableCell>  */}
+                        )}
+                      </TableCell>
 
                       {/* Payment Info Column */}
                       <TableCell>
@@ -435,7 +353,7 @@ const OrdersPage = () => {
                                 verticalAlign: "text-bottom",
                               }}
                             />
-                            {order.payment.method}
+                            {order.payment?.method || "N/A"}
                           </Typography>
 
                           {/* Price Breakdown */}
@@ -449,7 +367,7 @@ const OrdersPage = () => {
                                 Coupon ({order.couponCode}): -₹
                                 {(
                                   item.price * item.quantity -
-                                  order.payment.amount
+                                  (order.payment?.amount || 0)
                                 ).toFixed(1)}
                               </Typography>
                             )}
@@ -466,7 +384,7 @@ const OrdersPage = () => {
                               variant="body2"
                               sx={{ fontWeight: "bold", color: "green" }}
                             >
-                              Final Price: ₹{order.payment.amount}
+                              Final Price: ₹{order.payment?.amount || 0}
                             </Typography>
                           </Box>
                         </Box>
@@ -561,7 +479,7 @@ const OrdersPage = () => {
                             }
                             sx={{
                               width: "150px",
-                              margin:"10px 0px",
+                              margin: "10px 0px",
                               backgroundColor: "rgba(0, 0, 0, 0.05)",
                               "&:hover": {
                                 backgroundColor: "rgba(0, 0, 0, 0.1)",
