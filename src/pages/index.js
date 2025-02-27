@@ -19,6 +19,7 @@ import GenderFilter from "./components/genderFilter";
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     const fetchProducts = async () => {

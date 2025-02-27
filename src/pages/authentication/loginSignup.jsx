@@ -5,12 +5,25 @@ import SignupDrawer from "@/components/drawers/signupDrawer";
 import LoginDrawer from "@/components/drawers/loginDrawer"; 
 import logo from '../../media/logo.png'
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 const LoginSignup = () => {
   const [state, setState] = useState({
     right: false,
-    login: false, // Add a state for login drawer
+    login: false, 
   });
+
+  const router = useRouter();
+    
+    useEffect(() => {
+      let token = localStorage.getItem('usertoken');
+      if(token){
+        router.push('/')
+      }
+      else{
+        router.push('/authentication/loginSignup')
+      }
+    },[])
 
   const toggleDrawer = (anchor, open) => (event) => {
     if (

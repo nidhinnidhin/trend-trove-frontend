@@ -142,6 +142,33 @@ const CheckoutPage = () => {
     try {
       setLoading(true);
 
+      // First create checkout and get its ID
+      const checkoutPayload = {
+        cartId: checkoutData.cartId,
+        addressId: selectedAddress._id,
+        shippingMethod: "Standard",
+        paymentMethod: "online",
+        transactionId: "pending",
+        paymentStatus: "pending",
+        finalTotal: previewTotal,
+        couponCode: selectedCoupon,
+        discountAmount: previewDiscount,
+        items: cartItems.map((item) => ({
+          ...item,
+          finalPrice: item.sizeVariant.discountPrice * item.quantity,
+        })),
+      };
+
+      // Create checkout first
+      const checkoutResponse = await axiosInstance.post("/checkout/create-checkout", checkoutPayload);
+      
+      if (!checkoutResponse.data.order?._id) {
+        throw new Error("Failed to create checkout");
+      }
+
+      const checkoutId = checkoutResponse.data.order._id;
+
+      // Load Razorpay script
       const loadRazorpayScript = () => {
         return new Promise((resolve) => {
           const script = document.createElement("script");
@@ -157,9 +184,11 @@ const CheckoutPage = () => {
         throw new Error("Razorpay SDK failed to load");
       }
 
+      // Create payment order with checkoutId
       const response = await axiosInstance.post(`/payment/create-order`, {
         amount: Math.round(previewTotal * 100),
         currency: "INR",
+        checkoutId: checkoutId // Pass the checkoutId here
       });
 
       const orderData = response.data;
@@ -171,39 +200,19 @@ const CheckoutPage = () => {
         name: "TREND TROVE",
         description: "Purchase Payment",
         order_id: orderData.id,
-        prefill: {
-          name: selectedAddress?.fullName || "",
-          contact: selectedAddress?.mobileNumber || "",
-        },
         handler: async function (response) {
           try {
             const verifyResponse = await axiosInstance.post(`/payment/verify`, {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              checkoutId: checkoutId // Pass the checkoutId here
             });
 
-            const verifyData = verifyResponse.data;
-
-            if (verifyData.status === "success") {
-              const checkoutPayload = {
-                cartId: checkoutData.cartId,
-                addressId: selectedAddress._id,
-                shippingMethod: "Standard",
-                paymentMethod: "online",
-                transactionId: response.razorpay_payment_id,
-                paymentStatus: "completed",
-                couponCode: selectedCoupon,
-                finalTotal: previewTotal,
-                items: cartItems.map((item) => ({
-                  ...item,
-                  finalPrice: item.sizeVariant.discountPrice * item.quantity,
-                })),
-              };
-
-              await handlePlaceOrder(checkoutPayload);
-
+            if (verifyResponse.data.status === "success") {
               await clearCart();
+              setSnackbarMessage("Payment successful! Redirecting to orders...");
+              setSnackbarOpen(true);
               router.push("/orders/orders");
             }
           } catch (error) {
@@ -212,11 +221,24 @@ const CheckoutPage = () => {
             setSnackbarOpen(true);
           }
         },
-
         modal: {
-          ondismiss: function () {
+          ondismiss: async function () {
+            try {
+              await axiosInstance.post(`/payment/cancel`, {
+                orderId: orderData.id,
+                checkoutId: checkoutId // Pass the checkoutId here
+              });
+              setSnackbarMessage("Payment cancelled");
+              setSnackbarOpen(true);
+            } catch (error) {
+              console.error("Failed to handle payment cancellation:", error);
+            }
             setLoading(false);
           },
+        },
+        prefill: {
+          name: selectedAddress?.fullName || "",
+          contact: selectedAddress?.mobileNumber || "",
         },
         theme: {
           color: "#333",
@@ -227,7 +249,7 @@ const CheckoutPage = () => {
       razorpayInstance.open();
     } catch (error) {
       console.error("Payment initiation failed:", error);
-      setSnackbarMessage(error.message);
+      setSnackbarMessage(error.response?.data?.message || "Payment initiation failed");
       setSnackbarOpen(true);
       setLoading(false);
     }

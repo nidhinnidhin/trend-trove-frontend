@@ -44,6 +44,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { setWishlistLength } from "@/redux/features/wishlistSlice";
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -114,9 +115,7 @@ const DetailProduct = () => {
     if (id) {
       const fetchProduct = async () => {
         try {
-          const response = await axiosInstance.get(
-            `/products/${id}/details`
-          );
+          const response = await axiosInstance.get(`/products/${id}/details`);
           const productData = response.data.product;
           setVariants(productData.variants);
 
@@ -164,15 +163,15 @@ const DetailProduct = () => {
 
   const itemsPerView = {
     xs: 1,
-    sm: 2, 
-    md: 3, 
+    sm: 2,
+    md: 3,
   };
 
   const totalProductCount = relatedProducts.reduce(
     (count, product) => count + product.variants.length,
     0
   );
-  const maxVisibleItems = 3; 
+  const maxVisibleItems = 3;
   const totalSlides = Math.max(
     1,
     Math.ceil(totalProductCount / maxVisibleItems)
@@ -317,12 +316,13 @@ const DetailProduct = () => {
     };
 
     try {
-      const response = await axiosInstance.post(
-        "/user/wishlist/add",
-        wishlistData
-      );
+      const response = await axiosInstance.post("/user/wishlist/add", wishlistData);
 
       if (response.status === 201) {
+        // Get updated wishlist count
+        const wishlistResponse = await axiosInstance.get("/user/wishlist/get");
+        dispatch(setWishlistLength(wishlistResponse.data.Wishlist.length));
+
         setSnackbarMessage("Product added to wishlist successfully!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
@@ -948,7 +948,7 @@ const DetailProduct = () => {
                               alt={variant.name}
                               sx={{
                                 height: 400,
-                                padding:"10px 0px",
+                                padding: "10px 0px",
                                 objectFit: "contain",
                                 transition: "transform 0.3s ease",
                                 "&:hover": {
@@ -987,15 +987,17 @@ const DetailProduct = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <ProductReviews
-            productId={id}
-            selectedVariantId={variants[variantIndex]?._id}
-            selectedSizeVariantId={
-              variants[variantIndex]?.sizes.find(
-                (size) => size.size === selectedSize
-              )?._id
-            }
-          />
+          {product && variants[variantIndex] && (
+            <ProductReviews
+              productId={id}
+              selectedVariantId={variants[variantIndex]?._id}
+              selectedSizeVariantId={
+                variants[variantIndex]?.sizes.find(
+                  (size) => size.size === selectedSize
+                )?._id
+              }
+            />
+          )}
         </Grid>
       </Grid>
 

@@ -42,9 +42,16 @@ import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
+import { setWishlistLength } from "@/redux/features/wishlistSlice";
 import { motion } from "framer-motion";
 import LocalMallIcon from "@mui/icons-material/LocalMall"; // Custom cart icon
-import { ShoppingCartIcon, HeartIcon, HomeIcon, ShirtIcon, TagIcon } from "lucide-react";
+import {
+  ShoppingCartIcon,
+  HeartIcon,
+  HomeIcon,
+  ShirtIcon,
+  TagIcon,
+} from "lucide-react";
 
 const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -67,6 +74,7 @@ const Header = () => {
 
   const dispatch = useDispatch();
   const cartLength = useSelector((state) => state.cart.cartLength);
+  const wishlistLength = useSelector((state) => state.wishlist.wishlistLength);
 
   useEffect(() => {
     const fetchCartLength = async () => {
@@ -89,6 +97,24 @@ const Header = () => {
     };
 
     fetchCartLength();
+  }, [dispatch]);
+
+  useEffect(() => {
+    const fetchWishlistLength = async () => {
+      const token = localStorage.getItem("usertoken");
+      if (token) {
+        try {
+          const response = await axiosInstance.get("/user/wishlist/get");
+          if (response.data.Wishlist) {
+            dispatch(setWishlistLength(response.data.Wishlist.length));
+          }
+        } catch (error) {
+          console.error("Error fetching wishlist length:", error);
+        }
+      }
+    };
+
+    fetchWishlistLength();
   }, [dispatch]);
 
   useEffect(() => {
@@ -222,25 +248,25 @@ const Header = () => {
   };
 
   const menuItems = [
-    { text: 'Home', icon: <HomeIcon size={20} />, path: '/' },
-    { 
-      text: 'Men', 
-      icon: <ShirtIcon size={20} />, 
-      category: { _id: 'mensCategoryId', name: 'men' }  // Replace with actual category ID
+    { text: "Home", icon: <HomeIcon size={20} />, path: "/" },
+    {
+      text: "Men",
+      icon: <ShirtIcon size={20} />,
+      category: { _id: "mensCategoryId", name: "men" }, // Replace with actual category ID
     },
-    { 
-      text: 'Women', 
-      icon: <ShirtIcon size={20} />, 
-      category: { _id: 'womensCategoryId', name: 'women' }  // Replace with actual category ID
+    {
+      text: "Women",
+      icon: <ShirtIcon size={20} />,
+      category: { _id: "womensCategoryId", name: "women" }, // Replace with actual category ID
     },
-    { text: 'Brands', icon: <TagIcon size={20} />, path: '/brands' },
-    { text: 'Cart', icon: <ShoppingCartIcon size={20} />, path: '/cart' },
-    { text: 'Wishlist', icon: <HeartIcon size={20} />, path: '/wishlist' },
+    { text: "Brands", icon: <TagIcon size={20} />, path: "/brands" },
+    { text: "Cart", icon: <ShoppingCartIcon size={20} />, path: "/cart" },
+    { text: "Wishlist", icon: <HeartIcon size={20} />, path: "/wishlist" },
   ];
 
   return (
-    <Box sx={{ flexGrow: 1, marginBottom:"50px"}}>
-      <AppBar position="fixed" sx={{ bgcolor: "#fff", boxShadow: 'none' }}>
+    <Box sx={{ flexGrow: 1, marginBottom: "50px" }}>
+      <AppBar position="fixed" sx={{ bgcolor: "#fff", boxShadow: "none" }}>
         <Toolbar
           sx={{
             justifyContent: "space-between",
@@ -250,7 +276,7 @@ const Header = () => {
             },
             margin: "0 auto",
             paddingX: isMobile ? 2 : 0,
-            borderBottom: '1px solid #eee'
+            borderBottom: "1px solid #eee",
           }}
         >
           <motion.div
@@ -331,25 +357,28 @@ const Header = () => {
             </IconButton>
             {isLoggedIn ? (
               <>
-                <IconButton size="large" color="inherit">
-                  <Link href="/cart/cartpage">
+                <IconButton size="large" sx={{ color: "black" }}>
+                  <Link
+                    href="/cart/cartpage"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
                     <Badge badgeContent={cartLength} color="error">
-                      <ShoppingCartIcon
-                        sx={{ fontSize: "30px", color: "#ff6f61" }}
-                      />
+                      <ShoppingCartIcon sx={{ fontSize: "30px" }} />
                     </Badge>
                   </Link>
                 </IconButton>
 
-                <IconButton size="large" color="inherit">
-                  <Link href="/whishlist/whishlistPage">
-                    <Badge badgeContent={cartLength} color="error">
-                      <HeartIcon
-                        sx={{ fontSize: "30px", color: "#ff6f61" }}
-                      />
+                <IconButton size="large" sx={{ color: "black" }}>
+                  <Link
+                    href="/whishlist/whishlistPage"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <Badge badgeContent={wishlistLength} color="error">
+                      <HeartIcon sx={{ fontSize: "30px" }} />
                     </Badge>
                   </Link>
                 </IconButton>
+
                 <IconButton
                   size="large"
                   color="inherit"
@@ -403,22 +432,22 @@ const Header = () => {
         </Toolbar>
 
         {!isMobile && (
-          <Box 
-            sx={{ 
-              borderBottom: '1px solid #eee',
-              bgcolor: '#fff',
-              py: 1
+          <Box
+            sx={{
+              borderBottom: "1px solid #eee",
+              bgcolor: "#fff",
+              py: 1,
             }}
           >
             <Container maxWidth="xl">
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center',
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
                   gap: 3,
-                  overflowX: 'auto',
-                  '&::-webkit-scrollbar': { display: 'none' },
-                  scrollbarWidth: 'none'
+                  overflowX: "auto",
+                  "&::-webkit-scrollbar": { display: "none" },
+                  scrollbarWidth: "none",
                 }}
               >
                 {categories.map((category) => (
@@ -426,14 +455,14 @@ const Header = () => {
                     key={category._id}
                     onClick={() => handleCategoryClick(category)}
                     sx={{
-                      color: '#333',
-                      textTransform: 'none',
-                      minWidth: 'auto',
+                      color: "#333",
+                      textTransform: "none",
+                      minWidth: "auto",
                       px: 2,
-                      '&:hover': {
-                        color: '#ff6f61',
-                        bgcolor: 'transparent'
-                      }
+                      "&:hover": {
+                        color: "#ff6f61",
+                        bgcolor: "transparent",
+                      },
                     }}
                   >
                     {category.name}
@@ -504,25 +533,25 @@ const Header = () => {
         </Slide>
       </AppBar>
 
-      <Drawer 
-        anchor="left" 
-        open={drawerOpen} 
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
         onClose={handleDrawerToggle}
         sx={{
-          '& .MuiDrawer-paper': {
+          "& .MuiDrawer-paper": {
             width: 280,
-            boxSizing: 'border-box',
+            boxSizing: "border-box",
           },
         }}
       >
-        <Box sx={{ width: '100%' }}>
+        <Box sx={{ width: "100%" }}>
           <Box
             sx={{
               p: 2,
-              borderBottom: '1px solid #eaeaea',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              borderBottom: "1px solid #eaeaea",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Image src={logo} height={30} width={100} alt="Logo" />
@@ -530,13 +559,13 @@ const Header = () => {
 
           <List>
             <ListItem>
-              <ListItemText 
-                primary="Categories" 
-                sx={{ 
-                  '& .MuiTypography-root': {
+              <ListItemText
+                primary="Categories"
+                sx={{
+                  "& .MuiTypography-root": {
                     fontWeight: 600,
-                    color: '#333'
-                  }
+                    color: "#333",
+                  },
                 }}
               />
             </ListItem>
@@ -550,9 +579,9 @@ const Header = () => {
                 }}
                 sx={{
                   pl: 4,
-                  '&:hover': {
-                    bgcolor: '#f5f5f5'
-                  }
+                  "&:hover": {
+                    bgcolor: "#f5f5f5",
+                  },
                 }}
               >
                 <ListItemText primary={category.name} />
@@ -560,18 +589,20 @@ const Header = () => {
             ))}
             <Divider />
             {menuItems.map((item) => (
-              <MenuItem 
-                key={item.text} 
-                onClick={() => item.category ? handleCategoryClick(item.category) : router.push(item.path)}
+              <MenuItem
+                key={item.text}
+                onClick={() =>
+                  item.category
+                    ? handleCategoryClick(item.category)
+                    : router.push(item.path)
+                }
               >
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
+                <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                <ListItemText
                   primary={item.text}
                   sx={{
-                    '& .MuiTypography-root': {
-                      fontSize: '15px',
+                    "& .MuiTypography-root": {
+                      fontSize: "15px",
                       fontWeight: 500,
                     },
                   }}
@@ -586,12 +617,12 @@ const Header = () => {
                 fullWidth
                 variant="contained"
                 sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': {
-                    bgcolor: '#333',
+                  bgcolor: "#000",
+                  color: "#fff",
+                  "&:hover": {
+                    bgcolor: "#333",
                   },
-                  textTransform: 'none',
+                  textTransform: "none",
                   py: 1,
                 }}
                 onClick={() => {

@@ -20,8 +20,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
+import { useDispatch } from "react-redux";
+import { setWishlistLength } from "@/redux/features/wishlistSlice";
 
 const Wishlist = () => {
+  const dispatch = useDispatch();
   const [items, setItems] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -39,6 +42,7 @@ const Wishlist = () => {
 
         if (response.data.Wishlist !== 0) {
           setItems(response.data.Wishlist);
+          dispatch(setWishlistLength(response.data.Wishlist.length));
         }
       } catch (error) {
         console.error("Error fetching wishlist items:", error);
@@ -46,7 +50,7 @@ const Wishlist = () => {
     };
 
     fetchWishlist();
-  }, []);
+  }, [dispatch]);
 
   const handleRemoveItem = async () => {
     if (!selectedItem) return;
@@ -60,9 +64,11 @@ const Wishlist = () => {
         },
       });
 
-      setItems((prevItems) =>
-        prevItems.filter((i) => i._id !== selectedItem._id)
-      );
+      setItems((prevItems) => {
+        const newItems = prevItems.filter((i) => i._id !== selectedItem._id);
+        dispatch(setWishlistLength(newItems.length));
+        return newItems;
+      });
       setOpenDialog(false);
     } catch (error) {
       console.error("Error removing item from wishlist:", error);

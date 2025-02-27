@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -7,6 +7,7 @@ import {
   Button,
   IconButton,
   InputAdornment,
+  Box,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
@@ -35,6 +36,7 @@ const LoginForm = () => {
         { email, password },
       );
       Cookies.set("adminToken", response.data.token, { expires: 1 });
+      localStorage.setItem('admin-logged', true)
       router.push("/admin/dashboard/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed!");
@@ -43,52 +45,118 @@ const LoginForm = () => {
     }
   };
 
+  useEffect(() => {
+    let admin_logged = localStorage.getItem('admin-logged')
+    if(admin_logged){
+      router.push('/admin/dashboard/dashboard')
+    }
+    else{
+      router.push('/admin/authentication/login')
+    }
+  }, [])
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "85vh",
-        backgroundColor: "#f4f6f8",
+        minHeight: "85vh",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)",
+        padding: "20px",
       }}
     >
       <Card
         sx={{
-          width: "40%",
-          padding: "24px",
-          borderRadius: "12px",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+          width: { xs: "90%", sm: "70%", md: "40%", lg: "30%" },
+          borderRadius: "16px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          background: "white",
+          position: "relative",
+          overflow: "visible",
+          "&:before": {
+            content: '""',
+            position: "absolute",
+            top: "-10px",
+            left: "-10px",
+            right: "-10px",
+            bottom: "-10px",
+            background: "linear-gradient(135deg, #000000 0%, #434343 100%)",
+            zIndex: -1,
+            borderRadius: "20px",
+            opacity: 0.1,
+          }
         }}
       >
-        <CardContent>
-          <Typography variant="h5" align="center" gutterBottom>
-            Login to Your Account
-          </Typography>
-          <Typography variant="body2" align="center" color="textSecondary">
-            Get started with our app, and access admin panel.
-          </Typography>
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ mb: 4, textAlign: "center" }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: "#1a1a1a",
+                mb: 1,
+                fontFamily: "'Playfair Display', serif"
+              }}
+            >
+              TREND TROVE
+            </Typography>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2,
+                color: "#333",
+                fontWeight: 500 
+              }}
+            >
+              Admin Portal
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: "#666",
+                fontWeight: 400 
+              }}
+            >
+              Access your administrative dashboard
+            </Typography>
+          </Box>
 
           {error && (
             <Typography
               variant="body2"
-              color="error"
-              align="center"
-              sx={{ marginTop: "10px" }}
+              sx={{
+                color: "#d32f2f",
+                textAlign: "center",
+                p: 1,
+                mb: 2,
+                backgroundColor: "rgba(211, 47, 47, 0.1)",
+                borderRadius: "4px",
+              }}
             >
               {error}
             </Typography>
           )}
 
-          <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+          <form onSubmit={handleSubmit}>
             <TextField
-              label="Email"
+              label="Email Address"
               type="email"
               variant="outlined"
               fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              margin="normal"
+              sx={{
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#000000",
+                  },
+                },
+                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#000000",
+                },
+              }}
               required
             />
 
@@ -99,7 +167,17 @@ const LoginForm = () => {
               fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              margin="normal"
+              sx={{
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#000000",
+                  },
+                },
+                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#000000",
+                },
+              }}
               required
               InputProps={{
                 endAdornment: (
@@ -115,17 +193,27 @@ const LoginForm = () => {
             <Button
               type="submit"
               variant="contained"
-              color="primary"
               fullWidth
-              sx={{ marginTop: "16px", padding: "12px", fontSize: "16px" }}
               disabled={loading}
+              sx={{
+                mt: 2,
+                py: 1.5,
+                backgroundColor: "#000000",
+                color: "white",
+                fontWeight: 600,
+                letterSpacing: "0.5px",
+                "&:hover": {
+                  backgroundColor: "#333333",
+                },
+                transition: "all 0.3s ease",
+              }}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Authenticating..." : "Sign In"}
             </Button>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 };
 

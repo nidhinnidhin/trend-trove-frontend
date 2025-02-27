@@ -7,22 +7,22 @@ import store from "../redux/store";
 import '@/styles/globals.css';
 import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../utils/createEmotionCache';
+import { useRouter } from "next/router";
 
-// Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
 
 const theme = createTheme();
 
 export default function App({ Component, pageProps, emotionCache = clientSideEmotionCache }) {
+  const router = useRouter()
   useEffect(() => {
-    // Remove the server-side injected CSS
     const jssStyles = document.querySelector('#jss-server-side');
     if (jssStyles) {
       jssStyles.parentElement.removeChild(jssStyles);
     }
   }, []);
 
-  return (
+   return (
     <CacheProvider value={emotionCache}>
       <Provider store={store}>
         <FilterProvider>
@@ -35,3 +35,5 @@ export default function App({ Component, pageProps, emotionCache = clientSideEmo
     </CacheProvider>
   );
 }
+
+

@@ -23,6 +23,8 @@ import {
   FormHelperText,
   Divider,
   Rating,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   LocalShipping,
@@ -200,6 +202,94 @@ const OrdersPage = () => {
         return "error";
       default:
         return "primary";
+    }
+  };
+
+  const handleRetryPayment = async (order) => {
+    try {
+      // Load Razorpay script
+      const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      // Create new order for retry payment
+      const response = await axiosInstance.post(`/payment/create-order`, {
+        amount: Math.round(order.payment.amount * 100),
+        currency: "INR",
+        checkoutId: order.orderId
+      });
+
+      const orderData = response.data;
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: Math.round(order.payment.amount * 100),
+        currency: "INR",
+        name: "TREND TROVE",
+        description: "Purchase Payment Retry",
+        order_id: orderData.id,
+        handler: async function (response) {
+          try {
+            const verifyResponse = await axiosInstance.post(`/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              checkoutId: order.orderId
+            });
+
+            if (verifyResponse.data.status === "success") {
+              window.location.reload();
+            }
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            setSnackbar({
+              open: true,
+              message: "Payment verification failed",
+              severity: "error",
+            });
+          }
+        },
+        modal: {
+          ondismiss: async function () {
+            try {
+              await axiosInstance.post(`/payment/cancel`, {
+                orderId: orderData.id,
+                checkoutId: order.orderId
+              });
+            } catch (error) {
+              console.error("Failed to handle payment cancellation:", error);
+            }
+          },
+        },
+        prefill: {
+          name: order.shippingAddress?.fullName || "",
+          contact: order.shippingAddress?.mobileNumber || "",
+        },
+        theme: {
+          color: "#333",
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+    } catch (error) {
+      console.error("Payment retry failed:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to retry payment",
+        severity: "error",
+      });
     }
   };
 
@@ -489,6 +579,26 @@ const OrdersPage = () => {
                             Add Review
                           </Button>
                         )}
+
+                        {(item.paymentStatus === "retry_pending" || order.payment?.status === "retry_pending") && 
+                         order.payment?.method === "online" && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleRetryPayment(order)}
+                            startIcon={<Payment />}
+                            sx={{ 
+                              width: "150px", 
+                              mt: 1,
+                              backgroundColor: "#1976d2",
+                              "&:hover": {
+                                backgroundColor: "#115293"
+                              }
+                            }}
+                          >
+                            Retry Payment
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -571,6 +681,20 @@ const OrdersPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       <Footer />
     </Container>

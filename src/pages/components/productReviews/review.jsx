@@ -132,86 +132,103 @@ const ProductReviews = ({
         </Paper>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {reviews.map((review, index) => (
-            <Paper
-              key={review._id}
-              elevation={0}
-              sx={{
-                p: 3,
-                backgroundColor: "#f8f9fa",
-                borderRadius: "8px",
-                transition: "transform 0.2s ease",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                },
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", margin:"10px 0px" }}>
-                <Avatar
-                  src={review.user.image}
-                  sx={{ height: "30px", width: "30px", borderRadius: "50%" }}
-                />
-
-                {review.user?.username && (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#666",
-                      margin: "0px 10px",
-                      // mt: 2,
-                      fontStyle: "italic",
-                    }}
-                  >
-                    {review.user.username}
-                  </Typography>
-                )}
-              </Box>
-              <Box
+          {reviews &&
+            reviews.map((review, index) => (
+              <Paper
+                key={review._id}
+                elevation={0}
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
+                  p: 3,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "8px",
+                  transition: "transform 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                  },
                 }}
               >
-                <Box>
-                  <Rating value={review.rating} readOnly precision={0.5} />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#666",
-                      mt: 0.5,
-                    }}
-                  >
-                    {new Date(review.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
+                <Box
                   sx={{
-                    color: "#2c3e50",
-                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    margin: "10px 0px",
                   }}
                 >
-                  Verified Purchase
-                </Typography>
-              </Box>
+                  {review.user?.image && (
+                    <Avatar
+                      src={review.user.image}
+                      sx={{
+                        height: "30px",
+                        width: "30px",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  )}
+                  {/* <Avatar
+                  src={review.user.image}
+                  sx={{ height: "30px", width: "30px", borderRadius: "50%" }}
+                /> */}
 
-              <Typography
-                sx={{
-                  color: "#2c3e50",
-                  lineHeight: 1.6,
-                }}
-              >
-                {review.comment}
-              </Typography>
-              {index < reviews.length - 1 && <Divider sx={{ mt: 2 }} />}
-            </Paper>
-          ))}
+                  {review.user?.username && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        margin: "0px 10px",
+                        // mt: 2,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {review.user.username}
+                    </Typography>
+                  )}
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                  }}
+                >
+                  <Box>
+                    <Rating value={review.rating} readOnly precision={0.5} />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        mt: 0.5,
+                      }}
+                    >
+                      {new Date(review.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#2c3e50",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Verified Purchase
+                  </Typography>
+                </Box>
+
+                <Typography
+                  sx={{
+                    color: "#2c3e50",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {review.comment}
+                </Typography>
+                {index < reviews.length - 1 && <Divider sx={{ mt: 2 }} />}
+              </Paper>
+            ))}
         </Box>
       )}
     </Box>

@@ -255,7 +255,12 @@ const Orders = () => {
 
       {orders
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((order) => (
+        .map((order) => {
+          console.log("orderssssssssssssssssssssssssssss",order);
+          
+          return(
+
+          
           <Accordion key={order.orderId} sx={{ mb: 2, boxShadow: 3 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Box
@@ -316,20 +321,24 @@ const Orders = () => {
                       <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
                         Actions
                       </TableCell>
+                      <TableCell sx={{ color: "#ffffff", fontWeight: "bold" }}>
+                        Payement Status
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {order.items.map((item) => {
-                      console.log("Itemmm", item);
+                      console.log("Itemmm", order.payment.status);
 
                       return (
                         <TableRow key={item.itemId}>
                           <TableCell>
-                            {item.productName} - {item.color} ({item.size})
+                            {item.productName.slice(0,20)} - {item.color} ({item.size})
                           </TableCell>
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>₹{item.price}</TableCell>
                           <TableCell>{item.status || "Pending"}</TableCell>
+                          
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                               {/* Show Return Request button if return is pending */}
@@ -379,6 +388,7 @@ const Orders = () => {
                               )}
                             </Box>
                           </TableCell>
+                          <TableCell>{order.payment.status}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -387,7 +397,8 @@ const Orders = () => {
               </TableContainer>
             </AccordionDetails>
           </Accordion>
-        ))}
+          )
+})}
 
       <TablePagination
         component="div"
@@ -511,7 +522,7 @@ const Orders = () => {
                   </TableHead>
                   <TableBody>
                     {selectedOrder.items.map((item) => {
-                      console.log("Orderrrrrrrrrrrrrrrrrrrrrrrrrr", item);
+                      console.log("Orderrrrrrrrrrrrrrrrrrrrrrrrrraaaaa", item);
 
                       return (
                         <TableRow key={item.itemId}>

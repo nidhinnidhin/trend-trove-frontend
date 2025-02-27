@@ -40,13 +40,15 @@ import Brand from "../components/brand/brand";
 import { useRouter } from "next/router";
 import Products from "../components/products/products";
 import Orders from "../components/orders/orders";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import Coupons from "../components/coupons/coupons";
 import Offers from "../components/offers/offfers";
 import axios from 'axios';
 import axiosInstance from "@/utils/adminAxiosInstance";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import Banners from "../components/banners/banners";
+import Cookies from "js-cookie";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -158,9 +160,14 @@ const Dashboard = () => {
     setOpenLogoutDialog(true);
   };
 
-  const handleConfirmLogout = () => {
-    localStorage.removeItem("admintoken");
-    router.push("/admin/authentication/login");
+  const handleConfirmLogout = async () => {
+    try {
+      await axiosInstance.get('/admin/logout');
+      localStorage.setItem('admin-logged', false);
+      router.push('/admin/authentication/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
   };
 
   const handleCancelLogout = () => {
@@ -257,7 +264,7 @@ const Dashboard = () => {
                 "Orders",
                 "Coupons",
                 "Offers",
-                "Banner",
+                "Banners",
               ].map((text) => (
                 <ListItem
                   button
@@ -493,6 +500,7 @@ const Dashboard = () => {
           {selectedTopic === "Orders" && <Orders />}
           {selectedTopic === "Coupons" && <Coupons />}
           {selectedTopic === "Offers" && <Offers />}
+          {selectedTopic === "Banners" && <Banners />}
         </Box>
       </Box>
 
