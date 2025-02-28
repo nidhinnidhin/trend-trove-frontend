@@ -83,17 +83,18 @@ const Header = () => {
       if (token) {
         try {
           const response = await axiosInstance.get("/cart/get-cart");
-
-          if (response.data.cart) {
+          
+          if (response.data && response.data.cart && response.data.cart.items) {
             dispatch(setCartLength(response.data.cart.items.length));
+          } else {
+            dispatch(setCartLength(0));
           }
         } catch (error) {
-          if (error.response?.status === 404) {
-            dispatch(setCartLength(0));
-          } else {
-            console.error("Error fetching cart length:", error);
-          }
+          console.error("Error fetching cart length:", error);
+          dispatch(setCartLength(0));
         }
+      } else {
+        dispatch(setCartLength(0));
       }
     };
 

@@ -146,6 +146,12 @@ const LoginDrawer = ({ onClose }) => {
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const handleGoogleLogin = () => {
+    // Use the complete URL
+    window.location.href = 'http://localhost:9090/api/users/auth/google';
+  };
+
   return (
     <Box
       sx={{
@@ -316,9 +322,7 @@ const LoginDrawer = ({ onClose }) => {
             <Grid item xs={12}>
               <StyledWrapper>
                 <StyledButton
-                  onClick={() => {
-                    window.location.href = "http://localhost:9090/api/users/auth/google";
-                  }}
+                  onClick={handleGoogleLogin}
                   startIcon={<GoogleIcon />}
                 >
                   Continue with Google
