@@ -244,7 +244,6 @@ function Cart() {
         : cartItem
     );
 
-
     setCart({
       ...cart,
       items: updatedItems,
@@ -888,68 +887,140 @@ function Cart() {
         <Footer />
       </Box>
 
-      {/* Delete Confirmation Modal */}
       <Dialog
         open={openDeleteModal}
         onClose={handleCloseDeleteModal}
-        PaperProps={{
-          sx: {
-            backgroundColor: "#212121", // dark background
-            color: "white", // white text for contrast
-          },
+        sx={{
+          backdropFilter: "blur(5px)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
         }}
       >
-        <DialogTitle sx={{ color: "white" }}>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" sx={{ color: "white" }}>
-            Are you sure you want to delete this address?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseDeleteModal}
-            color="primary"
-            variant="outlined"
-            sx={{ color: "white" }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteAddress}
-            color="secondary"
-            variant="contained"
-            sx={{ backgroundColor: "#FF3D00", color: "white" }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
+        <Grid
+          sx={{
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            color: "#fff",
+            borderRadius: "12px",
+            padding: "20px",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+            textAlign: "center",
+          }}
+        >
+          <DialogTitle sx={{ color: "#ffcc00", fontWeight: "bold" }}>
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ color: "gray" }}>
+              Are you sure you want to delete this address?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseDeleteModal}
+              sx={{
+                color: "black",
+                border: "1px solid #777",
+                borderRadius: "20px",
+                backgroundColor: "rgba(134, 209, 241, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteAddress}
+              sx={{
+                color: "black",
+                border: "1px solid #ff4d4d",
+                borderRadius: "20px",
+                backgroundColor: "rgba(255, 0, 0, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
+                marginLeft: "10px",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 0, 0, 0.3)",
+                },
+              }}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Grid>
       </Dialog>
 
-      {/* Confirmation Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to remove this product from your cart?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteProduct} color="secondary">
-            Delete
-          </Button>
-        </DialogActions>
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        sx={{
+          backdropFilter: "blur(5px)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }}
+      >
+        <Grid
+          sx={{
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            color: "#fff",
+            borderRadius: "12px",
+            padding: "20px",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+            textAlign: "center",
+          }}
+        >
+          <DialogTitle sx={{ color: "#ffcc00", fontWeight: "bold" }}>
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent>
+            <Typography sx={{ color: "gray" }}>
+              Are you sure you want to remove this product from your cart?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseModal}
+              sx={{
+                color: "black",
+                border: "1px solid #777",
+                borderRadius: "20px",
+                backgroundColor: "rgba(134, 209, 241, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteProduct}
+              sx={{
+                color: "black",
+                border: "1px solid #ff4d4d",
+                borderRadius: "20px",
+                backgroundColor: "rgba(255, 0, 0, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
+                marginLeft: "10px",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 0, 0, 0.3)",
+                },
+              }}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Grid>
       </Dialog>
-      {/* Add the AddAddressModal component */}
+
       <AddAddressModal
         open={isAddAddressModalOpen}
         onClose={handleCloseAddAddressModal}
         onAddressAdded={handleAddressAdded}
       />
 
-      {/* Edit address modal */}
       <EditAddressModal
         open={isEditAddressModalOpen}
         onClose={() => {

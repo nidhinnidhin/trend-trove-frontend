@@ -58,6 +58,7 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -188,17 +189,41 @@ const Header = () => {
     setOpenLogoutDialog(true);
   };
 
-  const handleLogoutConfirm = () => {
-    localStorage.removeItem("usertoken");
-    setToken(null);
-    setIsLoggedIn(false);
+  const handleLogoutConfirm = async () => {
+    try {
+      // Call logout endpoint to clear CSRF token
+      await axiosInstance.post("/users/logout");
+      
+      // Clear localStorage token
+      localStorage.removeItem("usertoken");
+      
+      // Clear state
+      setToken(null);
+      setIsLoggedIn(false);
+      dispatch(setCartLength(0));
+      dispatch(setWishlistLength(0));
+      
+      // Clear all cookies including CSRF token
+      document.cookie.split(";").forEach((cookie) => {
+        const [name] = cookie.split("=");
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      });
+      
+      // Show success message
+      setSnackbarMessage("Successfully logged out");
+      setSnackbarOpen(true);
 
-    setTimeout(() => {
-      router.push("/authentication/loginSignup");
-    }, 1000);
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.push("/authentication/loginSignup");
+      }, 1000);
 
-    setSnackbarOpen(true);
-    setOpenLogoutDialog(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+      setErrorMessage("Error during logout. Please try again.");
+    } finally {
+      setOpenLogoutDialog(false);
+    }
   };
 
   const handleLogoutCancel = () => {
@@ -252,12 +277,12 @@ const Header = () => {
     {
       text: "Men",
       icon: <ShirtIcon size={20} />,
-      category: { _id: "mensCategoryId", name: "men" }, // Replace with actual category ID
+      category: { _id: "mensCategoryId", name: "men" }, 
     },
     {
       text: "Women",
       icon: <ShirtIcon size={20} />,
-      category: { _id: "womensCategoryId", name: "women" }, // Replace with actual category ID
+      category: { _id: "womensCategoryId", name: "women" }, 
     },
     { text: "Brands", icon: <TagIcon size={20} />, path: "/brands" },
     { text: "Cart", icon: <ShoppingCartIcon size={20} />, path: "/cart" },
@@ -524,7 +549,7 @@ const Header = () => {
                     onClick={handleSearchItemClick}
                   >
                     <SearchIcon sx={{ color: "gray", marginRight: "10px" }} />
-                    <ListItemText primary={product.name} />
+                    <ListItemText primary={product.name}  sx={{ color: "gray"}}/>
                   </ListItem>
                 ))}
               </List>
@@ -641,20 +666,38 @@ const Header = () => {
         open={openLogoutDialog}
         onClose={handleLogoutCancel}
         sx={{
+          backdropFilter: "blur(5px)",
           backgroundColor: "rgba(0, 0, 0, 0.5)",
         }}
       >
-        <Grid sx={{ backgroundColor: "transparent", color: "black" }}>
-          <DialogTitle>Confirm Logout</DialogTitle>
-          <DialogContent>Are you sure you want to logout?</DialogContent>
-          <DialogActions>
+        <Grid
+          sx={{
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            color: "#fff",
+            borderRadius: "12px",
+            padding: "20px",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+            textAlign: "center",
+          }}
+        >
+          <DialogTitle sx={{ color: "#ffcc00", fontWeight: "bold" }}>
+            Confirm Logout
+          </DialogTitle>
+          <DialogContent sx={{ color: "gray" }}>
+            Are you sure you want to logout?
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: "center" }}>
             <Button
               onClick={handleLogoutCancel}
               sx={{
-                border: "1px solid orange",
                 color: "black",
+                border: "1px solid #777",
+                borderRadius: "20px",
+                backgroundColor: "rgba(134, 209, 241, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "darkorange",
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
                 },
               }}
             >
@@ -663,10 +706,15 @@ const Header = () => {
             <Button
               onClick={handleLogoutConfirm}
               sx={{
-                border: "1px solid red",
                 color: "black",
+                border: "1px solid #ff4d4d",
+                borderRadius: "20px",
+                backgroundColor: "rgba(255, 0, 0, 0.2)",
+                backdropFilter: "blur(3px)",
+                textTransform: "none",
+                marginLeft: "10px",
                 "&:hover": {
-                  backgroundColor: "darkred",
+                  backgroundColor: "rgba(255, 0, 0, 0.3)",
                 },
               }}
             >
@@ -680,7 +728,7 @@ const Header = () => {
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        message="You are logged out"
+        message={snackbarMessage || "You are logged out"}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       />
 

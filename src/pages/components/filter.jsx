@@ -12,15 +12,25 @@ import {
   FormGroup,
   MenuItem,
   Select,
+  Drawer,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+  Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
 import GenderFilter from '../components/genderFilter';
 
 const Filter = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { filterState, updateFilters } = useFilter();
-  const [expanded, setExpanded] = useState(false);
   const [categories, setCategories] = useState([]);
 
   const handleSortChange = (event) => {
@@ -77,17 +87,23 @@ const Filter = () => {
   const ratings = [5, 4, 3, 2, 1];
   const discounts = ["10", "20", "30", "40", "50"];
 
-  return (
-    <Box
-      sx={{
-        width: "25%",
-        minWidth: "250px",
-        backgroundColor: "#fff",
-        padding: 3,
-        borderRight: "1px solid #e0e0e0",
-      }}
-    >
-      <Box sx={{ marginBottom: 4, marginTop: 10 }}>
+  const FilterContent = () => (
+    <Box sx={{ padding: 3 }}>
+      <Box sx={{ marginBottom: 4 }}>
+        {isMobile && (
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 3 
+          }}>
+            <Typography variant="h6">Filters</Typography>
+            <IconButton onClick={() => setIsDrawerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        )}
+
         <Typography variant="h6" gutterBottom>
           Price Range
         </Typography>
@@ -99,21 +115,13 @@ const Filter = () => {
           max={10000}
           sx={{ marginTop: 2, color: "#ff6f61" }}
         />
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 1,
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
           <Typography>₹{filterState.priceRange[0]}</Typography>
           <Typography>₹{filterState.priceRange[1]}</Typography>
         </Box>
       </Box>
 
-      <Box
-        sx={{ width: "100%", bgcolor: "background.paper", marginTop: "20px" }}
-      >
+      <Box sx={{ width: "100%", bgcolor: "background.paper", mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Sort By
         </Typography>
@@ -122,7 +130,6 @@ const Filter = () => {
           onChange={handleSortChange}
           fullWidth
           size="small"
-          sx={{ mb: 2 }}
         >
           <MenuItem value="default">Default</MenuItem>
           <MenuItem value="asc">Name (A-Z)</MenuItem>
@@ -157,8 +164,32 @@ const Filter = () => {
           state: filterState.selectedDiscounts,
         },
       ].map((section) => (
-        <Accordion key={section.title} defaultExpanded={true}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Accordion 
+          key={section.title} 
+          defaultExpanded={!isMobile}
+          sx={{
+            '&.MuiAccordion-root': {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              '&:before': {
+                display: 'none',
+              },
+            }
+          }}
+        >
+          <AccordionSummary 
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px',
+              mb: 1,
+              '&.Mui-expanded': {
+                minHeight: '48px',
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+              }
+            }}
+          >
             <Typography variant="subtitle1">{section.title}</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -170,6 +201,12 @@ const Filter = () => {
                     <Checkbox
                       checked={section.state.includes(item)}
                       onChange={() => section.handler(item)}
+                      sx={{
+                        color: '#ff6f61',
+                        '&.Mui-checked': {
+                          color: '#ff6f61',
+                        },
+                      }}
                     />
                   }
                   label={
@@ -186,8 +223,80 @@ const Filter = () => {
         </Accordion>
       ))}
 
-      <GenderFilter />
+      {isMobile && (
+        <Button 
+          fullWidth 
+          variant="contained"
+          sx={{ 
+            mt: 3,
+            backgroundColor: '#ff6f61',
+            '&:hover': {
+              backgroundColor: '#ff5c4d',
+            }
+          }}
+          onClick={() => setIsDrawerOpen(false)}
+        >
+          Apply Filters
+        </Button>
+      )}
     </Box>
+  );
+
+  return (
+    <>
+      {isMobile ? (
+        <>
+          <IconButton
+            onClick={() => setIsDrawerOpen(true)}
+            sx={{
+              position: 'fixed',
+              left: 16,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              backgroundColor: '#ff6f61',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#ff5c4d',
+              },
+              zIndex: 1000,
+            }}
+          >
+            <FilterListIcon />
+          </IconButton>
+
+          <Drawer
+            anchor="left"
+            open={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            PaperProps={{
+              sx: {
+                width: '85%',
+                maxWidth: '360px',
+                backgroundColor: '#fff',
+              }
+            }}
+          >
+            <FilterContent />
+          </Drawer>
+        </>
+      ) : (
+        <Box
+          sx={{
+            width: "25%",
+            minWidth: "250px",
+            maxWidth: "300px",
+            backgroundColor: "#fff",
+            borderRight: "1px solid #e0e0e0",
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            overflowY: 'auto',
+          }}
+        >
+          <FilterContent />
+        </Box>
+      )}
+    </>
   );
 };
 

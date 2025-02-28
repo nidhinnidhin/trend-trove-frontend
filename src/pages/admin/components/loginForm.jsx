@@ -8,12 +8,15 @@ import {
   IconButton,
   InputAdornment,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import axiosInstance from "@/utils/adminAxiosInstance";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const LoginForm = () => {
   const router = useRouter();
@@ -23,6 +26,19 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
+  const getCsrfToken = async () => {
+    try {
+      const response = await axios.get("http://localhost:9090/api/csrf-token", {
+        withCredentials: true,
+      });
+      return response.data.csrfToken;
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+      setError("Failed to initialize secure connection. Please try again.");
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -31,14 +47,30 @@ const LoginForm = () => {
     }
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        "/adminlogin",
+      const csrfToken = await getCsrfToken();
+      if (!csrfToken) {
+        setLoading(false);
+        return; // Stop if we couldn't get CSRF token
+      }
+      
+      const response = await axios.post(
+        "http://localhost:9090/api/admin/adminlogin",
         { email, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-token": csrfToken,
+          },
+          withCredentials: true,
+        }
       );
-      Cookies.set("adminToken", response.data.token, { expires: 1 });
-      localStorage.setItem('admin-logged', true)
-      router.push("/admin/dashboard/dashboard");
+
+      if (response.data.message === "Login successful") {
+        localStorage.setItem("admin-logged", true);
+        router.push("/admin/dashboard/dashboard");
+      }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.message || "Login failed!");
     } finally {
       setLoading(false);
@@ -46,14 +78,13 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    let admin_logged = localStorage.getItem('admin-logged')
-    if(admin_logged){
-      router.push('/admin/dashboard/dashboard')
+    let admin_logged = localStorage.getItem("admin-logged");
+    if (admin_logged) {
+      router.push("/admin/dashboard/dashboard");
+    } else {
+      router.push("/admin/authentication/login");
     }
-    else{
-      router.push('/admin/authentication/login')
-    }
-  }, [])
+  }, []);
 
   return (
     <Box
@@ -85,37 +116,37 @@ const LoginForm = () => {
             zIndex: -1,
             borderRadius: "20px",
             opacity: 0.1,
-          }
+          },
         }}
       >
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ mb: 4, textAlign: "center" }}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
+            <Typography
+              variant="h4"
+              sx={{
                 fontWeight: 700,
                 color: "#1a1a1a",
                 mb: 1,
-                fontFamily: "'Playfair Display', serif"
+                fontFamily: "'Playfair Display', serif",
               }}
             >
               TREND TROVE
             </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
+            <Typography
+              variant="h6"
+              sx={{
                 mb: 2,
                 color: "#333",
-                fontWeight: 500 
+                fontWeight: 500,
               }}
             >
               Admin Portal
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 color: "#666",
-                fontWeight: 400 
+                fontWeight: 400,
               }}
             >
               Access your administrative dashboard
@@ -153,9 +184,10 @@ const LoginForm = () => {
                     borderColor: "#000000",
                   },
                 },
-                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#000000",
-                },
+                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "#000000",
+                  },
               }}
               required
             />
@@ -174,9 +206,10 @@ const LoginForm = () => {
                     borderColor: "#000000",
                   },
                 },
-                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#000000",
-                },
+                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                  {
+                    borderColor: "#000000",
+                  },
               }}
               required
               InputProps={{
@@ -213,6 +246,15 @@ const LoginForm = () => {
           </form>
         </CardContent>
       </Card>
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError("")}
+      >
+        <Alert onClose={() => setError("")} severity="error">
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

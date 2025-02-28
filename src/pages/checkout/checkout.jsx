@@ -226,10 +226,11 @@ const CheckoutPage = () => {
             try {
               await axiosInstance.post(`/payment/cancel`, {
                 orderId: orderData.id,
-                checkoutId: checkoutId // Pass the checkoutId here
+                checkoutId: checkoutId 
               });
               setSnackbarMessage("Payment cancelled");
               setSnackbarOpen(true);
+              router.push('/orders/orders')
             } catch (error) {
               console.error("Failed to handle payment cancellation:", error);
             }

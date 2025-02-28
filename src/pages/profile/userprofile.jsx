@@ -36,6 +36,8 @@ import {
   Delete as DeleteIcon,
   LockReset,
   AccountBalanceWallet as AccountBalanceWalletIcon,
+  Share as ShareIcon,
+  ContentCopy as ContentCopyIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import Header from "../components/header";
@@ -60,9 +62,12 @@ const UserProfilePage = () => {
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] =
     useState(false);
   const [walletData, setWalletData] = useState({
+    balance: 0,
+    transactions: [],
     totalAmount: 0,
     returnedOrders: [],
     cancelledOrders: [],
+    referralEarnings: 0
   });
 
   useEffect(() => {
@@ -75,37 +80,28 @@ const UserProfilePage = () => {
       }
 
       try {
-        const [userResponse, addressesResponse, ordersResponse, cartResponse] =
+        const [userResponse, addressesResponse, ordersResponse, cartResponse, walletResponse] =
           await Promise.allSettled([
             axiosInstance.get("/users/profile"),
             axiosInstance.get("/address/get-address"),
             axiosInstance.get("/checkout/get-orders"),
             axiosInstance.get("/cart/get-cart"),
+            axiosInstance.get("/wallet/details")
           ]);
 
         if (userResponse.status === "fulfilled" && userResponse.value.data) {
           setUser(userResponse.value.data.user);
         }
 
-        if (
-          addressesResponse.status === "fulfilled" &&
-          addressesResponse.value.data
-        ) {
+        if (addressesResponse.status === "fulfilled" && addressesResponse.value?.data) {
           setAddresses(addressesResponse.value.data.addresses || []);
         }
 
-        if (
-          ordersResponse.status === "fulfilled" &&
-          ordersResponse.value.data
-        ) {
+        if (ordersResponse.status === "fulfilled" && ordersResponse.value?.data) {
           setOrders(ordersResponse.value.data.orders || []);
-        }
-
-        if (cartResponse.status === "fulfilled" && cartResponse.value.data) {
-          setCart(cartResponse.value.data.cart || { items: [] });
-        }
-
-        const processOrdersData = (orders) => {
+          
+          // Process orders for wallet data
+          const orders = ordersResponse.value.data.orders || [];
           const returnedOrders = orders.filter(
             (order) =>
               order.items.some((item) => item.status === "Returned") ||
@@ -118,25 +114,38 @@ const UserProfilePage = () => {
               order.orderStatus === "Cancelled"
           );
 
-          const totalAmount = [...returnedOrders, ...cancelledOrders].reduce(
-            (sum, order) => sum + order.payment.amount,
+          const totalOrderAmount = [...returnedOrders, ...cancelledOrders].reduce(
+            (sum, order) => sum + (order.payment?.amount || 0),
             0
           );
 
-          setWalletData({
-            totalAmount,
+          setWalletData(prev => ({
+            ...prev,
             returnedOrders,
             cancelledOrders,
-          });
-        };
-
-        if (
-          ordersResponse.status === "fulfilled" &&
-          ordersResponse.value.data
-        ) {
-          const orders = ordersResponse.value.data.orders;
-          processOrdersData(orders);
+            totalAmount: totalOrderAmount
+          }));
         }
+
+        if (cartResponse.status === "fulfilled" && cartResponse.value?.data) {
+          setCart(cartResponse.value.data.cart || { items: [] });
+        }
+
+        // Handle wallet data
+        if (walletResponse.status === "fulfilled" && walletResponse.value?.data) {
+          const { balance, transactions } = walletResponse.value.data;
+          const referralEarnings = transactions
+            .filter(t => t.description.toLowerCase().includes('referral'))
+            .reduce((sum, t) => sum + t.amount, 0);
+
+          setWalletData(prev => ({
+            ...prev,
+            balance,
+            transactions: transactions || [],
+            referralEarnings
+          }));
+        }
+
       } catch (error) {
         console.error("Error fetching user data:", error);
         setError("Failed to load user data. Please try again later.");
@@ -231,193 +240,191 @@ const UserProfilePage = () => {
     switch (selectedSection) {
       case "profile":
         return (
-          <Card
-            sx={{
-              backgroundColor: "#f8f9fa",
-              width: "100%",
-              borderRadius: 2,
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-              overflow: "hidden",
-            }}
-          >
-            {!user ? (
-              <CardContent>
-                <Typography variant="h6" align="center">
-                  No profile information available
-                </Typography>
-              </CardContent>
-            ) : (
-              <>
-                <Box
-                  sx={{
-                    backgroundColor: "#1a1a1a",
-                    py: 6,
-                    px: 3,
-                    textAlign: "center",
-                    position: "relative",
-                  }}
-                >
+          <Card sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3 }}>
+            <CardContent>
+              {/* Existing Profile Header */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
+                <Typography variant="h5">Profile Information</Typography>
+                <Box>
+                  <IconButton
+                    onClick={() => setIsProfileModalOpen(true)}
+                    sx={{ color: "white", mr: 1 }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => setIsResetPasswordModalOpen(true)}
+                    sx={{ color: "white" }}
+                  >
+                    <LockReset />
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Profile Content */}
+              <Grid container spacing={3}>
+                {/* Left side - Profile Image */}
+                <Grid item xs={12} md={4}>
                   <Box
                     sx={{
-                      width: 150,
-                      height: 150,
-                      margin: "0 auto",
-                      position: "relative",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
                     }}
                   >
-                    <Box
+                    <Avatar
+                      src={user?.image}
+                      alt={user?.username}
                       sx={{
-                        width: "100%",
-                        height: "100%",
-                        borderRadius: "12px",
-                        overflow: "hidden",
-                        border: "4px solid #ffffff",
-                        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                        width: 150,
+                        height: 150,
+                        mb: 2,
+                        border: "4px solid rgb(237, 161, 20)",
+                      }}
+                    />
+                  </Box>
+                </Grid>
+
+                {/* Right side - User Details */}
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ mb: 4 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
+                          First Name
+                        </Typography>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          {user?.firstname}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
+                          Last Name
+                        </Typography>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          {user?.lastname}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
+                          Username
+                        </Typography>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          {user?.username}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
+                          Email
+                        </Typography>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          {user?.email}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  {/* Referral Code Section */}
+                  <Box
+                    sx={{
+                      mt: 3,
+                      p: 3,
+                      bgcolor: "#262626",
+                      borderRadius: 2,
+                      border: "1px solid rgba(237, 161, 20, 0.2)",
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "rgb(237, 161, 20)",
+                        mb: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
                       }}
                     >
-                      <Image
-                        src={user?.image || "/default-avatar.png"}
-                        width={150}
-                        height={150}
-                        style={{ objectFit: "cover" }}
-                        alt="User Profile"
-                      />
+                      <ShareIcon /> Referral Program
+                    </Typography>
+                    
+                    <Typography variant="body2" sx={{ color: "#ccc", mb: 2 }}>
+                      Share your referral code and earn ₹500 when friends sign up!
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        bgcolor: "#333",
+                        p: 2,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Box flexGrow={1}>
+                        <Typography variant="subtitle2" sx={{ color: "#999", mb: 0.5 }}>
+                          Your Referral Code
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: "rgb(237, 161, 20)",
+                            letterSpacing: "2px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {user?.referralCode || "Loading..."}
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                          navigator.clipboard.writeText(user?.referralCode);
+                          setSnackbarMessage("Referral code copied!");
+                          setSnackbarSeverity("success");
+                          setSnackbarOpen(true);
+                        }}
+                        sx={{
+                          bgcolor: "rgb(237, 161, 20)",
+                          "&:hover": {
+                            bgcolor: "rgb(238, 169, 41)",
+                          },
+                          minWidth: "120px",
+                        }}
+                        startIcon={<ContentCopyIcon />}
+                      >
+                        Copy
+                      </Button>
                     </Box>
+
+                    {/* Show referral earnings if any */}
+                    {walletData?.transactions?.some(t => 
+                      t.description.includes('referral')
+                    ) && (
+                      <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
+                          Total Referral Earnings
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: "rgb(237, 161, 20)", fontWeight: "bold" }}
+                        >
+                          ₹{walletData.referralEarnings || 0}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
-                  <Typography
-                    variant="h4"
-                    sx={{ color: "white", mt: 2, fontWeight: 600 }}
-                  >
-                    {user?.firstname} {user?.lastname}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: "#9e9e9e", mt: 1 }}>
-                    @{user?.username}
-                  </Typography>
-                </Box>
-
-                <CardContent sx={{ p: 4 }}>
-                  <Grid container spacing={4}>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 4 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ mb: 3, color: "#1a1a1a", fontWeight: 600 }}
-                        >
-                          Personal Information
-                        </Typography>
-                        <Box
-                          sx={{
-                            backgroundColor: "white",
-                            p: 3,
-                            borderRadius: 2,
-                          }}
-                        >
-                          <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                              <Typography
-                                variant="subtitle2"
-                                sx={{ color: "#666" }}
-                              >
-                                Email Address
-                              </Typography>
-                              <Typography variant="body1" sx={{ mt: 1 }}>
-                                {user?.email}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Typography
-                                variant="subtitle2"
-                                sx={{ color: "#666" }}
-                              >
-                                First Name
-                              </Typography>
-                              <Typography variant="body1" sx={{ mt: 1 }}>
-                                {user?.firstname}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Typography
-                                variant="subtitle2"
-                                sx={{ color: "#666" }}
-                              >
-                                Last Name
-                              </Typography>
-                              <Typography variant="body1" sx={{ mt: 1 }}>
-                                {user?.lastname}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                              <Typography
-                                variant="subtitle2"
-                                sx={{ color: "#666" }}
-                              >
-                                Username
-                              </Typography>
-                              <Typography variant="body1" sx={{ mt: 1 }}>
-                                {user?.username}
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      </Box>
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 4 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ mb: 3, color: "#1a1a1a", fontWeight: 600 }}
-                        >
-                          Account Settings
-                        </Typography>
-                        <Box
-                          sx={{
-                            backgroundColor: "white",
-                            p: 3,
-                            borderRadius: 2,
-                          }}
-                        >
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            startIcon={<EditIcon />}
-                            onClick={handleEditProfile}
-                            sx={{
-                              mb: 2,
-                              backgroundColor: "#1a1a1a",
-                              color: "white",
-                              py: 1.5,
-                              "&:hover": {
-                                backgroundColor: "#333",
-                              },
-                            }}
-                          >
-                            Edit Profile
-                          </Button>
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<LockReset />}
-                            onClick={() => setIsResetPasswordModalOpen(true)}
-                            sx={{
-                              borderColor: "#1a1a1a",
-                              color: "#1a1a1a",
-                              py: 1.5,
-                              "&:hover": {
-                                borderColor: "#333",
-                                backgroundColor: "rgba(26,26,26,0.04)",
-                              },
-                            }}
-                          >
-                            Reset Password
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </>
-            )}
+                </Grid>
+              </Grid>
+            </CardContent>
           </Card>
         );
 
@@ -747,8 +754,7 @@ const UserProfilePage = () => {
               <Box
                 sx={{
                   p: 3,
-                  background:
-                    "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                  background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
                   borderRadius: 2,
                   mb: 3,
                   display: "flex",
@@ -761,95 +767,74 @@ const UserProfilePage = () => {
                     Wallet Balance
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    ₹{walletData.totalAmount}
+                    ₹{walletData.balance || 0}
                   </Typography>
                 </Box>
                 <AccountBalanceWalletIcon sx={{ fontSize: 40, opacity: 0.8 }} />
               </Box>
 
-              {/* Transaction History */}
+              {/* Add Referral Section */}
+              <Box sx={{ mt: 4, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Referral Earnings
+                </Typography>
+                <Box sx={{ 
+                  p: 3, 
+                  bgcolor: "rgba(33, 150, 243, 0.1)", 
+                  borderRadius: 2 
+                }}>
+                  <Typography variant="body1">
+                    Total Referral Earnings: ₹
+                    {(walletData.transactions || [])
+                      .filter(t => t?.description?.toLowerCase().includes('referral'))
+                      .reduce((sum, t) => sum + (t?.amount || 0), 0)}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Separate Referral Transactions */}
               <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Order History
+                Referral Transactions
               </Typography>
               <TableContainer
                 sx={{
                   maxHeight: 400,
                   bgcolor: "#262626",
                   borderRadius: 2,
-                  "& .MuiTableCell-root": {
-                    borderColor: "#404040",
-                    color: "white",
-                  },
+                  mb: 3
                 }}
               >
                 <Table stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ bgcolor: "#333" }}>Order Date</TableCell>
-                      <TableCell sx={{ bgcolor: "#333" }}>Product</TableCell>
-                      <TableCell sx={{ bgcolor: "#333" }}>Amount</TableCell>
-                      <TableCell sx={{ bgcolor: "#333" }}>Status</TableCell>
+                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Date</TableCell>
+                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Description</TableCell>
+                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Amount</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {[
-                      ...walletData.returnedOrders,
-                      ...walletData.cancelledOrders,
-                    ]
-                      .sort(
-                        (a, b) => new Date(b.orderDate) - new Date(a.orderDate)
-                      )
-                      .map((order) =>
-                        order.items.map((item, index) => (
-                          <TableRow
-                            key={`${order.orderId}-${index}`}
-                            sx={{ "&:hover": { bgcolor: "#333" } }}
-                          >
-                            <TableCell>
-                              {new Date(order.orderDate).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 2,
-                                }}
-                              >
-                                <img
-                                  src={item.image}
-                                  alt={item.productName}
-                                  style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 4,
-                                    objectFit: "cover",
-                                  }}
-                                />
-                                <Typography variant="body2">
-                                  {item.productName}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell>₹{item.finalPrice}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={item.status}
-                                color={
-                                  item.status === "Returned" ? "info" : "error"
-                                }
-                                size="small"
-                                sx={{
-                                  bgcolor:
-                                    item.status === "Returned"
-                                      ? "rgba(33, 150, 243, 0.2)"
-                                      : "rgba(244, 67, 54, 0.2)",
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
+                    {(walletData.transactions || [])
+                      .filter(t => t?.description?.toLowerCase().includes('referral'))
+                      .map((transaction, index) => (
+                        <TableRow key={index}>
+                          <TableCell sx={{ color: "white" }}>
+                            {new Date(transaction.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell sx={{ color: "white" }}>
+                            {transaction.description}
+                          </TableCell>
+                          <TableCell sx={{ color: "white" }}>
+                            ₹{transaction.amount}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {(!walletData.transactions || walletData.transactions.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={3} sx={{ color: "white", textAlign: "center" }}>
+                          No referral transactions found
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>

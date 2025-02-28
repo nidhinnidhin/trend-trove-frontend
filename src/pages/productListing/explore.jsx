@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import Head from "next/head";
 import { FilterProvider, useFilter } from "@/context/filterContext";
 import Products from "../components/products";
@@ -6,9 +6,11 @@ import Filter from "../components/filter";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Slider from "../components/slider";
-import { Box, colors } from "@mui/material";
-import ListProducts from "./listProducts";
+import { Box, colors, CircularProgress } from "@mui/material";
 import axiosInstance from "@/utils/axiosInstance";
+
+// Lazy load ListProducts component
+const ListProducts = React.lazy(() => import("./listProducts"));
 
 export default function Explore() {
   const [products, setProducts] = useState([]);
@@ -133,10 +135,11 @@ export default function Explore() {
     fetchProducts();
   }, [currentPage, filterState]);
 
-  const handlePageChange = (newPage) => {
+  // Memoize handlePageChange function
+  const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <>
@@ -152,13 +155,19 @@ export default function Explore() {
         >
           <Box sx={{ display: "flex", flexGrow: 1 }}>
             <Filter />
-            <ListProducts
-              products={products}
-              totalPages={totalPages}
-              currentPage={currentPage}
-              onPageChange={handlePageChange}
-              loading={loading}
-            />
+            <Suspense fallback={
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <CircularProgress />
+              </Box>
+            }>
+              <ListProducts
+                products={products}
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                loading={loading}
+              />
+            </Suspense>
           </Box>
           <Footer />
         </Box>

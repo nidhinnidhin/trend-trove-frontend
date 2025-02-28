@@ -88,59 +88,57 @@ const LoginDrawer = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
+    
+    try {
+      setLoading(true);
+      
+      // Client-side validations
+      if (!email.trim() || !password.trim()) {
+        setSnackbarMessage("Email and password are required");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+        return;
+      }
 
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
+      const response = await axiosInstance.post("/users/login", {
+        email: email.trim(),
+        password: password,
+      }).catch((error) => {
+        // Handle specific error cases
+        if (error.response) {
+          // Server responded with error status
+          const errorMessage = error.response.data.message || "Invalid credentials";
+          setSnackbarMessage(errorMessage);
+          setSnackbarSeverity("error");
+          setOpenSnackbar(true);
+          throw new Error(errorMessage); // Stop execution here
+        }
+        // Network or other errors
+        setSnackbarMessage("Connection error. Please try again.");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+        throw error;
+      });
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setSnackbarMessage("Please enter a valid email address!");
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-      return;
-    }
-
-    // Validate password
-    const passwordRegex =
-      /^(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setSnackbarMessage(
-        "Password must be at least 8 characters long and include at least one special character!"
-      );
-      setSnackbarSeverity("error");
-      setOpenSnackbar(true);
-      return;
-    }
-
-    const datas = {
-      email: email,
-      password: password,
-    };
-
-    setLoading(true);
-
-    setTimeout(async () => {
-      try {
-        const response = await axiosInstance.post("/users/login", datas);
-        setSnackbarMessage(response.data.message);
+      // Handle successful login
+      if (response && response.data) {
+        setSnackbarMessage("Login successful!");
         setSnackbarSeverity("success");
         setOpenSnackbar(true);
         localStorage.setItem("usertoken", response.data.token);
+        
         setTimeout(() => {
           router.push("/");
+          if (onClose) onClose();
         }, 2000);
-      } catch (err) {
-        setSnackbarMessage(err.response?.data?.message || "Login failed!");
-        setSnackbarSeverity("error");
-        setOpenSnackbar(true);
-      } finally {
-        setLoading(false);
       }
-    }, 1000);
+
+    } catch (error) {
+      // This will only log to console, not show to user
+      console.log("Login failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseSnackbar = () => {

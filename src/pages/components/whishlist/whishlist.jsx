@@ -97,39 +97,39 @@ const Wishlist = () => {
       }}
     >
       {items.length !== 0 ? (
-        items.map((item) => (
-          <>
-            <Typography
-              variant="h4"
-              align="center"
-              gutterBottom
-              style={{ color: "#333333", marginBottom: "30px" }}
-            >
-              Your Wishlist
-            </Typography>
-            <TableContainer
-              component={Paper}
-              style={{ overflowX: "auto", width: "90%" }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow style={{ backgroundColor: "#FF6F61" }}>
-                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                      Image
-                    </TableCell>
-                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                      Product Name
-                    </TableCell>
-                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                      Price
-                    </TableCell>
-                    <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                      Actions
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <AnimatePresence>
+        <>
+          <Typography
+            variant="h4"
+            align="center"
+            gutterBottom
+            style={{ color: "#333333", marginBottom: "30px" }}
+          >
+            Your Wishlist
+          </Typography>
+          <TableContainer
+            component={Paper}
+            style={{ overflowX: "auto", width: "90%" }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow style={{ backgroundColor: "#FF6F61" }}>
+                  <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                    Image
+                  </TableCell>
+                  <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                    Product Name
+                  </TableCell>
+                  <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                    Price
+                  </TableCell>
+                  <TableCell style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <AnimatePresence>
+                  {items.map((item) => (
                     <motion.tr
                       key={item._id}
                       initial={{ opacity: 0, x: -50 }}
@@ -196,12 +196,12 @@ const Wishlist = () => {
                         </IconButton>
                       </TableCell>
                     </motion.tr>
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </>
-        ))
+                  ))}
+                </AnimatePresence>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       ) : (
         <Typography
           variant="h4"

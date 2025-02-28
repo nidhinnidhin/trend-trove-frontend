@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { useRouter } from "next/router";
 import { useFilter } from "@/context/filterContext";
 import {
@@ -107,7 +107,146 @@ const StyledEyeIcon = styled(IconButton)`
   }
 `;
 
-const ListProducts = ({
+const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, handleMouseLeave, handleProductDetail, cardVariants }) => {
+  return (
+    <Grid item xs={12} sm={6} md={4} lg={3}>
+      <motion.div
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: index * 0.1, duration: 0.5 }}
+      >
+        <Grid
+          sx={{
+            height: "520px",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {product.isOfferActive &&
+            product.discountPercentage > 0 && (
+              <OfferBadge
+                label={`${product.discountPercentage}% OFF`}
+                sx={{
+                  "& .MuiChip-label": {
+                    padding: "0 4px",
+                    fontSize: "0.575rem",
+                    lineHeight: "1.2",
+                  },
+                }}
+              />
+            )}
+
+          <Box sx={{ position: "relative" }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0 }} 
+              transition={{
+                duration: 0.6, 
+                ease: "easeInOut",
+              }}
+            >
+              <CardMedia
+                component="img"
+                onClick={() => handleProductDetail(product.id)}
+                image={
+                  hoveredProductId === product.id
+                    ? product.subImage 
+                    : product.image 
+                }
+                alt={product.title}
+                sx={{
+                  height: 400,
+                  objectFit: "cover",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={() => handleMouseEnter(product.id)} 
+                onMouseLeave={handleMouseLeave} 
+              />
+            </motion.div>
+          </Box>
+
+          <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                color: '#333',
+                fontSize: '16px',
+              }}
+            >
+              {product.title.slice(0, 40)}...
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "10px",
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    color: '#333',
+                    fontSize: '16px',
+                  }}
+                >
+                  ₹{product.price.toFixed(1)}
+                </Typography>
+                {product.isOfferActive &&
+                  product.originalPrice > product.price && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        textDecoration: "line-through",
+                        marginLeft: "4px",
+                      }}
+                    >
+                      ₹{product.originalPrice}
+                    </Typography>
+                  )}
+              </Box>
+              <Box sx={{ display: "flex", gap: "5px" }}>
+                {product.colorImages.map((colorVariant) => {
+                  console.log("COLORRRR", colorVariant);
+
+                  return (
+                    <img
+                      key={colorVariant.color}
+                      src={colorVariant}
+                      alt={colorVariant.color}
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "50%",
+                        border: "2px solid #ff6f61",
+                        cursor: "pointer",
+                        objectFit: "contain",
+                      }}
+                      title={colorVariant.color}
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
+          </CardContent>
+        </Grid>
+      </motion.div>
+    </Grid>
+  );
+});
+
+ProductCard.displayName = 'ProductCard';
+
+const ListProducts = memo(({
   products,
   totalPages,
   currentPage,
@@ -132,15 +271,32 @@ const ListProducts = ({
     fetchCategories();
   }, []);
 
-  const handleCategoryClick = (category) => {
+  // Memoize handlers
+  const handleCategoryClick = useCallback((category) => {
     updateFilters({ categories: [category] });
-  };
+  }, [updateFilters]);
 
-  const handleSearchChange = (event) => {
+  const handleSearchChange = useCallback((event) => {
     setSearchQuery(event.target.value);
-  };
+  }, []);
 
-  const filterProducts = (products) => {
+  const handleMouseEnter = useCallback((productId) => {
+    setHoveredProductId(productId);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredProductId(null);
+  }, []);
+
+  const handleProductDetail = useCallback((id) => {
+    router.push(`/product/${id}`);
+  }, [router]);
+
+  const handlePageChange = useCallback((event, value) => {
+    onPageChange(value);
+  }, [onPageChange]);
+
+  const filterProducts = useCallback((products) => {
     return products.filter((product) => {
       if (
         searchQuery &&
@@ -189,9 +345,9 @@ const ListProducts = ({
 
       return true;
     });
-  };
+  }, [filterState, searchQuery]);
 
-  const sortProducts = (products) => {
+  const sortProducts = useCallback((products) => {
     const sorted = [...products];
     switch (filterState.sortBy) {
       case "asc":
@@ -203,29 +359,17 @@ const ListProducts = ({
       default:
         return sorted;
     }
-  };
+  }, [filterState.sortBy]);
 
   const calculateDiscount = (originalPrice, currentPrice) => {
     return Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
   };
 
-  const filteredAndSortedProducts = sortProducts(filterProducts(products));
-
-  const handleProductDetail = (id) => {
-    router.push(`/product/${id}`);
-  };
-
-  const handlePageChange = (event, value) => {
-    onPageChange(value);
-  };
-
-  const handleMouseEnter = (productId) => {
-    setHoveredProductId(productId);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredProductId(null);
-  };
+  // Memoize the filtered and sorted products
+  const filteredAndSortedProducts = React.useMemo(() => 
+    sortProducts(filterProducts(products)),
+    [products, sortProducts, filterProducts]
+  );
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -287,144 +431,18 @@ const ListProducts = ({
           </StyledWrapper>
 
           <Grid container spacing={1}>
-            {filteredAndSortedProducts.map((product, index) => {
-              console.log("Productttttttt", product);
-
-              return (
-                <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-                  <motion.div
-                    variants={cardVariants}
-                    initial="hidden"
-                    animate="visible"
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
-                  >
-                    <Grid
-                      sx={{
-                        height: "520px",
-                        display: "flex",
-                        flexDirection: "column",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {product.isOfferActive &&
-                        product.discountPercentage > 0 && (
-                          <OfferBadge
-                            label={`${product.discountPercentage}% OFF`}
-                            sx={{
-                              "& .MuiChip-label": {
-                                padding: "0 4px",
-                                fontSize: "0.575rem",
-                                lineHeight: "1.2",
-                              },
-                            }}
-                          />
-                        )}
-
-                      <Box sx={{ position: "relative" }}>
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }} 
-                          exit={{ opacity: 0 }} 
-                          transition={{
-                            duration: 0.6, 
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <CardMedia
-                            component="img"
-                            onClick={() => handleProductDetail(product.id)}
-                            image={
-                              hoveredProductId === product.id
-                                ? product.subImage 
-                                : product.image 
-                            }
-                            alt={product.title}
-                            sx={{
-                              height: 400,
-                              objectFit: "cover",
-                              cursor: "pointer",
-                            }}
-                            onMouseEnter={() => handleMouseEnter(product.id)} 
-                            onMouseLeave={handleMouseLeave} 
-                          />
-                        </motion.div>
-                      </Box>
-
-                      <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-                        <Typography
-                          variant="h6"
-                          gutterBottom
-                          sx={{
-                            fontWeight: 600,
-                            color: '#333',
-                            fontSize: '16px',
-                          }}
-                        >
-                          {product.title.slice(0, 40)}...
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginTop: "10px",
-                          }}
-                        >
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontWeight: 600,
-                                color: '#333',
-                                fontSize: '16px',
-                              }}
-                            >
-                              ₹{product.price.toFixed(1)}
-                            </Typography>
-                            {product.isOfferActive &&
-                              product.originalPrice > product.price && (
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    color: "#666",
-                                    textDecoration: "line-through",
-                                    marginLeft: "4px",
-                                  }}
-                                >
-                                  ₹{product.originalPrice}
-                                </Typography>
-                              )}
-                          </Box>
-                          <Box sx={{ display: "flex", gap: "5px" }}>
-                            {product.colorImages.map((colorVariant) => {
-                              console.log("COLORRRR", colorVariant);
-
-                              return (
-                                <img
-                                  key={colorVariant.color}
-                                  src={colorVariant}
-                                  alt={colorVariant.color}
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "50%",
-                                    border: "2px solid #ff6f61",
-                                    cursor: "pointer",
-                                    objectFit: "contain",
-                                  }}
-                                  title={colorVariant.color}
-                                />
-                              );
-                            })}
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Grid>
-                  </motion.div>
-                </Grid>
-              );
-            })}
+            {filteredAndSortedProducts.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                index={index}
+                hoveredProductId={hoveredProductId}
+                handleMouseEnter={handleMouseEnter}
+                handleMouseLeave={handleMouseLeave}
+                handleProductDetail={handleProductDetail}
+                cardVariants={cardVariants}
+              />
+            ))}
           </Grid>
           <Box
             sx={{
@@ -458,6 +476,8 @@ const ListProducts = ({
       )}
     </Box>
   );
-};
+});
+
+ListProducts.displayName = 'ListProducts';
 
 export default ListProducts;

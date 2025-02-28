@@ -68,6 +68,7 @@ const SignupDrawer = ({ open, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
 
   const validateForm = () => {
     // Check if all fields are filled
@@ -157,7 +158,7 @@ const SignupDrawer = ({ open, onClose }) => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:9090/api/otp/send-otp", { email });
+      await axiosInstance.post("/otp/send-otp", { email });
       setOtpModalOpen(true);
     } catch (err) {
       // Handle specific error messages from backend
@@ -171,27 +172,41 @@ const SignupDrawer = ({ open, onClose }) => {
   };
 
   const handleOtpVerificationSuccess = async () => {
-    const formData = new FormData();
-    formData.append("firstname", firstName);
-    formData.append("lastname", lastName);
-    formData.append("username", userName);
-    formData.append("email", email);
-    formData.append("image", image);
-    formData.append("password", password);
-    formData.append("confirmpassword", confirmPassword);
-
-    setLoading(true);
     try {
-      const response = await axiosInstance.post("/users/register", formData);
-      setSnackbarMessage("Registration successful!");
+      setLoading(true);
+      
+      const formData = new FormData();
+      formData.append("firstname", firstName);
+      formData.append("lastname", lastName);
+      formData.append("username", userName);
+      formData.append("email", email);
+      formData.append("image", image);
+      formData.append("password", password);
+      formData.append("confirmpassword", confirmPassword);
+      
+      if (referralCode && referralCode.trim()) {
+        formData.append("referralCode", referralCode.trim().toUpperCase());
+      }
+
+      const response = await axiosInstance.post("/users/register", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Registration response:', response.data);
+
+      setSnackbarMessage(response.data.message);
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
+
       localStorage.setItem("usertoken", response.data.token);
       setTimeout(() => {
         router.push("/");
       }, 2000);
+
     } catch (err) {
-      // Handle specific backend error messages
+      console.error("Registration error:", err);
       const errorMessage = err.response?.data?.message || "Registration failed";
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
@@ -371,6 +386,15 @@ const SignupDrawer = ({ open, onClose }) => {
             ),
           }}
           sx={textFieldStyle}
+        />
+
+        <TextField
+          label="Referral Code (Optional)"
+          fullWidth
+          value={referralCode}
+          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+          sx={textFieldStyle}
+          placeholder="Enter referral code if you have one"
         />
 
         <Button

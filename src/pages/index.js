@@ -15,6 +15,7 @@ import CategoryCarousel from "./components/categoryCarousal";
 import NewArrival from "./components/newArivals";
 import TrendingWears from "./components/trendingWears";
 import GenderFilter from "./components/genderFilter";
+import axiosInstance from '@/utils/axiosInstance';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -25,10 +26,8 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "http://localhost:9090/api/products/get?page=1&limit=12"
-        );
-        const data = await response.json();
+        const response = await axiosInstance.get('products/get?page=1&limit=12');
+        const data = response.data;
         const transformedProducts = data.products.map((product) => {
           const variant = product.variants[0];
           const firstSize = variant.sizes[0];

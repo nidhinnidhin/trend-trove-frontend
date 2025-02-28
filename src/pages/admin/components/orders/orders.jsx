@@ -72,12 +72,7 @@ const Orders = () => {
     try {
       const response = await axiosInstance.patch(
         `/checkout/update-order-status/${orderId}/${itemId}`,
-        { newStatus },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { newStatus }
       );
 
       if (response.data.success) {
@@ -103,9 +98,10 @@ const Orders = () => {
         });
       }
     } catch (error) {
+      console.error("Error updating status:", error);
       setSnackbar({
         open: true,
-        message: "Error updating item status",
+        message: error.response?.data?.message || "Error updating item status",
         severity: "error",
       });
     }
