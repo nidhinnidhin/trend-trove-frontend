@@ -104,7 +104,7 @@ const Filter = () => {
           </Box>
         )}
 
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{marginTop:"100px"}}>
           Price Range
         </Typography>
         <Slider

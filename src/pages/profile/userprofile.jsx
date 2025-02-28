@@ -67,7 +67,7 @@ const UserProfilePage = () => {
     totalAmount: 0,
     returnedOrders: [],
     cancelledOrders: [],
-    referralEarnings: 0
+    referralEarnings: 0,
   });
 
   useEffect(() => {
@@ -80,26 +80,37 @@ const UserProfilePage = () => {
       }
 
       try {
-        const [userResponse, addressesResponse, ordersResponse, cartResponse, walletResponse] =
-          await Promise.allSettled([
-            axiosInstance.get("/users/profile"),
-            axiosInstance.get("/address/get-address"),
-            axiosInstance.get("/checkout/get-orders"),
-            axiosInstance.get("/cart/get-cart"),
-            axiosInstance.get("/wallet/details")
-          ]);
+        const [
+          userResponse,
+          addressesResponse,
+          ordersResponse,
+          cartResponse,
+          walletResponse,
+        ] = await Promise.allSettled([
+          axiosInstance.get("/users/profile"),
+          axiosInstance.get("/address/get-address"),
+          axiosInstance.get("/checkout/get-orders"),
+          axiosInstance.get("/cart/get-cart"),
+          axiosInstance.get("/wallet/details"),
+        ]);
 
         if (userResponse.status === "fulfilled" && userResponse.value.data) {
           setUser(userResponse.value.data.user);
         }
 
-        if (addressesResponse.status === "fulfilled" && addressesResponse.value?.data) {
+        if (
+          addressesResponse.status === "fulfilled" &&
+          addressesResponse.value?.data
+        ) {
           setAddresses(addressesResponse.value.data.addresses || []);
         }
 
-        if (ordersResponse.status === "fulfilled" && ordersResponse.value?.data) {
+        if (
+          ordersResponse.status === "fulfilled" &&
+          ordersResponse.value?.data
+        ) {
           setOrders(ordersResponse.value.data.orders || []);
-          
+
           // Process orders for wallet data
           const orders = ordersResponse.value.data.orders || [];
           const returnedOrders = orders.filter(
@@ -114,16 +125,16 @@ const UserProfilePage = () => {
               order.orderStatus === "Cancelled"
           );
 
-          const totalOrderAmount = [...returnedOrders, ...cancelledOrders].reduce(
-            (sum, order) => sum + (order.payment?.amount || 0),
-            0
-          );
+          const totalOrderAmount = [
+            ...returnedOrders,
+            ...cancelledOrders,
+          ].reduce((sum, order) => sum + (order.payment?.amount || 0), 0);
 
-          setWalletData(prev => ({
+          setWalletData((prev) => ({
             ...prev,
             returnedOrders,
             cancelledOrders,
-            totalAmount: totalOrderAmount
+            totalAmount: totalOrderAmount,
           }));
         }
 
@@ -132,20 +143,22 @@ const UserProfilePage = () => {
         }
 
         // Handle wallet data
-        if (walletResponse.status === "fulfilled" && walletResponse.value?.data) {
+        if (
+          walletResponse.status === "fulfilled" &&
+          walletResponse.value?.data
+        ) {
           const { balance, transactions } = walletResponse.value.data;
           const referralEarnings = transactions
-            .filter(t => t.description.toLowerCase().includes('referral'))
+            .filter((t) => t.description.toLowerCase().includes("referral"))
             .reduce((sum, t) => sum + t.amount, 0);
 
-          setWalletData(prev => ({
+          setWalletData((prev) => ({
             ...prev,
             balance,
             transactions: transactions || [],
-            referralEarnings
+            referralEarnings,
           }));
         }
-
       } catch (error) {
         console.error("Error fetching user data:", error);
         setError("Failed to load user data. Please try again later.");
@@ -240,7 +253,9 @@ const UserProfilePage = () => {
     switch (selectedSection) {
       case "profile":
         return (
-          <Card sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3 }}>
+          <Card
+            sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3 }}
+          >
             <CardContent>
               {/* Existing Profile Header */}
               <Box
@@ -353,9 +368,10 @@ const UserProfilePage = () => {
                     >
                       <ShareIcon /> Referral Program
                     </Typography>
-                    
+
                     <Typography variant="body2" sx={{ color: "#ccc", mb: 2 }}>
-                      Share your referral code and earn ₹500 when friends sign up!
+                      Share your referral code and earn ₹500 when friends sign
+                      up!
                     </Typography>
 
                     <Box
@@ -369,7 +385,10 @@ const UserProfilePage = () => {
                       }}
                     >
                       <Box flexGrow={1}>
-                        <Typography variant="subtitle2" sx={{ color: "#999", mb: 0.5 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: "#999", mb: 0.5 }}
+                        >
                           Your Referral Code
                         </Typography>
                         <Typography
@@ -406,16 +425,25 @@ const UserProfilePage = () => {
                     </Box>
 
                     {/* Show referral earnings if any */}
-                    {walletData?.transactions?.some(t => 
-                      t.description.includes('referral')
+                    {walletData?.transactions?.some((t) =>
+                      t.description.includes("referral")
                     ) && (
-                      <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                      <Box
+                        sx={{
+                          mt: 2,
+                          pt: 2,
+                          borderTop: "1px solid rgba(255,255,255,0.1)",
+                        }}
+                      >
                         <Typography variant="subtitle2" sx={{ color: "#999" }}>
                           Total Referral Earnings
                         </Typography>
                         <Typography
                           variant="h6"
-                          sx={{ color: "rgb(237, 161, 20)", fontWeight: "bold" }}
+                          sx={{
+                            color: "rgb(237, 161, 20)",
+                            fontWeight: "bold",
+                          }}
                         >
                           ₹{walletData.referralEarnings || 0}
                         </Typography>
@@ -747,97 +775,265 @@ const UserProfilePage = () => {
           </TableContainer>
         );
       case "wallet":
+        const allTransactions = [
+          // Regular wallet transactions
+          ...walletData.transactions.map((transaction) => ({
+            date: transaction.date,
+            description: transaction.description,
+            type: transaction.type,
+            amount: transaction.amount,
+          })),
+          // Returned orders
+          ...(walletData.returnedOrders || [])
+            .map((order) =>
+              order.items
+                .filter(
+                  (item) =>
+                    item.status === "Returned" ||
+                    (item.returnRequested &&
+                      item.returnStatus === "Return Approved")
+                )
+                .map((item) => ({
+                  date: order.orderDate,
+                  description: `Refund for returned item: ${item.productName}`,
+                  type: "credit",
+                  amount: item.price * item.quantity,
+                  status: "Returned",
+                }))
+            )
+            .flat(),
+          // Cancelled orders with online payment
+          ...(walletData.cancelledOrders || [])
+            .map((order) =>
+              order.items
+                .filter((item) => item.status === "Cancelled")
+                .map((item) => ({
+                  date: order.orderDate,
+                  description: `Refund for cancelled order: ${item.productName}`,
+                  type: "credit",
+                  amount: item.price * item.quantity,
+                  status: "Cancelled",
+                }))
+            )
+            .flat(),
+        ];
+        
+        // Calculate total wallet balance by summing all amounts in the transactions
+        const totalWalletBalance = allTransactions.reduce(
+          (sum, transaction) =>
+            transaction.type === "credit"
+              ? sum + transaction.amount
+              : sum - transaction.amount,
+          0
+        );
+        
+        // Update wallet data with the calculated total balance
+        const updatedWalletData = {
+          ...walletData,
+          totalWalletBalance,
+        };
         return (
           <Card sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2 }}>
             <CardContent>
               {/* Wallet Balance */}
               <Box
                 sx={{
-                  p: 3,
-                  background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                  borderRadius: 2,
-                  mb: 3,
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  mb: 3,
+                  p: 3,
+                  bgcolor: "rgba(255, 255, 255, 0.05)",
+                  borderRadius: 2,
                 }}
               >
                 <Box>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom sx={{ color: "#fff" }}>
                     Wallet Balance
                   </Typography>
-                  <Typography variant="h4" fontWeight="bold">
-                    ₹{walletData.balance || 0}
-                  </Typography>
+                  <Typography
+            variant="h4"
+            fontWeight="bold"
+            sx={{ color: "#4CAF50" }}
+          >
+            ₹{updatedWalletData.totalWalletBalance || 0}
+          </Typography>
                 </Box>
-                <AccountBalanceWalletIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                <AccountBalanceWalletIcon
+                  sx={{ fontSize: 40, color: "#4CAF50" }}
+                />
               </Box>
 
-              {/* Add Referral Section */}
-              <Box sx={{ mt: 4, mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Referral Earnings
+              {/* Pending Refunds Alert */}
+              {updatedWalletData.pendingRefunds > 0 && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    bgcolor: "rgba(255, 152, 0, 0.15)",
+                    borderRadius: 1,
+                    border: "1px solid rgba(255, 152, 0, 0.3)",
+                  }}
+                >
+                  <Typography variant="body1" sx={{ color: "#FFA726" }}>
+                    Pending Refunds: ₹{updatedWalletData.pendingRefunds}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Transaction History */}
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom sx={{ color: "#90CAF9" }}>
+                  Transaction History
                 </Typography>
-                <Box sx={{ 
-                  p: 3, 
-                  bgcolor: "rgba(33, 150, 243, 0.1)", 
-                  borderRadius: 2 
-                }}>
-                  <Typography variant="body1">
-                    Total Referral Earnings: ₹
-                    {(walletData.transactions || [])
-                      .filter(t => t?.description?.toLowerCase().includes('referral'))
-                      .reduce((sum, t) => sum + (t?.amount || 0), 0)}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Separate Referral Transactions */}
-              <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Referral Transactions
-              </Typography>
-              <TableContainer
-                sx={{
-                  maxHeight: 400,
-                  bgcolor: "#262626",
-                  borderRadius: 2,
-                  mb: 3
-                }}
-              >
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Date</TableCell>
-                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Description</TableCell>
-                      <TableCell sx={{ bgcolor: "#333", color: "white" }}>Amount</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(walletData.transactions || [])
-                      .filter(t => t?.description?.toLowerCase().includes('referral'))
-                      .map((transaction, index) => (
-                        <TableRow key={index}>
-                          <TableCell sx={{ color: "white" }}>
-                            {new Date(transaction.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell sx={{ color: "white" }}>
-                            {transaction.description}
-                          </TableCell>
-                          <TableCell sx={{ color: "white" }}>
-                            ₹{transaction.amount}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    {(!walletData.transactions || walletData.transactions.length === 0) && (
+                <TableContainer
+                  sx={{
+                    bgcolor: "rgba(255, 255, 255, 0.05)",
+                    borderRadius: 2,
+                    "& .MuiTableCell-root": {
+                      color: "#fff",
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                    },
+                  }}
+                >
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={3} sx={{ color: "white", textAlign: "center" }}>
-                          No referral transactions found
+                        <TableCell
+                          sx={{ fontWeight: "bold", color: "#90CAF9" }}
+                        >
+                          Date
+                        </TableCell>
+                        <TableCell
+                          sx={{ fontWeight: "bold", color: "#90CAF9" }}
+                        >
+                          Description
+                        </TableCell>
+                        <TableCell
+                          sx={{ fontWeight: "bold", color: "#90CAF9" }}
+                        >
+                          Type
+                        </TableCell>
+                        <TableCell
+                          sx={{ fontWeight: "bold", color: "#90CAF9" }}
+                          align="right"
+                        >
+                          Amount
                         </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {/* Combine all transactions including refunds and returns */}
+                      {[
+                        // Regular wallet transactions
+                        ...updatedWalletData.transactions.map(
+                          (transaction) => ({
+                            date: transaction.date,
+                            description: transaction.description,
+                            type: transaction.type,
+                            amount: transaction.amount,
+                          })
+                        ),
+                        // Returned orders
+                        ...(updatedWalletData.returnedOrders || [])
+                          .map((order) =>
+                            order.items
+                              .filter(
+                                (item) =>
+                                  item.status === "Returned" ||
+                                  (item.returnRequested &&
+                                    item.returnStatus === "Return Approved")
+                              )
+                              .map((item) => ({
+                                date: order.orderDate,
+                                description: `Refund for returned item: ${item.productName}`,
+                                type: "credit",
+                                amount: item.price * item.quantity,
+                                status: "Returned",
+                              }))
+                          )
+                          .flat(),
+                        // Cancelled orders with online payment
+                        ...(updatedWalletData.cancelledOrders || [])
+                          .map((order) =>
+                            order.items
+                              .filter((item) => item.status === "Cancelled")
+                              .map((item) => ({
+                                date: order.orderDate,
+                                description: `Refund for cancelled order: ${item.productName}`,
+                                type: "credit",
+                                amount: item.price * item.quantity,
+                                status: "Cancelled",
+                              }))
+                          )
+                          .flat(),
+                      ]
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .map((transaction, index) => (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              "&:hover": {
+                                bgcolor: "rgba(255, 255, 255, 0.05)",
+                              },
+                            }}
+                          >
+                            <TableCell sx={{ color: "#E0E0E0" }}>
+                              {new Date(transaction.date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell sx={{ color: "#E0E0E0" }}>
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={transaction.type}
+                                color={
+                                  transaction.type === "credit"
+                                    ? "success"
+                                    : "error"
+                                }
+                                size="small"
+                                sx={{
+                                  color: "#fff",
+                                  fontWeight: "bold",
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{
+                                color:
+                                  transaction.type === "credit"
+                                    ? "#4CAF50"
+                                    : "#F44336",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              ₹{transaction.amount}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+
+              {/* No Transactions Message */}
+              {!updatedWalletData.transactions?.length &&
+                !updatedWalletData.returnedOrders?.length &&
+                !updatedWalletData.cancelledOrders?.length && (
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      py: 4,
+                      color: "#90CAF9",
+                    }}
+                  >
+                    <Typography variant="body1">
+                      No transactions found
+                    </Typography>
+                  </Box>
+                )}
             </CardContent>
           </Card>
         );

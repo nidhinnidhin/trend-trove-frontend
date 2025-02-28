@@ -160,8 +160,11 @@ const CheckoutPage = () => {
       };
 
       // Create checkout first
-      const checkoutResponse = await axiosInstance.post("/checkout/create-checkout", checkoutPayload);
-      
+      const checkoutResponse = await axiosInstance.post(
+        "/checkout/create-checkout",
+        checkoutPayload
+      );
+
       if (!checkoutResponse.data.order?._id) {
         throw new Error("Failed to create checkout");
       }
@@ -188,7 +191,7 @@ const CheckoutPage = () => {
       const response = await axiosInstance.post(`/payment/create-order`, {
         amount: Math.round(previewTotal * 100),
         currency: "INR",
-        checkoutId: checkoutId // Pass the checkoutId here
+        checkoutId: checkoutId, // Pass the checkoutId here
       });
 
       const orderData = response.data;
@@ -206,12 +209,14 @@ const CheckoutPage = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              checkoutId: checkoutId // Pass the checkoutId here
+              checkoutId: checkoutId, // Pass the checkoutId here
             });
 
             if (verifyResponse.data.status === "success") {
               await clearCart();
-              setSnackbarMessage("Payment successful! Redirecting to orders...");
+              setSnackbarMessage(
+                "Payment successful! Redirecting to orders..."
+              );
               setSnackbarOpen(true);
               router.push("/orders/orders");
             }
@@ -226,11 +231,11 @@ const CheckoutPage = () => {
             try {
               await axiosInstance.post(`/payment/cancel`, {
                 orderId: orderData.id,
-                checkoutId: checkoutId 
+                checkoutId: checkoutId,
               });
               setSnackbarMessage("Payment cancelled");
               setSnackbarOpen(true);
-              router.push('/orders/orders')
+              router.push("/orders/orders");
             } catch (error) {
               console.error("Failed to handle payment cancellation:", error);
             }
@@ -250,7 +255,9 @@ const CheckoutPage = () => {
       razorpayInstance.open();
     } catch (error) {
       console.error("Payment initiation failed:", error);
-      setSnackbarMessage(error.response?.data?.message || "Payment initiation failed");
+      setSnackbarMessage(
+        error.response?.data?.message || "Payment initiation failed"
+      );
       setSnackbarOpen(true);
       setLoading(false);
     }
@@ -275,27 +282,25 @@ const CheckoutPage = () => {
       };
 
       const token = localStorage.getItem("usertoken");
-      const response = await fetch(
-        "http://localhost:9090/api/checkout/create-checkout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(checkoutPayload),
-        }
-      );
+      try {
+        const response = await axiosInstance.post(
+          "/checkout/create-checkout",
+          checkoutPayload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      if (!response.ok) {
-        throw new Error("Checkout failed");
+        await clearCart();
+
+        setSnackbarMessage("Order placed successfully!");
+        setSnackbarOpen(true);
+        router.push("/orders/orders");
+      } catch (error) {
+        console.error("Checkout failed:", error);
       }
-
-      await clearCart();
-
-      setSnackbarMessage("Order placed successfully!");
-      setSnackbarOpen(true);
-      router.push("/orders/orders");
     } catch (error) {
       console.error("Error during checkout:", error);
       setSnackbarMessage("Failed to place order: " + error.message);

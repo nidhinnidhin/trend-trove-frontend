@@ -281,7 +281,7 @@ const OrdersPage = () => {
         setOrders((prevOrders) =>
           prevOrders.map((order) => {
             if (order.orderId === selectedOrder) {
-              return {
+              const updatedOrder = {
                 ...order,
                 items: order.items.map((item) =>
                   item.itemId === selectedItem
@@ -294,6 +294,7 @@ const OrdersPage = () => {
                     : item
                 ),
               };
+              return updatedOrder;
             }
             return order;
           })
@@ -325,7 +326,7 @@ const OrdersPage = () => {
         setOrders((prevOrders) =>
           prevOrders.map((order) => {
             if (order.orderId === selectedOrder) {
-              return {
+              const updatedOrder = {
                 ...order,
                 items: order.items.map((item) =>
                   item.itemId === selectedItem
@@ -337,6 +338,7 @@ const OrdersPage = () => {
                     : item
                 ),
               };
+              return updatedOrder;
             }
             return order;
           })
