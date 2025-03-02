@@ -57,6 +57,7 @@ const Slider = () => {
         width: "100%",
         backgroundColor: "#000",
         overflow: "hidden",
+        marginTop:"50px"
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -238,7 +239,7 @@ const Slider = () => {
       </Box>
 
       {/* Slide Indicators */}
-      <Box
+      {/* <Box
         sx={{
           position: "absolute",
           bottom: { xs: "20px", md: "40px" },
@@ -262,10 +263,10 @@ const Slider = () => {
             }}
           />
         ))}
-      </Box>
+      </Box> */}
 
       {/* Progress Bar */}
-      <Box
+      {/* <Box
         sx={{
           position: "absolute",
           bottom: 0,
@@ -284,7 +285,7 @@ const Slider = () => {
             backgroundColor: "#FFA726",
           }}
         />
-      </Box>
+      </Box> */}
     </Box>
   );
 };

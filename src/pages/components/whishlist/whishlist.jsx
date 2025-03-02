@@ -14,6 +14,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,12 +24,16 @@ import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
 import { useDispatch } from "react-redux";
 import { setWishlistLength } from "@/redux/features/wishlistSlice";
+import { setCartLength } from "@/redux/features/cartSlice";
 
 const Wishlist = () => {
   const dispatch = useDispatch();
   const [items, setItems] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -83,6 +89,45 @@ const Wishlist = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedItem(null);
+  };
+
+  const handleMoveToCart = async (item) => {
+    try {
+      // Check if item is out of stock
+      if (item.sizeVariant.stock <= 0) {
+        setSnackbarMessage("Sorry, this product is out of stock!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // Add to cart if in stock
+      const cartData = {
+        productId: item.product._id,
+        variantId: item.variant._id,
+        sizeVariantId: item.sizeVariant._id,
+        quantity: 1,
+      };
+
+      const cartResponse = await axiosInstance.post("/cart/add-to-cart", cartData);
+
+      if (cartResponse.status === 201) {
+        // Update cart count
+        const updatedCartResponse = await axiosInstance.get("/cart/get-cart");
+        if (updatedCartResponse.data.cart) {
+          dispatch(setCartLength(updatedCartResponse.data.cart.items.length));
+        }
+
+        setSnackbarMessage("Product added to cart successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+      setSnackbarMessage("Failed to add item to cart. Please try again.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
   return (
@@ -179,13 +224,14 @@ const Wishlist = () => {
                           variant="contained"
                           startIcon={<ShoppingCartIcon />}
                           style={{
-                            backgroundColor: "#FF6F61",
+                            backgroundColor: item.sizeVariant.stock <= 0 ? "#cccccc" : "#FF6F61",
                             color: "#FFFFFF",
                             marginRight: "10px",
                           }}
                           onClick={() => handleMoveToCart(item)}
+                          disabled={item.sizeVariant.stock <= 0}
                         >
-                          Move to Cart
+                          {item.sizeVariant.stock <= 0 ? "Out of Stock" : "Add to Cart"}
                         </Button>
                         <IconButton
                           aria-label="delete"
@@ -234,6 +280,30 @@ const Wishlist = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Update Snackbar styling */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{
+            width: '100%',
+            backgroundColor: snackbarSeverity === 'success' ? '#333333' : '#f44336',
+            color: '#FFFFFF',
+            '& .MuiAlert-icon': {
+              color: '#FFFFFF'
+            }
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

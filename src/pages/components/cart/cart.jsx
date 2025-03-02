@@ -58,6 +58,9 @@ import { Router, useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
 import axiosInstance from "@/utils/axiosInstance";
+import AddIcon from "@mui/icons-material/Add";
+import { getDeliveryCharge, getUserLocation, deliveryCharges  } from '@/utils/deliveryCharges';
+import LocationConsentBanner from "@/utils/locationConcentBanner";
 
 const EditButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
@@ -122,6 +125,14 @@ function Cart() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
+  const [cartError, setCartError] = useState("")
+  const [deliveryChargeInfo, setDeliveryChargeInfo] = useState({ charge: null, message: '' });
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [userLocation, setUserLocation] = useState(null);
+  const [showLocationConsent, setShowLocationConsent] = useState(false);
+  const [locationPreference, setLocationPreference] = useState(null);
+
 
   const dispatch = useDispatch();
 
@@ -145,6 +156,96 @@ function Cart() {
   }, []);
 
   useEffect(() => {
+    const savedLocationPref = localStorage.getItem('locationPreference');
+    if (savedLocationPref) {
+      setLocationPreference(savedLocationPref);
+      
+      // If user previously agreed to share location, get it automatically
+      if (savedLocationPref === 'allow') {
+        detectUserLocation();
+      }
+    } else {
+      setShowLocationConsent(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cart?.items) {
+      if (userLocation?.city) {
+        updateDeliveryCharge(userLocation.city);
+      } else if (selectedAddress) {
+        updateDeliveryCharge(selectedAddress.city);
+      } else {
+        setDeliveryChargeInfo({ 
+          charge: deliveryCharges.DEFAULT, 
+          message: `Standard delivery charge: ₹${deliveryCharges.DEFAULT}`
+        });
+      }
+    }
+  }, [cart, userLocation, selectedAddress]);
+
+  const handleLocationConsent = (choice) => {
+    setShowLocationConsent(false);
+    setLocationPreference(choice);
+    localStorage.setItem('locationPreference', choice);
+    
+    if (choice === 'allow') {
+      detectUserLocation();
+    }
+  };
+
+  const detectUserLocation = async () => {
+    setIsLoadingLocation(true);
+    setLocationError('');
+    
+    try {
+      const location = await getUserLocation();
+      if (location?.city) {
+        setUserLocation(location);
+        updateDeliveryCharge(location.city);
+        
+        // Show a subtle notification instead of an intrusive alert
+        setSnackbarMessage(`Delivering to ${location.city}, ${location.state || ''}`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        
+        // Save to localStorage for persistence between refreshes
+        localStorage.setItem('userLocation', JSON.stringify(location));
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      setLocationError('Location detection failed. Please select a delivery address.');
+      
+      // Clear any saved location if detection fails
+      localStorage.removeItem('userLocation');
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const handleGetLocation = () => {
+    detectUserLocation();
+  };
+
+  const updateDeliveryCharge = (city, state) => {
+    if (!city) return;
+
+    const location = state ? `${city}, ${state}` : city;
+    
+    const totals = calculateTotals(cart.items);
+    const { charge, message } = getDeliveryCharge(location, totals.finalTotal);
+    
+    setDeliveryChargeInfo({ charge, message });
+
+    if (charge === null) {
+      setLocationError('We couldn\'t determine delivery charges for your location. Please select a delivery address.');
+    } else {
+      setLocationError('');
+    }
+  };
+
+
+  useEffect(() => {
     const fetchCartData = async () => {
       try {
         const response = await axiosInstance.get("/cart/get-cart");
@@ -163,6 +264,14 @@ function Cart() {
 
     fetchCartData();
   }, []);
+
+  // useEffect(() => {
+  //   if (addresses && addresses.length > 0 && !selectedAddress) {
+  //     setSelectedAddress(addresses[0]);
+  //     updateDeliveryCharge(addresses[0].city);
+  //   }
+  //   handleGetLocation();
+  // }, [addresses]);
 
   const handleOpenModal = (item) => {
     setItemToDelete(item);
@@ -265,9 +374,14 @@ function Cart() {
     }
   };
 
-  const handleAddressSelect = (address) => {
-    setSelectedAddress(address);
+  const dismissLocationConsent = () => {
+    setShowLocationConsent(false);
   };
+
+  // const handleAddressSelect = (address) => {
+  //   setSelectedAddress(address);
+    // updateDeliveryCharge(address.city);
+  // };
 
   const handleOpenAddAddressModal = () => {
     setIsAddAddressModalOpen(true);
@@ -330,8 +444,67 @@ function Cart() {
     }
   };
 
+  // const handleGetLocation = async () => {
+  //   setIsLoadingLocation(true);
+  //   setLocationError('');
+    
+  //   try {
+  //     const location = await getUserLocation();
+  //     if (location?.city) {
+  //       setUserLocation(location);
+  //       updateDeliveryCharge(location.city);
+  //       setSnackbarMessage(`Location detected: ${location.city}`);
+  //       setSnackbarOpen(true);
+  //     }
+  //   } catch (error) {
+  //     setLocationError('Please enable location services or select a delivery address');
+  //     console.error('Location error:', error);
+  //   } finally {
+  //     setIsLoadingLocation(false);
+  //   }
+  // };
+
+  // const updateDeliveryCharge = (city) => {
+  //   if (!city || !cart?.items) return;
+
+  //   const totals = calculateTotals(cart.items);
+  //   const { charge, message } = getDeliveryCharge(city, totals.finalTotal);
+  //   setDeliveryChargeInfo({ charge, message });
+  // };
+
+  // const calculateTotals = (items) => {
+  //   if (!items || !Array.isArray(items)) {
+  //     return { totalPrice: 0, discountAmount: 0, finalTotal: 0 };
+  //   }
+
+  //   const itemTotals = items.reduce(
+  //     (acc, item) => {
+  //       const discountedTotal = item.sizeVariant.discountPrice * item.quantity;
+  //       const regularTotal = item.sizeVariant.price * item.quantity;
+  //       const itemDiscount = regularTotal - discountedTotal;
+
+  //       return {
+  //         totalPrice: acc.totalPrice + regularTotal,
+  //         discountAmount: acc.discountAmount + itemDiscount,
+  //         finalTotal: acc.finalTotal + discountedTotal,
+  //       };
+  //     },
+  //     { totalPrice: 0, discountAmount: 0, finalTotal: 0 }
+  //   );
+
+  //   return {
+  //     ...itemTotals,
+  //     deliveryCharge: deliveryChargeInfo.charge || 0,
+  //     grandTotal: itemTotals.finalTotal + (deliveryChargeInfo.charge || 0)
+  //   };
+  // };
+
   const calculateTotals = (items) => {
-    return items.reduce(
+    if (!items || !Array.isArray(items)) {
+      return { totalPrice: 0, discountAmount: 0, finalTotal: 0 };
+    }
+
+    const itemTotals = items.reduce(
       (acc, item) => {
         const discountedTotal = item.sizeVariant.discountPrice * item.quantity;
         const regularTotal = item.sizeVariant.price * item.quantity;
@@ -345,6 +518,21 @@ function Cart() {
       },
       { totalPrice: 0, discountAmount: 0, finalTotal: 0 }
     );
+
+    return {
+      ...itemTotals,
+      deliveryCharge: deliveryChargeInfo.charge || 0,
+      grandTotal: itemTotals.finalTotal + (deliveryChargeInfo.charge || 0)
+    };
+  };
+
+  // Handle address selection - updated to update delivery charges
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address);
+    updateDeliveryCharge(address.city, address.state);
+    
+    // If user selects an address manually, prioritize it over detected location
+    localStorage.setItem('preferredAddressId', address._id);
   };
 
   const handleCheckout = async () => {
@@ -380,7 +568,7 @@ function Cart() {
       cartItems: cart.items,
       totalPrice: totals.finalTotal,
       finalTotal: totals.finalTotal + shippingCost,
-      deliveryCharge: shippingCost,
+      deliveryCharge: deliveryChargeInfo.charge,
       discountAmount: totals.discountAmount,
       selectedAddress: selectedAddress,
     };
@@ -402,6 +590,14 @@ function Cart() {
   return (
     <Container>
       <Header />
+
+      {showLocationConsent && (
+        <LocationConsentBanner 
+          onAccept={() => handleLocationConsent('allow')}
+          onDecline={() => handleLocationConsent('deny')}
+          onClose={dismissLocationConsent}
+        />
+      )}
 
       <Box my={4}>
         <Typography variant="h4" gutterBottom>
@@ -606,187 +802,254 @@ function Cart() {
           </Grid>
 
           <Grid item xs={12} md={3}>
-            {/* <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Have coupon?
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      placeholder="Coupon code"
-                    />
-                  </Grid>
-                  <Grid item>
-                    <Button variant="contained" color="primary">
-                      Apply
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card> */}
+            <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Delivery Information
+              </Typography>
 
-            <Box mt={3}>
-              <Card>
-                <CardContent>
-                  <List>
-                    <ListItem>
-                      <ListItemText primary="Total price:" />
-                      <Typography variant="body1">{`₹ ${
-                        calculateTotals(cart.items).totalPrice
-                      }`}</Typography>
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="Discount:" />
-                      <Typography variant="body1">{`₹ ${
-                        calculateTotals(cart.items).discountAmount
-                      }`}</Typography>
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="Shipping:" />
-                      {calculateTotals(cart.items).finalTotal > 1000 ? (
-                        <Typography variant="body1">Free shipping</Typography>
-                      ) : (
-                        <Typography variant="body1">₹ 40</Typography>
-                      )}
-                    </ListItem>
-                    <Divider />
-                    <ListItem>
-                      <ListItemText primary="Total:" />
-                      <Typography variant="h6">{`₹ ${
-                        calculateTotals(cart.items).finalTotal +
-                        (calculateTotals(cart.items).finalTotal > 1000 ? 0 : 40)
-                      }`}</Typography>
-                    </ListItem>
-                  </List>
-                  <Box textAlign="center" mt={2}>
-                    <img
-                      src="https://t3.ftcdn.net/jpg/09/21/55/16/240_F_921551609_o84jc48ToVS69IZesWxn4F30svtbpepf.jpg"
-                      alt="payments"
-                      height="60"
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
-            <Grid
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "10px 0px",
-              }}
-            >
-              <Button
+              {/* <Button
+                fullWidth
                 variant="outlined"
+                onClick={handleGetLocation}
+                disabled={isLoadingLocation}
                 startIcon={<LocationOnIcon />}
-                sx={{
-                  color: "gray",
-                  borderColor: "black",
-                  textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "rgba(0,0,0,0.05)",
-                    borderColor: "black",
-                    color: "black",
-                  },
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                }}
-                onClick={handleOpenAddAddressModal}
+                sx={{ mb: 2 }}
               >
-                + Addresses
+                {isLoadingLocation ? 'Detecting Location...' : 'Use My Location'}
+              </Button> */}
+
+{(!userLocation && locationPreference !== 'allow') && (
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleGetLocation}
+              disabled={isLoadingLocation}
+              startIcon={<LocationOnIcon />}
+              sx={{ mb: 2 }}
+            >
+              {isLoadingLocation ? 'Detecting Location...' : 'Use My Location'}
+            </Button>
+          )}
+
+          {locationError && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {locationError}
+            </Alert>
+          )}
+
+          {userLocation && (
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+              <LocationOnIcon color="primary" sx={{ mr: 1 }} />
+              <Typography variant="body2">
+                Detected location: {userLocation.city}{userLocation.state ? `, ${userLocation.state}` : ''}
+              </Typography>
+            </Box>
+          )}
+
+          {selectedAddress && (
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Delivering to: {selectedAddress.city}{selectedAddress.state ? `, ${selectedAddress.state}` : ''}
+            </Typography>
+          )}
+
+          <Box sx={{ 
+            p: 1.5, 
+            bgcolor: deliveryChargeInfo.charge === 0 ? '#e8f5e9' : '#f5f5f5', 
+            borderRadius: 1,
+            mb: 2
+          }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Delivery Charge:
+            </Typography>
+            <Typography variant="body1" sx={{ 
+              fontWeight: 'bold', 
+              color: deliveryChargeInfo.charge === 0 ? '#2e7d32' : 'inherit'
+            }}>
+              {deliveryChargeInfo.charge === null 
+                ? 'Calculating...' 
+                : deliveryChargeInfo.charge === 0 
+                  ? 'FREE' 
+                  : `₹${deliveryChargeInfo.charge}`
+              }
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              {deliveryChargeInfo.message}
+            </Typography>
+          </Box>
+                <Divider sx={{ my: 1 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="h6">Total:</Typography>
+                  <Typography variant="h6">
+                    ₹{calculateTotals(cart?.items).grandTotal}
+                  </Typography>
+                </Box>
+              {/* </Box> */}
+
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleCheckout}
+                sx={{
+                  bgcolor: "#333",
+                  "&:hover": { bgcolor: "#555" },
+                }}
+              >
+                Proceed to Checkout
               </Button>
-            </Grid>
+            </Paper>
           </Grid>
         </Grid>
       )}
       {addresses.length > 0 ? (
         <>
-          <Divider />
-          <Typography variant="h6" my={2}>
-            Choose Address
+          <Typography variant="h6" sx={{ mb: 3, color: '#333' }}>
+            Select Delivery Address
           </Typography>
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {addresses.map((address) => (
               <Grid item xs={12} sm={6} md={4} key={address._id}>
                 <Card
-                  variant="outlined"
+                  onClick={() => handleAddressSelect(address)}
                   sx={{
-                    border:
-                      selectedAddress && selectedAddress._id === address._id
-                        ? "1px solid orange"
-                        : "1px solid #ddd",
-                    cursor: "pointer",
-                    transition: "transform 0.3s",
-                    "&:hover": {
-                      transform: "scale(1.05)",
+                    cursor: 'pointer',
+                    height: '100%',
+                    position: 'relative',
+                    transition: 'all 0.3s ease',
+                    border: selectedAddress && selectedAddress._id === address._id
+                      ? '2px solid #FF6F61'
+                      : '1px solid #e0e0e0',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      borderColor: '#FF6F61',
                     },
                   }}
-                  onClick={() => handleAddressSelect(address)}
                 >
                   <CardContent>
-                    <Grid
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography variant="h6">{address.fullName}</Typography>
-                      <Grid>
-                        <EditButton
-                          variant="contained"
-                          startIcon={<EditIcon />}
-                          onClick={handleEditAddress(address)}
-                          disableElevation
-                        >
-                          Edit Address
-                        </EditButton>
-                        <Tooltip title="Delete Address" arrow>
-                          <IconButton
-                            onClick={(e) =>
-                              handleDeleteAddressClick(e, address._id)
-                            }
-                            sx={{ color: "brown", marginLeft: "5px" }}
-                          >
-                            <DeleteForeverRounded />
-                          </IconButton>
-                        </Tooltip>
-                      </Grid>
-                    </Grid>
-                    <Typography variant="h6" color="textSecondary">
-                      Type: {address.addressType}
-                    </Typography>
-                    <Divider sx={{ margin: "10px 0px" }} />
-                    <Typography variant="body2" color="textSecondary">
+                    {selectedAddress && selectedAddress._id === address._id && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          bgcolor: '#FF6F61',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Selected
+                      </Box>
+                    )}
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333' }}>
+                        {address.fullName}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          bgcolor: '#f5f5f5',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          color: '#666',
+                        }}
+                      >
+                        {address.addressType}
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
                       {address.address}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {address.locality}
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                      {address.locality}, {address.city}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {address.city}, {address.state}
+                    <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                      {address.state} - {address.pincode}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Pincode: {address.pincode}
+                    <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                      Mobile: {address.mobileNumber}
+                      {address.alternatePhone && `, Alt: ${address.alternatePhone}`}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Phone: {address.mobileNumber}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Alternate Phone: {address.alternatePhone || ""}
-                    </Typography>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                      <Button
+                        startIcon={<EditIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditAddress(address)(e);
+                        }}
+                        sx={{
+                          color: '#666',
+                          '&:hover': { color: '#FF6F61' },
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <IconButton
+                        onClick={(e) => handleDeleteAddressClick(e, address._id)}
+                        sx={{
+                          color: '#666',
+                          '&:hover': { color: '#d32f2f' },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
             ))}
+
+            {/* Add New Address Card */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Card
+                onClick={handleOpenAddAddressModal}
+                sx={{
+                  height: '100%',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px dashed #e0e0e0',
+                  bgcolor: '#fafafa',
+                  '&:hover': {
+                    borderColor: '#FF6F61',
+                    bgcolor: '#fff',
+                  },
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <AddIcon sx={{ fontSize: 40, color: '#FF6F61', mb: 1 }} />
+                  <Typography variant="subtitle1" sx={{ color: '#666' }}>
+                    Add New Address
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
         </>
       ) : (
-        <Typography>No Address Created</Typography>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
+            No Addresses Found
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={handleOpenAddAddressModal}
+            sx={{
+              bgcolor: '#FF6F61',
+              '&:hover': { bgcolor: '#ff5c4d' },
+            }}
+          >
+            Add New Address
+          </Button>
+        </Box>
       )}
       <Divider />
       <Box my={4}>

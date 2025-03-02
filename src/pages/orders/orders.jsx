@@ -387,7 +387,8 @@ const OrdersPage = () => {
       const response = await axiosInstance.post(`/payment/create-order`, {
         amount: Math.round(order.payment.amount * 100),
         currency: "INR",
-        checkoutId: order.orderId
+        checkoutId: order.orderId,
+        isRetry: true
       });
 
       const orderData = response.data;
@@ -405,10 +406,16 @@ const OrdersPage = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              checkoutId: order.orderId
+              checkoutId: order.orderId,
+              isRetry: true
             });
 
             if (verifyResponse.data.status === "success") {
+              setSnackbar({
+                open: true,
+                message: "Payment successful!",
+                severity: "success",
+              });
               window.location.reload();
             }
           } catch (error) {
@@ -425,7 +432,8 @@ const OrdersPage = () => {
             try {
               await axiosInstance.post(`/payment/cancel`, {
                 orderId: orderData.id,
-                checkoutId: order.orderId
+                checkoutId: order.orderId,
+                status: 'retry_pending'
               });
             } catch (error) {
               console.error("Failed to handle payment cancellation:", error);
@@ -492,6 +500,7 @@ const OrdersPage = () => {
 
       {orders.map((order) => {
         const orderTotal = calculateOrderTotal(order);
+        console.log("Ordered date", order);
         
         return (
           <Accordion 
@@ -527,7 +536,7 @@ const OrdersPage = () => {
                     Order ID: {order.orderId}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Date: {new Date(order.createdAt).toLocaleDateString()}
+                    Date: {new Date(order.orderDate).toLocaleDateString()}
                   </Typography>
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="body2" color="text.secondary">

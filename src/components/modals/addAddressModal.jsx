@@ -15,9 +15,13 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Box,
+  Typography,
 } from "@mui/material";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
   const [addressData, setAddressData] = useState({
@@ -31,6 +35,7 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
     landmark: "",
     alternatePhone: "",
     addressType: "Home",
+    coordinates: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -40,6 +45,9 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
     message: "",
     severity: "success",
   });
+
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const INDIAN_STATES = [
     "Andhra Pradesh",
@@ -142,47 +150,169 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+  const formatDetailedAddress = (addressData) => {
+    const parts = [];
+    if (addressData.road) parts.push(addressData.road);
+    if (addressData.house_number) parts.push(addressData.house_number);
+    if (addressData.suburb) parts.push(addressData.suburb);
+    if (addressData.neighbourhood) parts.push(addressData.neighbourhood);
+    if (addressData.residential) parts.push(addressData.residential);
+    if (addressData.building) parts.push(addressData.building);
 
-    setLoading(true);
+    return parts.filter(Boolean).join(', ');
+  };
+
+  const getCityFromResponse = (addressData) => {
+    // Try different fields that might contain city information
+    return addressData.city || 
+           addressData.town || 
+           addressData.municipality || 
+           addressData.suburb || 
+           addressData.district || 
+           addressData.county ||
+           "";
+  };
+
+  const handleGetCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    setLocationError("");
 
     try {
-      const response = await axiosInstance.post(
-        "/address/add-address",
-        addressData
+      // Get user's geolocation
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+
+      // Use Nominatim API with more detailed parameters
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?` +
+        `format=json&` +
+        `lat=${latitude}&` +
+        `lon=${longitude}&` +
+        `addressdetails=1&` +
+        `zoom=18&` + // Higher zoom level for more detail
+        `namedetails=1&` + // Include name details
+        `accept-language=en` // Ensure English response
       );
 
+      if (!response.ok) {
+        throw new Error('Failed to fetch address details');
+      }
+
+      const data = await response.json();
+      console.log('Nominatim Response:', data); // For debugging
+
+      if (data.address) {
+        // Create a detailed address string
+        const detailedAddress = formatDetailedAddress(data.address);
+        const city = getCityFromResponse(data.address);
+
+        // Map the Nominatim response to our address format
+        const address = {
+          ...addressData, // Keep existing data
+          pincode: data.address.postcode || "",
+          locality: data.address.suburb || 
+                   data.address.neighbourhood || 
+                   data.address.residential || 
+                   "",
+          address: detailedAddress,
+          city: city,
+          state: INDIAN_STATES.find(state => 
+            data.address.state?.toLowerCase().includes(state.toLowerCase())
+          ) || "",
+          coordinates: {
+            latitude,
+            longitude
+          }
+        };
+
+        setAddressData(prev => ({
+          ...prev,
+          ...address
+        }));
+
+        setSnackbar({
+          open: true,
+          message: "Location detected successfully! Please verify the details.",
+          severity: "success"
+        });
+      } else {
+        throw new Error('No address data found');
+      }
+    } catch (error) {
+      console.error("Error getting location:", error);
+      let errorMessage = "Unable to get your location. ";
+      
+      if (error.code === 1) {
+        errorMessage += "Please enable location access in your browser.";
+      } else if (error.code === 2) {
+        errorMessage += "Location unavailable. Please try again.";
+      } else if (error.code === 3) {
+        errorMessage += "Request timed out. Please try again.";
+      } else {
+        errorMessage += "Please try again or enter address manually.";
+      }
+
+      setLocationError(errorMessage);
       setSnackbar({
         open: true,
-        message: response.data.message || "Address added successfully",
-        severity: "success",
+        message: errorMessage,
+        severity: "error"
       });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
 
-      onAddressAdded(response.data.address);
+  // Add this helper function to validate coordinates before saving
+  const validateCoordinates = (coords) => {
+    if (!coords) return false;
+    const { latitude, longitude } = coords;
+    return (
+      typeof latitude === 'number' &&
+      typeof longitude === 'number' &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180
+    );
+  };
 
-      setAddressData({
-        fullName: "",
-        mobileNumber: "",
-        pincode: "",
-        locality: "",
-        address: "",
-        city: "",
-        state: "",
-        landmark: "",
-        alternatePhone: "",
-        addressType: "Home",
-      });
-      onClose();
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const addressPayload = {
+        ...addressData,
+        coordinates: validateCoordinates(addressData.coordinates) 
+          ? addressData.coordinates 
+          : undefined
+      };
+
+      const response = await axiosInstance.post("/address/add-address", addressPayload);
+      
+      if (response.data) {
+        onAddressAdded(response.data.address);
+        setSnackbar({
+          open: true,
+          message: "Address added successfully!",
+          severity: "success"
+        });
+        onClose();
+      }
     } catch (error) {
       setSnackbar({
         open: true,
         message: error.response?.data?.message || "Error adding address",
-        severity: "error",
+        severity: "error"
       });
-      console.error("Error adding address:", error);
     } finally {
       setLoading(false);
     }
@@ -218,7 +348,10 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
             fontWeight: 600,
           }}
         >
-          Add New Address
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LocationOnIcon color="primary" />
+            <Typography variant="h6">Add New Address</Typography>
+          </Box>
         </DialogTitle>
         <DialogContent
           sx={{
@@ -227,6 +360,51 @@ const AddAddressModal = ({ open, onClose, onAddressAdded }) => {
             px: 3,
           }}
         >
+          <Box sx={{ mb: 3, mt: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<LocationOnIcon />}
+              onClick={handleGetCurrentLocation}
+              disabled={isLoadingLocation}
+              sx={{
+                borderColor: '#1a1a1a',
+                color: '#1a1a1a',
+                '&:hover': {
+                  borderColor: '#000000',
+                  backgroundColor: 'rgba(0,0,0,0.04)'
+                },
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
+              {isLoadingLocation ? (
+                <>
+                  <CircularProgress size={20} />
+                  <span>Detecting Location...</span>
+                </>
+              ) : (
+                "Use Current Location"
+              )}
+            </Button>
+            {locationError && (
+              <Typography 
+                color="error" 
+                variant="caption" 
+                sx={{ 
+                  mt: 1, 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  gap: 0.5 
+                }}
+              >
+                <ErrorOutlineIcon fontSize="small" />
+                {locationError}
+              </Typography>
+            )}
+          </Box>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <TextField

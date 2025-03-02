@@ -232,8 +232,9 @@ const CheckoutPage = () => {
               await axiosInstance.post(`/payment/cancel`, {
                 orderId: orderData.id,
                 checkoutId: checkoutId,
+                status: 'retry_pending'
               });
-              setSnackbarMessage("Payment cancelled");
+              setSnackbarMessage("Payment pending. You can retry payment from your orders page.");
               setSnackbarOpen(true);
               router.push("/orders/orders");
             } catch (error) {
@@ -408,8 +409,8 @@ const CheckoutPage = () => {
     return <Typography>Loading...</Typography>;
   }
 
-  const { cartItems, totalPrice, selectedAddress } = checkoutData;
-  const deliveryCharge = totalPrice < 1000 ? 40 : 0;
+  const { cartItems, totalPrice, selectedAddress, deliveryCharge } = checkoutData;
+  // const deliveryCharge = totalPrice < 1000 ? 40 : 0;
   const previewTotal = totalPrice - previewDiscount + deliveryCharge;
 
   return (

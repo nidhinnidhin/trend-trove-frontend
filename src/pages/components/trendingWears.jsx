@@ -180,7 +180,9 @@ const TrendingWears = () => {
 
         <ProductsWrapper
           sx={{
-            transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`
+            transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+            display:"flex",
+            justifyContent:"center"
           }}
         >
           {products.map((product) => (
