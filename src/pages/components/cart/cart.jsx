@@ -589,17 +589,8 @@ function Cart() {
 
   return (
     <Container>
-      <Header />
-
-      {showLocationConsent && (
-        <LocationConsentBanner 
-          onAccept={() => handleLocationConsent('allow')}
-          onDecline={() => handleLocationConsent('deny')}
-          onClose={dismissLocationConsent}
-        />
-      )}
-
-      <Box my={4}>
+      <Header />  
+      <Box my={6} sx={{marginTop:"20px"}}>
         <Typography variant="h4" gutterBottom>
           Cart
         </Typography>
@@ -609,6 +600,13 @@ function Cart() {
           </Alert>
         )}
       </Box>
+      {showLocationConsent && (
+        <LocationConsentBanner 
+          onAccept={() => handleLocationConsent('allow')}
+          onDecline={() => handleLocationConsent('deny')}
+          onClose={dismissLocationConsent}
+        />
+      )}
       {!cart || cart.items.length === 0 ? (
         <>
           <Typography variant="h5" gutterBottom>

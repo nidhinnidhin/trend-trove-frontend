@@ -64,6 +64,8 @@ const LoginForm = () => {
           withCredentials: true,
         }
       );
+      console.log(response);
+      
 
       if (response.data.message === "Login successful") {
         localStorage.setItem("admin-logged", true);

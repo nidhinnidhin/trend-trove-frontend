@@ -21,6 +21,12 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  useEffect(() => {
+    axiosInstance.get("/users/profile")
+    .then((res) => {
+      localStorage.setItem("userId",res.data.user._id);
+    })
+  },[])
 
   useEffect(() => {
     const fetchProducts = async () => {

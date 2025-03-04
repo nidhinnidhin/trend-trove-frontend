@@ -72,6 +72,7 @@ import CouponManagement from "../components/coupons/coupons";
 import OfferManagement from "../components/offers/offfers";
 import BannerManagement from "../components/banners/banners";
 import * as XLSX from 'xlsx';
+import DisplayChat from "../components/chat/displayChat";
 
 const Dashboard = () => {
   const [selectedTopic, setSelectedTopic] = useState("Sales Summary");
@@ -275,11 +276,18 @@ const Dashboard = () => {
 
   const handleConfirmLogout = async () => {
     try {
-      await axiosInstance.get("/admin/logout");
+      await axiosInstance.post("/adminlogout");
+      
       localStorage.removeItem("admin-logged");
+      Cookies.remove('adminToken');
+      
       router.push("/admin/authentication/login");
     } catch (err) {
       console.error("Logout failed:", err);
+      setSnackbarMessage("Logout failed. Please try again.");
+      setSnackbarOpen(true);
+    } finally {
+      setOpenLogoutDialog(false);
     }
   };
 
@@ -477,6 +485,7 @@ const Dashboard = () => {
                 { text: "Coupons", icon: Discount },
                 { text: "Offers", icon: LocalOffer },
                 { text: "Banners", icon: Collections },
+                { text: "Chats", icon: Collections },
               ].map(({ text, icon: Icon }) => (
                 <ListItem
                   button
@@ -791,6 +800,7 @@ const Dashboard = () => {
           {selectedTopic === "Coupons" && <CouponManagement />}
           {selectedTopic === "Offers" && <OfferManagement />}
           {selectedTopic === "Banners" && <BannerManagement />}
+          {selectedTopic === "Chats" && <DisplayChat/>}
 
           {/* Top Products, Categories, and Brands Overview */}
           <Grid container spacing={3}>

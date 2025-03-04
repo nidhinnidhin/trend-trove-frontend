@@ -9,6 +9,7 @@ import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '../utils/createEmotionCache';
 import { setupAxios } from '../utils/setupAxios';
 import { useRouter } from "next/router";
+import ChatBox from "@/components/modals/chatBox";
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -16,6 +17,8 @@ const theme = createTheme();
 
 export default function App({ Component, pageProps, emotionCache = clientSideEmotionCache }) {
   const router = useRouter()
+  const isAdminRoute = router.pathname.startsWith('/admin');
+
   useEffect(() => {
     // Setup global axios configuration
     setupAxios();
@@ -34,6 +37,7 @@ export default function App({ Component, pageProps, emotionCache = clientSideEmo
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <Component {...pageProps} />
+            {!isAdminRoute && <ChatBox />}
           </ThemeProvider>
         </FilterProvider>
       </Provider>

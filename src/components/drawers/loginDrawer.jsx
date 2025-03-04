@@ -103,7 +103,10 @@ const LoginDrawer = ({ onClose }) => {
       const response = await axiosInstance.post("/users/login", {
         email: email.trim(),
         password: password,
-      }).catch((error) => {
+      }
+    )
+      
+      .catch((error) => {
         // Handle specific error cases
         if (error.response) {
           // Server responded with error status

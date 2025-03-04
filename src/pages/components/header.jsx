@@ -197,6 +197,7 @@ const Header = () => {
       
       // Clear localStorage token
       localStorage.removeItem("usertoken");
+      localStorage.removeItem("userId");
       
       // Clear state
       setToken(null);
