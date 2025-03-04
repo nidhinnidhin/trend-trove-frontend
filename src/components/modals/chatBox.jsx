@@ -20,7 +20,10 @@ const ChatBox = () => {
 
   useEffect(() => {
     // Load chat history first
-    loadChatHistory();
+    if(localStorage.getItem("userId")){
+
+      loadChatHistory();
+    }
     
     // Initialize socket connection
     const newSocket = io('http://localhost:9090', {
@@ -39,9 +42,7 @@ const ChatBox = () => {
       const userId = localStorage.getItem('userId');
       if (userId) {
         newSocket.emit('join', userId);
-      } else {
-        setError('User ID not found. Please login again.');
-      }
+      } 
     });
 
     newSocket.on('connect_error', (err) => {

@@ -15,24 +15,28 @@ import CategoryCarousel from "./components/categoryCarousal";
 import NewArrival from "./components/newArivals";
 import TrendingWears from "./components/trendingWears";
 import GenderFilter from "./components/genderFilter";
-import axiosInstance from '@/utils/axiosInstance';
+import axiosInstance from "@/utils/axiosInstance";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-    axiosInstance.get("/users/profile")
-    .then((res) => {
-      localStorage.setItem("userId",res.data.user._id);
-    })
-  },[])
+    let token = localStorage.getItem("usertoken");
+    if (token) {
+      axiosInstance.get("/users/profile").then((res) => {
+        localStorage.setItem("userId", res.data.user._id);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get('products/get?page=1&limit=12');
+        const response = await axiosInstance.get(
+          "products/get?page=1&limit=12"
+        );
         const data = response.data;
         const transformedProducts = data.products.map((product) => {
           const variant = product.variants[0];
@@ -57,7 +61,6 @@ export default function Home() {
 
   return (
     <Grid maxWidth="xl">
-
       <Head>
         <title>E-Commerce Store</title>
         <meta name="description" content="Shop the latest products" />
@@ -70,8 +73,8 @@ export default function Home() {
           <Header />
           <Slider />
           {/* <GenderFilter/> */}
-          <NewArrival/>
-          <TrendingWears/>
+          <NewArrival />
+          <TrendingWears />
           {/* <div
             style={{
               // marginTop:"100px",
@@ -115,7 +118,7 @@ export default function Home() {
             {/* <Filter /> */}
             <Products products={products} loading={loading} />
           </Box>
-          
+
           <Footer />
         </Box>
       </FilterProvider>
