@@ -468,7 +468,7 @@ const Product = () => {
                             Discount Price
                           </TableCell>
                           <TableCell sx={{ color: "white" }}>Stock</TableCell>
-                          <TableCell sx={{ color: "white" }}>Actions</TableCell>
+                          {/* <TableCell sx={{ color: "white" }}>Actions</TableCell> */}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -478,8 +478,8 @@ const Product = () => {
                             <TableCell>₹{size.price}</TableCell>
                             <TableCell>₹{size.discountPrice}</TableCell>
                             <TableCell>{size.stockCount}</TableCell>
-                            <TableCell>
-                              <Button
+                            {/* <TableCell> */}
+                              {/* <Button
                                 variant="contained"
                                 color="primary"
                                 startIcon={<EditIcon />}
@@ -491,8 +491,8 @@ const Product = () => {
                                 }}
                               >
                                 Edit
-                              </Button>
-                            </TableCell>
+                              </Button> */}
+                            {/* </TableCell> */}
                           </TableRow>
                         ))}
                       </TableBody>

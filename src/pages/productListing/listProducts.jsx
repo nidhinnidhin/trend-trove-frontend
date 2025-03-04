@@ -122,6 +122,7 @@ const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, 
             display: "flex",
             flexDirection: "column",
             position: "relative",
+            opacity: product.isDeleted ? 0.7 : 1, // Reduce opacity for unavailable products
             overflow: "hidden",
           }}
         >
@@ -138,6 +139,22 @@ const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, 
                 }}
               />
             )}
+
+          {product.isDeleted && (
+            <Chip
+              label="Coming Soon"
+              color="secondary"
+              sx={{
+                position: 'absolute',
+                top: 10,
+                right: 10,
+                zIndex: 1,
+                backgroundColor: '#ff6f61',
+                color: 'white',
+                fontWeight: 'bold'
+              }}
+            />
+          )}
 
           <Box sx={{ position: "relative" }}>
             <motion.div
@@ -198,7 +215,7 @@ const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, 
                     fontSize: '16px',
                   }}
                 >
-                  ₹{product.price.toFixed(1)}
+                  ₹{product.isDeleted ? "Price Coming Soon" : product.price.toFixed(1)}
                 </Typography>
                 {product.isOfferActive &&
                   product.originalPrice > product.price && (

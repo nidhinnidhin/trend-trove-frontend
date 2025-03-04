@@ -117,6 +117,8 @@ const DetailProduct = () => {
         try {
           const response = await axiosInstance.get(`/products/${id}/details`);
           const productData = response.data.product;
+          console.log(productData);
+
           setVariants(productData.variants);
 
           const initialVariant = productData.variants[0];
@@ -146,6 +148,7 @@ const DetailProduct = () => {
             stockCount: initialVariant.sizes[0]?.stockCount,
             subImages: initialVariant.subImages,
             gender: productData.gender,
+            isDeleted: productData.isDeleted,
           });
 
           const relatedResponse = await axiosInstance.get(
@@ -316,7 +319,10 @@ const DetailProduct = () => {
     };
 
     try {
-      const response = await axiosInstance.post("/user/wishlist/add", wishlistData);
+      const response = await axiosInstance.post(
+        "/user/wishlist/add",
+        wishlistData
+      );
 
       if (response.status === 201) {
         // Get updated wishlist count
@@ -358,6 +364,20 @@ const DetailProduct = () => {
   };
 
   const sliderRef = React.useRef(null);
+
+  // Add styled component for the Coming Soon overlay
+  const ComingSoonOverlay = styled(Box)({
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+  });
 
   return (
     <motion.div
@@ -420,15 +440,44 @@ const DetailProduct = () => {
                   cursor: "crosshair",
                 }}
               >
-                <img
-                  src={mainImage}
-                  alt="Main Product"
-                  style={{
+                <Box
+                  sx={{
+                    position: "relative",
                     width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
+                    height: "600px",
+                    borderRadius: "8px",
+                    overflow: "hidden",
                   }}
-                />
+                >
+                  <CardMedia
+                    component="img"
+                    image={mainImage || "/placeholder.jpg"}
+                    alt={product?.title}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      filter: product?.isDeleted ? "grayscale(20%)" : "none",
+                    }}
+                  />
+                  {product?.isDeleted && (
+                    <ComingSoonOverlay>
+                      <Chip
+                        label="COMING SOON"
+                        sx={{
+                          backgroundColor: "#ff6f61",
+                          color: "white",
+                          fontSize: "1.2rem",
+                          padding: "24px 16px",
+                          fontWeight: "bold",
+                          "& .MuiChip-label": {
+                            padding: "0 16px",
+                          },
+                        }}
+                      />
+                    </ComingSoonOverlay>
+                  )}
+                </Box>
 
                 <Chip
                   label={
@@ -588,6 +637,38 @@ const DetailProduct = () => {
                 {product?.title}
               </Typography>
 
+              {/* Coming Soon Banner */}
+              {product?.isDeleted && (
+                <Box
+                  sx={{
+                    padding: "1.5rem",
+                    backgroundColor: "#fff4f4",
+                    borderRadius: "8px",
+                    border: "2px solid #ffebee",
+                    marginBottom: "2rem",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      color: "#ff6f61",
+                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    Coming Soon
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary">
+                    This product is currently unavailable for purchase. We're
+                    working on bringing it back soon!
+                  </Typography>
+                </Box>
+              )}
+
               <Box
                 sx={{
                   display: "flex",
@@ -682,6 +763,7 @@ const DetailProduct = () => {
                       },
                     },
                   }}
+                  disabled={product?.isDeleted}
                 >
                   <InputLabel sx={{ color: "#34495e" }}>Size</InputLabel>
                   <Select
@@ -816,21 +898,45 @@ const DetailProduct = () => {
                     fullWidth
                     variant="contained"
                     onClick={handleAddToCart}
-                    disabled={!isLoggedIn || product?.stockCount === 0}
+                    disabled={
+                      !isLoggedIn ||
+                      product?.isDeleted ||
+                      product?.inStock === "Not Available"
+                    }
                     sx={{
-                      backgroundColor: "#2c3e50",
-                      color: "#fff",
+                      backgroundColor: product?.isDeleted
+                        ? "#E0D5C1"
+                        : "#FAD4C0", // Soft peach tone
+                      color: "#5A5A5A", // Deep gray text for readability
                       padding: "1rem",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      borderRadius: "8px",
+                      border: "1px solid #E8B79E", // Subtle taupe border
+                      boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+                      transition: "all 0.3s ease",
                       "&:hover": {
-                        backgroundColor: "#34495e",
+                        backgroundColor: product?.isDeleted
+                          ? "#E0D5C1"
+                          : "#F7C2AD", // Gentle coral glow
+                        transform: "scale(1.05)",
                       },
                       "&:disabled": {
-                        backgroundColor: "#95a5a6",
+                        backgroundColor: "#E0D5C1",
+                        color: "#A6A6A6",
+                        boxShadow: "none",
+                        cursor: "not-allowed",
                       },
                     }}
                   >
                     <ShoppingCartIcon sx={{ marginRight: "0.5rem" }} />
-                    {isLoggedIn ? "Add to Cart" : "Login to Add"}
+                    {product?.isDeleted || product?.inStock === "Not Available"
+                      ? "Coming Soon"
+                      : isLoggedIn
+                      ? "Add to Cart"
+                      : "Login to Add"}
                   </Button>
                 </motion.div>
 
@@ -843,21 +949,45 @@ const DetailProduct = () => {
                     fullWidth
                     variant="contained"
                     onClick={() => handleButtonClick("Buy Now")}
-                    disabled={!isLoggedIn || product?.stockCount === 0}
+                    disabled={
+                      !isLoggedIn ||
+                      product?.isDeleted ||
+                      product?.inStock === "Not Available"
+                    }
                     sx={{
-                      backgroundColor: "#e67e22",
-                      color: "#fff",
+                      backgroundColor: product?.isDeleted
+                        ? "#E0D5C1"
+                        : "#F5E6CC", // Soft sand tone
+                      color: "#5A5A5A", // Classy deep gray text
                       padding: "1rem",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      borderRadius: "8px",
+                      border: "1px solid #C9B79C", // Subtle taupe border
+                      boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+                      transition: "all 0.3s ease",
                       "&:hover": {
-                        backgroundColor: "#d35400",
+                        backgroundColor: product?.isDeleted
+                          ? "#E0D5C1"
+                          : "#E4D5B7", // Gentle cream glow
+                        transform: "scale(1.05)",
                       },
                       "&:disabled": {
-                        backgroundColor: "#95a5a6",
+                        backgroundColor: "#E0D5C1",
+                        color: "#A6A6A6",
+                        boxShadow: "none",
+                        cursor: "not-allowed",
                       },
                     }}
                   >
                     <LocalMallIcon sx={{ marginRight: "0.5rem" }} />
-                    {isLoggedIn ? "Buy Now" : "Login to Buy"}
+                    {product?.isDeleted || product?.inStock === "Not Available"
+                      ? "Coming Soon"
+                      : isLoggedIn
+                      ? "Buy Now"
+                      : "Login to Buy"}
                   </Button>
                 </motion.div>
               </Box>
@@ -871,14 +1001,29 @@ const DetailProduct = () => {
                   fullWidth
                   startIcon={<FavoriteBorderIcon />}
                   onClick={handleAddToWishlist}
+                  disabled={!isLoggedIn}
                   sx={{
-                    backgroundColor: "#2c3e50",
-                    color: "#fff",
+                    backgroundColor: "#F8F4E1", // Soft ivory base
+                    color: "#5A5A5A", // Elegant deep gray text
                     fontSize: "1rem",
                     marginTop: "10px",
                     py: 1.5,
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    borderRadius: "8px",
+                    border: "1px solid #D3C3A5", // Subtle golden beige border
+                    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.08)",
+                    transition: "all 0.3s ease",
                     "&:hover": {
-                      backgroundColor: "#34495e",
+                      backgroundColor: "#EAD7BB", // Warm beige glow
+                      transform: "scale(1.05)",
+                    },
+                    "&:disabled": {
+                      backgroundColor: "#F0EDE5",
+                      color: "#A6A6A6",
+                      boxShadow: "none",
+                      cursor: "not-allowed",
                     },
                   }}
                 >

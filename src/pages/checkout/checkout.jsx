@@ -49,6 +49,7 @@ const CheckoutPage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showLoader, setShowLoader] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("info");
 
   useEffect(() => {
     if (router.query.data) {
@@ -123,7 +124,10 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleSnackbarClose = () => {
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
     setSnackbarOpen(false);
   };
 
@@ -232,9 +236,11 @@ const CheckoutPage = () => {
               await axiosInstance.post(`/payment/cancel`, {
                 orderId: orderData.id,
                 checkoutId: checkoutId,
-                status: 'retry_pending'
+                status: "retry_pending",
               });
-              setSnackbarMessage("Payment pending. You can retry payment from your orders page.");
+              setSnackbarMessage(
+                "Payment pending. You can retry payment from your orders page."
+              );
               setSnackbarOpen(true);
               router.push("/orders/orders");
             } catch (error) {
@@ -255,12 +261,29 @@ const CheckoutPage = () => {
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
     } catch (error) {
-      console.error("Payment initiation failed:", error);
-      setSnackbarMessage(
-        error.response?.data?.message || "Payment initiation failed"
-      );
+      console.error("Checkout error:", error.response?.data || error.message);
+
+      if (error.response?.data?.blockedProducts) {
+        const blockedItems = error.response.data.blockedProducts.join(", ");
+        setSnackbarMessage(
+          `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
+        );
+      } else {
+        setSnackbarMessage(
+          error.response?.data?.message ||
+            "Failed to place order. Please try again."
+        );
+      }
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
+      if (error.response?.data?.blockedProducts) {
+        setTimeout(() => {
+          router.push("/cart/cartpage");
+        }, 4000);
+      }
+    } finally {
       setLoading(false);
+      setShowLoader(false);
     }
   };
 
@@ -311,11 +334,153 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePaymentClick = () => {
-    if (paymentMethod === "online") {
-      handleOnlinePayment();
-    } else {
-      handleCashOnDelivery();
+  // const handlePaymentClick = async () => {
+  //   try {
+  //     if (!selectedAddress) {
+  //       setSnackbarMessage("Please select a delivery address");
+  //       setSnackbarSeverity("error");
+  //       setSnackbarOpen(true);
+  //       return;
+  //     }
+
+  //     setLoading(true);
+  //     setShowLoader(true);
+
+  //     const checkoutPayload = {
+  //       cartId: checkoutData.cartId,
+  //       addressId: selectedAddress._id,
+  //       shippingMethod: "Standard",
+  //       paymentMethod: paymentMethod,
+  //       transactionId: paymentMethod === "cod" ? "COD_" + Date.now() : null,
+  //       paymentStatus: "pending",
+  //       couponCode: selectedCoupon,
+  //       finalTotal: previewTotal,
+  //       discountAmount: previewDiscount,
+  //     };
+
+  //     if (paymentMethod === "online") {
+  //       handleOnlinePayment();
+  //       return;
+  //     }
+
+  //     const response = await axiosInstance.post(
+  //       "/checkout/create-checkout",
+  //       checkoutPayload
+  //     )
+
+  //     if (response.data.success) {
+  //       await clearCart();
+  //       setSnackbarMessage("Order placed successfully!");
+  //       setSnackbarSeverity("success");
+  //       setSnackbarOpen(true);
+  //       setTimeout(() => {
+  //         router.push("/orders/orders");
+  //       }, 2000);
+  //     }
+
+  //   } catch (error) {
+  //     console.error("Checkout error:", error);
+
+  //     // Handle blocked products case
+  //     if (error.blockedProducts) {
+  //       const blockedItems = error.blockedProducts.join(", ");
+  //       setSnackbarMessage(
+  //         `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
+  //       );
+  //     } else {
+  //       // Handle other errors
+  //       setSnackbarMessage(error.message || "Failed to place order. Please try again.");
+  //     }
+
+  //     setSnackbarSeverity("error");
+  //     setSnackbarOpen(true);
+
+  //     // If there are blocked products, redirect to cart after showing message
+  //     if (error.blockedProducts) {
+  //       setTimeout(() => {
+  //         router.push("/cart/cartpage");
+  //       }, 4000);
+  //     }
+
+  //   } finally {
+  //     setLoading(false);
+  //     setShowLoader(false);
+  //   }
+  // };
+
+  const handlePaymentClick = async () => {
+    try {
+      if (!selectedAddress) {
+        setSnackbarMessage("Please select a delivery address");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      setLoading(true);
+      setShowLoader(true);
+
+      const checkoutPayload = {
+        cartId: checkoutData.cartId,
+        addressId: selectedAddress._id,
+        shippingMethod: "Standard",
+        paymentMethod: paymentMethod,
+        transactionId: paymentMethod === "cod" ? "COD_" + Date.now() : null,
+        paymentStatus: "pending",
+        couponCode: selectedCoupon,
+        finalTotal: previewTotal,
+        discountAmount: previewDiscount,
+      };
+
+      if (paymentMethod === "online") {
+        handleOnlinePayment();
+        return;
+      }
+
+      const response = await axiosInstance.post(
+        "/checkout/create-checkout",
+        checkoutPayload
+      );
+
+      if (response.data.success) {
+        await clearCart();
+        setSnackbarMessage("Order placed successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        setTimeout(() => {
+          router.push("/orders/orders");
+        }, 2000);
+      }
+    } catch (error) {
+      // Log the error for debugging
+      console.error("Checkout error:", error.response?.data || error.message);
+
+      // Handle blocked products case
+      if (error.response?.data?.blockedProducts) {
+        const blockedItems = error.response.data.blockedProducts.join(", ");
+        setSnackbarMessage(
+          `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
+        );
+      } else {
+        // Handle other errors
+        setSnackbarMessage(
+          error.response?.data?.message ||
+            "Failed to place order. Please try again."
+        );
+      }
+
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+
+      // If there are blocked products, redirect to cart after showing message
+      if (error.response?.data?.blockedProducts) {
+        setTimeout(() => {
+          router.push("/cart/cartpage");
+        }, 4000);
+      }
+    } finally {
+      setLoading(false);
+      setShowLoader(false);
     }
   };
 
@@ -409,7 +574,8 @@ const CheckoutPage = () => {
     return <Typography>Loading...</Typography>;
   }
 
-  const { cartItems, totalPrice, selectedAddress, deliveryCharge } = checkoutData;
+  const { cartItems, totalPrice, selectedAddress, deliveryCharge } =
+    checkoutData;
   // const deliveryCharge = totalPrice < 1000 ? 40 : 0;
   const previewTotal = totalPrice - previewDiscount + deliveryCharge;
 
@@ -650,11 +816,17 @@ const CheckoutPage = () => {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="info"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            "& .MuiAlert-message": {
+              fontSize: "1rem",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

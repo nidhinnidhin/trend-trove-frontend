@@ -12,11 +12,51 @@ import {
   Typography,
   Snackbar,
   Alert,
+  IconButton,
+  Divider,
+  Paper,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
+import CloseIcon from "@mui/icons-material/Close";
+import { styled } from '@mui/material/styles';
 import axios from "axios";
 import AddVariantModal from "./addVariantModal";
 import axiosInstance from "@/utils/adminAxiosInstance";
+
+// Styled Components
+const StyledModal = styled(Modal)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+const ModalContent = styled(Paper)({
+  width: '80%',
+  maxWidth: '900px',
+  maxHeight: '85vh',
+  overflowY: 'auto',
+  padding: '32px',
+  borderRadius: '12px',
+  backgroundColor: '#fff',
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#bdbdbd',
+    borderRadius: '4px',
+  },
+});
+
+const FormSection = styled(Box)({
+  marginBottom: '24px',
+});
+
+const SectionTitle = styled(Typography)({
+  fontSize: '16px',
+  fontWeight: 600,
+  color: '#2c3e50',
+  marginBottom: '16px',
+});
 
 const AddProductModal = ({ open, onClose, onProductAdded }) => {
   const [brands, setBrands] = useState([]);
@@ -130,192 +170,240 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
 
   return (
     <>
-      <Modal open={open} onClose={onClose}>
-        <Box
-          sx={{
-            width: "80%",
-            margin: "auto",
-            backgroundColor: "white",
-            padding: 4,
-            borderRadius: 2,
-            marginTop: "5%",
-            maxHeight: "80vh",
-            overflowY: "auto",
-          }}
-        >
-          <Box sx={{ fontSize: "24px", fontWeight: "bold", marginBottom: 2 }}>
-            Add New Product
+      <StyledModal open={open} onClose={onClose}>
+        <ModalContent elevation={3}>
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 3 
+          }}>
+            <Typography variant="h5" sx={{ 
+              fontWeight: 600,
+              color: '#1a237e',
+              fontSize: '24px'
+            }}>
+              Add New Product
+            </Typography>
+            <IconButton onClick={onClose} size="small">
+              <CloseIcon />
+            </IconButton>
           </Box>
 
+          <Divider sx={{ mb: 4 }} />
+
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={2}>
-              {/* Product Name */}
-              <Grid item xs={12}>
-                <Controller
-                  name="productName"
-                  control={control}
-                  rules={{ required: "Product Name is required" }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Product Name"
-                      fullWidth
-                      error={!!errors.productName}
-                      helperText={errors.productName?.message}
-                      placeholder="Enter product name"
-                    />
-                  )}
-                />
+            {/* Basic Information Section */}
+            <FormSection>
+              <SectionTitle>Basic Information</SectionTitle>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Controller
+                    name="productName"
+                    control={control}
+                    rules={{ required: "Product Name is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Product Name"
+                        fullWidth
+                        error={!!errors.productName}
+                        helperText={errors.productName?.message}
+                        placeholder="Enter product name"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            '&:hover fieldset': {
+                              borderColor: '#3f51b5',
+                            },
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Controller
+                    name="description"
+                    control={control}
+                    rules={{ required: "Description is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Description"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        error={!!errors.description}
+                        helperText={errors.description?.message}
+                        placeholder="Enter product description"
+                      />
+                    )}
+                  />
+                </Grid>
               </Grid>
+            </FormSection>
 
-              {/* Product Description */}
-              <Grid item xs={12}>
-                <Controller
-                  name="description"
-                  control={control}
-                  rules={{ required: "Description is required" }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Description"
-                      fullWidth
-                      error={!!errors.description}
-                      helperText={errors.description?.message}
-                      placeholder="Enter product description"
-                    />
-                  )}
-                />
+            {/* Classification Section */}
+            <FormSection>
+              <SectionTitle>Product Classification</SectionTitle>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Controller
+                    name="brand"
+                    control={control}
+                    rules={{ required: "Brand is required" }}
+                    render={({ field }) => (
+                      <FormControl fullWidth error={!!errors.brand}>
+                        <InputLabel>Brand</InputLabel>
+                        <Select
+                          {...field}
+                          label="Brand"
+                          sx={{ backgroundColor: '#fff' }}
+                        >
+                          {brands.map((brand) => (
+                            <MenuItem key={brand._id} value={brand.name}>
+                              {brand.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.brand && (
+                          <Typography color="error" variant="caption">
+                            {errors.brand.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Controller
+                    name="category"
+                    control={control}
+                    rules={{ required: "Category is required" }}
+                    render={({ field }) => (
+                      <FormControl fullWidth error={!!errors.category}>
+                        <InputLabel>Category</InputLabel>
+                        <Select
+                          {...field}
+                          label="Category"
+                          sx={{ backgroundColor: '#fff' }}
+                        >
+                          {categories.map((category) => (
+                            <MenuItem key={category._id} value={category.name}>
+                              {category.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.category && (
+                          <Typography color="error" variant="caption">
+                            {errors.category.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                </Grid>
               </Grid>
+            </FormSection>
 
-              {/* Product Brand */}
-              <Grid item xs={6}>
-                <Controller
-                  name="brand"
-                  control={control}
-                  rules={{ required: "Brand is required" }}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.brand}>
-                      <InputLabel>Brand</InputLabel>
-                      <Select {...field} label="Brand">
-                        {brands.map((brand) => (
-                          <MenuItem key={brand._id} value={brand.name}>
-                            {brand.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.brand && <p>{errors.brand.message}</p>}
-                    </FormControl>
-                  )}
-                />
+            {/* Details Section */}
+            <FormSection>
+              <SectionTitle>Product Details</SectionTitle>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name="gender"
+                    control={control}
+                    rules={{ required: "Gender is required" }}
+                    render={({ field }) => (
+                      <FormControl fullWidth error={!!errors.gender}>
+                        <InputLabel>Gender</InputLabel>
+                        <Select {...field} label="Gender">
+                          <MenuItem value="Men">Men</MenuItem>
+                          <MenuItem value="Women">Women</MenuItem>
+                          <MenuItem value="Unisex">Unisex</MenuItem>
+                        </Select>
+                        {errors.gender && (
+                          <Typography color="error" variant="caption">
+                            {errors.gender.message}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name="pattern"
+                    control={control}
+                    rules={{ required: "Pattern is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Pattern"
+                        fullWidth
+                        error={!!errors.pattern}
+                        helperText={errors.pattern?.message}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name="material"
+                    control={control}
+                    rules={{ required: "Material is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Material"
+                        fullWidth
+                        error={!!errors.material}
+                        helperText={errors.material?.message}
+                      />
+                    )}
+                  />
+                </Grid>
               </Grid>
+            </FormSection>
 
-              {/* Product Category */}
-              <Grid item xs={6}>
-                <Controller
-                  name="category"
-                  control={control}
-                  rules={{ required: "Category is required" }}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.category}>
-                      <InputLabel>Category</InputLabel>
-                      <Select {...field} label="Category">
-                        {categories.map((category) => (
-                          <MenuItem key={category._id} value={category.name}>
-                            {category.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.category && <p>{errors.category.message}</p>}
-                    </FormControl>
-                  )}
-                />
-              </Grid>
-
-              {/* Product Gender */}
-              <Grid item xs={6}>
-                <Controller
-                  name="gender"
-                  control={control}
-                  rules={{ required: "Gender is required" }}
-                  render={({ field }) => (
-                    <FormControl fullWidth error={!!errors.gender}>
-                      <InputLabel>Gender</InputLabel>
-                      <Select {...field} label="Gender">
-                        <MenuItem value="Men">Men</MenuItem>
-                        <MenuItem value="Women">Women</MenuItem>
-                        <MenuItem value="Unisex">Unisex</MenuItem>
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-              </Grid>
-
-              {/* Product Pattern */}
-              <Grid item xs={6}>
-                <Controller
-                  name="pattern"
-                  control={control}
-                  rules={{ required: "Pattern is required" }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Pattern"
-                      fullWidth
-                      error={!!errors.pattern}
-                      helperText={errors.pattern?.message}
-                      placeholder="Enter product pattern"
-                    />
-                  )}
-                />
-              </Grid>
-
-              {/* Product Material */}
-              <Grid item xs={6}>
-                <Controller
-                  name="material"
-                  control={control}
-                  rules={{ required: "Material is required" }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Material"
-                      fullWidth
-                      error={!!errors.material}
-                      helperText={errors.material?.message}
-                      placeholder="Enter product material"
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  type="submit"
-                  fullWidth
-                  sx={{
-                    backgroundColor: "orange",
-                    "&:hover": { backgroundColor: "darkorange" },
-                  }}
-                >
-                  Add Product
-                </Button>
-              </Grid>
-            </Grid>
+            {/* Submit Button */}
+            <Box sx={{ mt: 4 }}>
+              <Button
+                variant="contained"
+                type="submit"
+                fullWidth
+                sx={{
+                  py: 1.5,
+                  backgroundColor: '#3f51b5',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  '&:hover': {
+                    backgroundColor: '#303f9f',
+                  },
+                }}
+              >
+                Add Product
+              </Button>
+            </Box>
           </form>
-        </Box>
-      </Modal>
+        </ModalContent>
+      </StyledModal>
 
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert 
           onClose={handleSnackbarClose} 
           severity={snackbar.severity}
           elevation={6}
           variant="filled"
+          sx={{ width: '100%' }}
         >
           {snackbar.message}
         </Alert>

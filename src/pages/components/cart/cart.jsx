@@ -60,7 +60,11 @@ import { useDispatch } from "react-redux";
 import { setCartLength } from "@/redux/features/cartSlice";
 import axiosInstance from "@/utils/axiosInstance";
 import AddIcon from "@mui/icons-material/Add";
-import { getDeliveryCharge, getUserLocation, deliveryCharges  } from '@/utils/deliveryCharges';
+import {
+  getDeliveryCharge,
+  getUserLocation,
+  deliveryCharges,
+} from "@/utils/deliveryCharges";
 import LocationConsentBanner from "@/utils/locationConcentBanner";
 
 const EditButton = styled(Button)(({ theme }) => ({
@@ -126,14 +130,16 @@ function Cart() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
-  const [cartError, setCartError] = useState("")
-  const [deliveryChargeInfo, setDeliveryChargeInfo] = useState({ charge: null, message: '' });
+  const [cartError, setCartError] = useState("");
+  const [deliveryChargeInfo, setDeliveryChargeInfo] = useState({
+    charge: null,
+    message: "",
+  });
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [locationError, setLocationError] = useState('');
+  const [locationError, setLocationError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [showLocationConsent, setShowLocationConsent] = useState(false);
   const [locationPreference, setLocationPreference] = useState(null);
-
 
   const dispatch = useDispatch();
 
@@ -157,10 +163,10 @@ function Cart() {
   }, []);
 
   useEffect(() => {
-    const savedLocationPref = localStorage.getItem('locationPreference');
-    const savedLocation = localStorage.getItem('userLocation');
-    
-    if (savedLocationPref === 'allow' && savedLocation) {
+    const savedLocationPref = localStorage.getItem("locationPreference");
+    const savedLocation = localStorage.getItem("userLocation");
+
+    if (savedLocationPref === "allow" && savedLocation) {
       try {
         const parsedLocation = JSON.parse(savedLocation);
         setUserLocation(parsedLocation);
@@ -168,7 +174,7 @@ function Cart() {
           updateDeliveryCharge(parsedLocation.city, parsedLocation.state);
         }
       } catch (error) {
-        console.log('Error parsing saved location:', error);
+        console.log("Error parsing saved location:", error);
         setShowLocationConsent(true);
       }
     } else if (!savedLocationPref) {
@@ -183,25 +189,25 @@ function Cart() {
       } else if (selectedAddress) {
         updateDeliveryCharge(selectedAddress.city, selectedAddress.state);
       } else {
-        setDeliveryChargeInfo({ 
-          charge: deliveryCharges.DEFAULT, 
-          message: `Standard delivery charge: ₹${deliveryCharges.DEFAULT}`
+        setDeliveryChargeInfo({
+          charge: deliveryCharges.DEFAULT,
+          message: `Standard delivery charge: ₹${deliveryCharges.DEFAULT}`,
         });
       }
     }
   }, [cart, userLocation, selectedAddress]);
 
   const handleLocationConsent = async (consent) => {
-    if (consent === 'allow') {
+    if (consent === "allow") {
       try {
         const position = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
             timeout: 5000,
-            maximumAge: 0
+            maximumAge: 0,
           });
         });
-        
+
         // Process the location data
         const location = await getUserLocation();
         if (location?.city) {
@@ -213,13 +219,15 @@ function Cart() {
       } catch (error) {
         // Handle the error gracefully without throwing
         console.log("Location error:", error);
-        setSnackbarMessage("Location access denied. You can select your delivery address manually.");
+        setSnackbarMessage(
+          "Location access denied. You can select your delivery address manually."
+        );
         setSnackbarSeverity("info");
       } finally {
         setSnackbarOpen(true);
         setShowLocationConsent(false);
       }
-    } else if (consent === 'deny') {
+    } else if (consent === "deny") {
       // Handle denial gracefully
       setSnackbarMessage("You can select your delivery address manually.");
       setSnackbarSeverity("info");
@@ -230,8 +238,8 @@ function Cart() {
 
   const detectUserLocation = async () => {
     setIsLoadingLocation(true);
-    setLocationError('');
-    
+    setLocationError("");
+
     try {
       if (!navigator.geolocation) {
         setSnackbarMessage("Geolocation is not supported by your browser");
@@ -244,7 +252,7 @@ function Cart() {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 5000,
-          maximumAge: 0
+          maximumAge: 0,
         });
       });
 
@@ -254,15 +262,21 @@ function Cart() {
         if (cart) {
           updateDeliveryCharge(location.city, location.state);
         }
-        setSnackbarMessage(`Delivering to ${location.city}${location.state ? `, ${location.state}` : ''}`);
+        setSnackbarMessage(
+          `Delivering to ${location.city}${
+            location.state ? `, ${location.state}` : ""
+          }`
+        );
         setSnackbarSeverity("success");
-        localStorage.setItem('userLocation', JSON.stringify(location));
+        localStorage.setItem("userLocation", JSON.stringify(location));
       }
     } catch (error) {
-      console.log('Location detection error:', error);
-      setSnackbarMessage("Location access denied. You can select your delivery address manually.");
+      console.log("Location detection error:", error);
+      setSnackbarMessage(
+        "Location access denied. You can select your delivery address manually."
+      );
       setSnackbarSeverity("info");
-      localStorage.removeItem('userLocation');
+      localStorage.removeItem("userLocation");
     } finally {
       setIsLoadingLocation(false);
       setSnackbarOpen(true);
@@ -277,20 +291,23 @@ function Cart() {
     if (!city || !cart) return;
 
     const location = state ? `${city}, ${state}` : city;
-    
+
     // Only calculate totals if cart and cart.items exist
-    const totals = cart?.items ? calculateTotals(cart.items) : { finalTotal: 0 };
+    const totals = cart?.items
+      ? calculateTotals(cart.items)
+      : { finalTotal: 0 };
     const { charge, message } = getDeliveryCharge(location, totals.finalTotal);
-    
+
     setDeliveryChargeInfo({ charge, message });
 
     if (charge === null) {
-      setLocationError('We couldn\'t determine delivery charges for your location. Please select a delivery address.');
+      setLocationError(
+        "We couldn't determine delivery charges for your location. Please select a delivery address."
+      );
     } else {
-      setLocationError('');
+      setLocationError("");
     }
   };
-
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -427,7 +444,7 @@ function Cart() {
 
   // const handleAddressSelect = (address) => {
   //   setSelectedAddress(address);
-    // updateDeliveryCharge(address.city);
+  // updateDeliveryCharge(address.city);
   // };
 
   const handleOpenAddAddressModal = () => {
@@ -494,7 +511,7 @@ function Cart() {
   // const handleGetLocation = async () => {
   //   setIsLoadingLocation(true);
   //   setLocationError('');
-    
+
   //   try {
   //     const location = await getUserLocation();
   //     if (location?.city) {
@@ -569,7 +586,7 @@ function Cart() {
     return {
       ...itemTotals,
       deliveryCharge: deliveryChargeInfo.charge || 0,
-      grandTotal: itemTotals.finalTotal + (deliveryChargeInfo.charge || 0)
+      grandTotal: itemTotals.finalTotal + (deliveryChargeInfo.charge || 0),
     };
   };
 
@@ -577,9 +594,9 @@ function Cart() {
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
     updateDeliveryCharge(address.city, address.state);
-    
+
     // If user selects an address manually, prioritize it over detected location
-    localStorage.setItem('preferredAddressId', address._id);
+    localStorage.setItem("preferredAddressId", address._id);
   };
 
   const handleCheckout = async () => {
@@ -608,7 +625,7 @@ function Cart() {
     }
 
     const totals = calculateTotals(cart.items);
-    const shippingCost = totals.finalTotal > 1000 ? 0 : 40;
+    const shippingCost = totals.finalTotal > 5000 ? 0 : 40;
 
     const checkoutData = {
       cartId: cart._id,
@@ -635,21 +652,21 @@ function Cart() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, marginTop:"100px" }}>
+    <Container maxWidth="lg" sx={{ py: 4, marginTop: "100px" }}>
       {loading ? (
         <Box display="flex" justifyContent="center">
           <CircularProgress />
         </Box>
       ) : (
         <>
-          {showLocationConsent && (
+          {/* {showLocationConsent && (
             <LocationConsentBanner
               onAccept={() => handleLocationConsent('allow')}
               onDecline={() => handleLocationConsent('deny')}
               onClose={() => setShowLocationConsent(false)}
             />
-          )}
-          
+          )} */}
+
           {!cart || cart.items.length === 0 ? (
             <>
               <Typography variant="h5" gutterBottom>
@@ -703,10 +720,21 @@ function Cart() {
                           console.log(item);
 
                           return (
-                            <StyledTableRow key={index}>
+                            <StyledTableRow
+                              key={index}
+                              sx={{
+                                position: "relative",
+                                opacity: item.product.isDeleted ? 0.6 : 1,
+                              }}
+                            >
                               <TableCell>
-                                <Grid container spacing={2} alignItems="center">
-                                  <Grid item>
+                                <Grid
+                                  container
+                                  spacing={2}
+                                  alignItems="center"
+                                  sx={{ position: "relative" }}
+                                >
+                                  <Grid item sx={{ position: "relative" }}>
                                     <img
                                       src={item.variant.mainImage}
                                       alt={item.product.name}
@@ -714,8 +742,41 @@ function Cart() {
                                         width: 60,
                                         height: 60,
                                         objectFit: "contain",
+                                        filter: item.product.isDeleted
+                                          ? "grayscale(100%)"
+                                          : "none", 
                                       }}
                                     />
+                                    {item.product.isDeleted && (
+                                      <Box
+                                        sx={{
+                                          position: "absolute",
+                                          top: 0,
+                                          left: 0,
+                                          backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark overlay
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          borderRadius: "4px",
+                                        }}
+                                      >
+                                        <Typography
+                                          variant="caption"
+                                          sx={{
+                                            color: "white",
+                                            fontWeight: "bold",
+                                            backgroundColor:
+                                              "rgba(255, 0, 0, 0.8)", // Light red background
+                                            padding: "2px 6px",
+                                            borderRadius: "4px",
+                                            textTransform: "uppercase",
+                                            fontSize: "12px",
+                                          }}
+                                        >
+                                          Unavailable
+                                        </Typography>
+                                      </Box>
+                                    )}
                                   </Grid>
                                   <Grid item>
                                     <Typography
@@ -735,6 +796,15 @@ function Cart() {
                                       Size: {item.sizeVariant.size}, Color:{" "}
                                       {item.variant.color}
                                     </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      color="textSecondary"
+                                      sx={{ fontWeight: "bold" }}
+                                    >
+                                      {item.product.isDeleted
+                                        ? "Can't purchase"
+                                        : "Can purchase"}
+                                    </Typography>
                                   </Grid>
                                 </Grid>
                               </TableCell>
@@ -750,6 +820,7 @@ function Cart() {
                                       handleQuantityChange(item, e.target.value)
                                     }
                                     error={item.quantity > 4}
+                                    disabled={item.product.isDeleted} // Disable quantity selection for unavailable products
                                   >
                                     {[1, 2, 3, 4].map((num) => (
                                       <MenuItem key={num} value={num}>
@@ -763,7 +834,10 @@ function Cart() {
                                 <Typography variant="body1">{`₹${
                                   item.sizeVariant.discountPrice * item.quantity
                                 }`}</Typography>
-                                <Typography variant="body2" color="textSecondary">
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                >
                                   {`₹${item.sizeVariant.discountPrice} each`}
                                 </Typography>
                               </TableCell>
@@ -859,71 +933,87 @@ function Cart() {
                     {isLoadingLocation ? 'Detecting Location...' : 'Use My Location'}
                   </Button> */}
 
-{(!userLocation && locationPreference !== 'allow') && (
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={handleGetLocation}
-                  disabled={isLoadingLocation}
-                  startIcon={<LocationOnIcon />}
-                  sx={{ mb: 2 }}
-                >
-                  {isLoadingLocation ? 'Detecting Location...' : 'Use My Location'}
-                </Button>
-              )}
+                  {!userLocation && locationPreference !== "allow" && (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={handleGetLocation}
+                      disabled={isLoadingLocation}
+                      startIcon={<LocationOnIcon />}
+                      sx={{ mb: 2 }}
+                    >
+                      {isLoadingLocation
+                        ? "Detecting Location..."
+                        : "Use My Location"}
+                    </Button>
+                  )}
 
-              {locationError && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  {locationError}
-                </Alert>
-              )}
+                  {locationError && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      {locationError}
+                    </Alert>
+                  )}
 
-              {userLocation && (
-                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <LocationOnIcon color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="body2">
-                    Detected location: {userLocation.city}{userLocation.state ? `, ${userLocation.state}` : ''}
-                  </Typography>
-                </Box>
-              )}
-
-              {selectedAddress && (
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Delivering to: {selectedAddress.city}{selectedAddress.state ? `, ${selectedAddress.state}` : ''}
-                </Typography>
-              )}
-
-              <Box sx={{ 
-                p: 1.5, 
-                bgcolor: deliveryChargeInfo.charge === 0 ? '#e8f5e9' : '#f5f5f5', 
-                borderRadius: 1,
-                mb: 2
-              }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Delivery Charge:
-                </Typography>
-                <Typography variant="body1" sx={{ 
-                  fontWeight: 'bold', 
-                  color: deliveryChargeInfo.charge === 0 ? '#2e7d32' : 'inherit'
-                }}>
-                  {deliveryChargeInfo.charge === null 
-                    ? 'Calculating...' 
-                    : deliveryChargeInfo.charge === 0 
-                      ? 'FREE' 
-                      : `₹${deliveryChargeInfo.charge}`
-                  }
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  {deliveryChargeInfo.message}
-                </Typography>
-              </Box>
-                    <Divider sx={{ my: 1 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="h6">Total:</Typography>
-                      <Typography variant="h6">
-                        ₹{calculateTotals(cart?.items).grandTotal}
+                  {userLocation && (
+                    <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+                      <LocationOnIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="body2">
+                        Detected location: {userLocation.city}
+                        {userLocation.state ? `, ${userLocation.state}` : ""}
                       </Typography>
                     </Box>
+                  )}
+
+                  {selectedAddress && (
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      Delivering to: {selectedAddress.city}
+                      {selectedAddress.state
+                        ? `, ${selectedAddress.state}`
+                        : ""}
+                    </Typography>
+                  )}
+
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      bgcolor:
+                        deliveryChargeInfo.charge === 0 ? "#e8f5e9" : "#f5f5f5",
+                      borderRadius: 1,
+                      mb: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" gutterBottom>
+                      Delivery Charge:
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: "bold",
+                        color:
+                          deliveryChargeInfo.charge === 0
+                            ? "#2e7d32"
+                            : "inherit",
+                      }}
+                    >
+                      {deliveryChargeInfo.charge === null
+                        ? "Calculating..."
+                        : deliveryChargeInfo.charge === 0
+                        ? "FREE"
+                        : `₹${deliveryChargeInfo.charge}`}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {deliveryChargeInfo.message}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="h6">Total:</Typography>
+                    <Typography variant="h6">
+                      ₹{calculateTotals(cart?.items).grandTotal}
+                    </Typography>
+                  </Box>
                   {/* </Box> */}
 
                   <Button
@@ -943,7 +1033,7 @@ function Cart() {
           )}
           {addresses.length > 0 ? (
             <>
-              <Typography variant="h6" sx={{ mb: 3, color: '#333' }}>
+              <Typography variant="h6" sx={{ mb: 3, color: "#333" }}>
                 Select Delivery Address
               </Typography>
               <Grid container spacing={2}>
@@ -952,73 +1042,97 @@ function Cart() {
                     <Card
                       onClick={() => handleAddressSelect(address)}
                       sx={{
-                        cursor: 'pointer',
-                        height: '100%',
-                        position: 'relative',
-                        transition: 'all 0.3s ease',
-                        border: selectedAddress && selectedAddress._id === address._id
-                          ? '2px solid #FF6F61'
-                          : '1px solid #e0e0e0',
-                        '&:hover': {
-                          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                          borderColor: '#FF6F61',
+                        cursor: "pointer",
+                        height: "100%",
+                        position: "relative",
+                        transition: "all 0.3s ease",
+                        border:
+                          selectedAddress && selectedAddress._id === address._id
+                            ? "2px solid #FF6F61"
+                            : "1px solid #e0e0e0",
+                        "&:hover": {
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                          borderColor: "#FF6F61",
                         },
                       }}
                     >
                       <CardContent>
-                        {selectedAddress && selectedAddress._id === address._id && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              bgcolor: '#FF6F61',
-                              color: 'white',
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1,
-                              fontSize: '0.75rem',
-                            }}
-                          >
-                            Selected
-                          </Box>
-                        )}
-                        
+                        {selectedAddress &&
+                          selectedAddress._id === address._id && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                bgcolor: "#FF6F61",
+                                color: "white",
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              Selected
+                            </Box>
+                          )}
+
                         <Box sx={{ mb: 2 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333' }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: 600, color: "#333" }}
+                          >
                             {address.fullName}
                           </Typography>
                           <Typography
                             variant="caption"
                             sx={{
-                              bgcolor: '#f5f5f5',
+                              bgcolor: "#f5f5f5",
                               px: 1,
                               py: 0.5,
                               borderRadius: 1,
-                              color: '#666',
+                              color: "#666",
                             }}
                           >
                             {address.addressType}
                           </Typography>
                         </Box>
 
-                        <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#666", mb: 1 }}
+                        >
                           {address.address}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#666", mb: 1 }}
+                        >
                           {address.locality}, {address.city}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#666", mb: 1 }}
+                        >
                           {address.state} - {address.pincode}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#666", mb: 2 }}
+                        >
                           Mobile: {address.mobileNumber}
-                          {address.alternatePhone && `, Alt: ${address.alternatePhone}`}
+                          {address.alternatePhone &&
+                            `, Alt: ${address.alternatePhone}`}
                         </Typography>
 
                         <Divider sx={{ my: 2 }} />
 
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            mt: 2,
+                          }}
+                        >
                           <Button
                             startIcon={<EditIcon />}
                             onClick={(e) => {
@@ -1026,17 +1140,19 @@ function Cart() {
                               handleEditAddress(address)(e);
                             }}
                             sx={{
-                              color: '#666',
-                              '&:hover': { color: '#FF6F61' },
+                              color: "#666",
+                              "&:hover": { color: "#FF6F61" },
                             }}
                           >
                             Edit
                           </Button>
                           <IconButton
-                            onClick={(e) => handleDeleteAddressClick(e, address._id)}
+                            onClick={(e) =>
+                              handleDeleteAddressClick(e, address._id)
+                            }
                             sx={{
-                              color: '#666',
-                              '&:hover': { color: '#d32f2f' },
+                              color: "#666",
+                              "&:hover": { color: "#d32f2f" },
                             }}
                           >
                             <DeleteIcon />
@@ -1052,22 +1168,22 @@ function Cart() {
                   <Card
                     onClick={handleOpenAddAddressModal}
                     sx={{
-                      height: '100%',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px dashed #e0e0e0',
-                      bgcolor: '#fafafa',
-                      '&:hover': {
-                        borderColor: '#FF6F61',
-                        bgcolor: '#fff',
+                      height: "100%",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "2px dashed #e0e0e0",
+                      bgcolor: "#fafafa",
+                      "&:hover": {
+                        borderColor: "#FF6F61",
+                        bgcolor: "#fff",
                       },
                     }}
                   >
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <AddIcon sx={{ fontSize: 40, color: '#FF6F61', mb: 1 }} />
-                      <Typography variant="subtitle1" sx={{ color: '#666' }}>
+                    <CardContent sx={{ textAlign: "center" }}>
+                      <AddIcon sx={{ fontSize: 40, color: "#FF6F61", mb: 1 }} />
+                      <Typography variant="subtitle1" sx={{ color: "#666" }}>
                         Add New Address
                       </Typography>
                     </CardContent>
@@ -1076,16 +1192,16 @@ function Cart() {
               </Grid>
             </>
           ) : (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="h6" sx={{ color: "#666", mb: 2 }}>
                 No Addresses Found
               </Typography>
               <Button
                 variant="contained"
                 onClick={handleOpenAddAddressModal}
                 sx={{
-                  bgcolor: '#FF6F61',
-                  '&:hover': { bgcolor: '#ff5c4d' },
+                  bgcolor: "#FF6F61",
+                  "&:hover": { bgcolor: "#ff5c4d" },
                 }}
               >
                 Add New Address
@@ -1099,8 +1215,9 @@ function Cart() {
             </Typography>
             <Typography variant="body1" paragraph>
               At TREND TROVE, we strive to provide a smooth and secure shopping
-              experience for all our customers. Please read the following payment
-              and refund policy carefully before making a purchase on our site.
+              experience for all our customers. Please read the following
+              payment and refund policy carefully before making a purchase on
+              our site.
             </Typography>
 
             <Typography variant="body1" paragraph>
@@ -1108,19 +1225,20 @@ function Cart() {
             </Typography>
 
             <Typography variant="body1" paragraph>
-              1. <strong>Accepted Payment Methods:</strong> We accept payments via
-              major credit and debit cards, including Visa, MasterCard, American
-              Express, and Discover. PayPal, Apple Pay, and Google Pay are also
-              available for your convenience. For local customers, we may accept COD
-              (Cash on Delivery) as a payment option, depending on your location.
+              1. <strong>Accepted Payment Methods:</strong> We accept payments
+              via major credit and debit cards, including Visa, MasterCard,
+              American Express, and Discover. PayPal, Apple Pay, and Google Pay
+              are also available for your convenience. For local customers, we
+              may accept COD (Cash on Delivery) as a payment option, depending
+              on your location.
             </Typography>
 
             <Typography variant="body1" paragraph>
-              2. <strong>Payment Security:</strong> All transactions are processed
-              securely through an encrypted payment gateway. Your payment
-              information is never stored on our servers. We utilize SSL encryption
-              technology to ensure the confidentiality and security of your payment
-              details.
+              2. <strong>Payment Security:</strong> All transactions are
+              processed securely through an encrypted payment gateway. Your
+              payment information is never stored on our servers. We utilize SSL
+              encryption technology to ensure the confidentiality and security
+              of your payment details.
             </Typography>
 
             <Typography variant="body1" paragraph>
@@ -1132,18 +1250,18 @@ function Cart() {
             </Typography>
 
             <Typography variant="body1" paragraph>
-              4. <strong>Currency:</strong> All prices displayed on our website are
-              in [Your Currency]. If you are shopping from outside [Your Country],
-              please note that currency conversion may apply based on your payment
-              provider's exchange rates.
+              4. <strong>Currency:</strong> All prices displayed on our website
+              are in [Your Currency]. If you are shopping from outside [Your
+              Country], please note that currency conversion may apply based on
+              your payment provider's exchange rates.
             </Typography>
 
             <Typography variant="body1" paragraph>
-              5. <strong>Fraud Prevention:</strong> To protect both our customers
-              and ourselves from fraudulent transactions, we reserve the right to
-              request additional information or verification for large or suspicious
-              orders. Failure to provide requested details may result in order
-              cancellation.
+              5. <strong>Fraud Prevention:</strong> To protect both our
+              customers and ourselves from fraudulent transactions, we reserve
+              the right to request additional information or verification for
+              large or suspicious orders. Failure to provide requested details
+              may result in order cancellation.
             </Typography>
 
             <Typography variant="body1" paragraph>
@@ -1151,39 +1269,41 @@ function Cart() {
             </Typography>
 
             <Typography variant="body1" paragraph>
-              1. <strong>Returns:</strong> We accept returns on unworn, unwashed,
-              and unused items within 30 days from the date of purchase. Items must
-              be returned in their original condition, including all tags and
-              packaging. Items that are damaged or altered cannot be accepted for
-              returns. To initiate a return, please contact our customer support
-              team at [Customer Support Email] to receive return instructions and
-              authorization. Return shipping costs are the responsibility of the
-              customer unless the return is due to a mistake on our part (such as a
-              defective product or incorrect item).
+              1. <strong>Returns:</strong> We accept returns on unworn,
+              unwashed, and unused items within 30 days from the date of
+              purchase. Items must be returned in their original condition,
+              including all tags and packaging. Items that are damaged or
+              altered cannot be accepted for returns. To initiate a return,
+              please contact our customer support team at [Customer Support
+              Email] to receive return instructions and authorization. Return
+              shipping costs are the responsibility of the customer unless the
+              return is due to a mistake on our part (such as a defective
+              product or incorrect item).
             </Typography>
 
             <Typography variant="body1" paragraph>
-              2. <strong>Refunds:</strong> Once we receive your returned item(s) and
-              verify the condition, your refund will be processed. Refunds will be
-              credited back to the original payment method used for the purchase.
-              Please allow up to 7-10 business days for your refund to be reflected
-              in your account, depending on your payment provider. If your order was
-              paid via COD, we will issue a refund to the account details you
-              provide during the return process.
+              2. <strong>Refunds:</strong> Once we receive your returned item(s)
+              and verify the condition, your refund will be processed. Refunds
+              will be credited back to the original payment method used for the
+              purchase. Please allow up to 7-10 business days for your refund to
+              be reflected in your account, depending on your payment provider.
+              If your order was paid via COD, we will issue a refund to the
+              account details you provide during the return process.
             </Typography>
 
             <Typography variant="body1" paragraph>
               3. <strong>Exchanges:</strong> We currently do not offer direct
-              exchanges. However, you may return your item for a refund and place a
-              new order for the desired item. Please follow our return process and
-              then place a new order for the correct size or style.
+              exchanges. However, you may return your item for a refund and
+              place a new order for the desired item. Please follow our return
+              process and then place a new order for the correct size or style.
             </Typography>
 
             <Typography variant="body1" paragraph>
               4. <strong>Defective or Incorrect Items:</strong> If you receive a
-              defective or incorrect item, please contact our customer support team
-              immediately. We will provide you with a prepaid return label for the
-              return and issue a full refund or replacement, as per your preference.
+              defective or incorrect item, please contact our customer support
+              team immediately. We will provide you with a prepaid return label
+              for the return and issue a full refund or replacement, as per your
+              preference.
             </Typography>
           </Box>
 
