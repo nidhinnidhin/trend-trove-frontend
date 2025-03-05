@@ -164,13 +164,15 @@ const ChatBox = () => {
 
   return (
     <>
-      <Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
+      <Box sx={{ position: 'fixed', bottom: 50, right: 20, zIndex: 1000 }}>
         {!isOpen ? (
           <IconButton
             onClick={() => setIsOpen(true)}
             sx={{
               backgroundColor: '#FF9800',
               color: 'white',
+              height:"50px",
+              width:"50px",
               '&:hover': { backgroundColor: '#F57C00' }
             }}
           >
