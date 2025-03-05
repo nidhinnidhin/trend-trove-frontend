@@ -66,7 +66,6 @@ const ChatBox = () => {
     
     newSocket.on('message-sent', (data) => {
       console.log('Message sent confirmation:', data);
-      // Message already added optimistically
     });
     
     newSocket.on('error', (error) => {
@@ -76,7 +75,6 @@ const ChatBox = () => {
 
     setSocket(newSocket);
 
-    // Cleanup function
     return () => {
       if (newSocket) {
         newSocket.disconnect();
@@ -137,15 +135,12 @@ const ChatBox = () => {
       setError('Please login to send messages');
       return;
     }
-
-    // Create message object
     const messageData = {
       userId,
       message: message.trim(),
       senderType: 'User'
     };
     
-    // Optimistically add message to UI
     const optimisticMessage = {
       message: message.trim(),
       senderType: 'User',
@@ -157,12 +152,9 @@ const ChatBox = () => {
     setMessage('');
 
     try {
-      // Send message through socket for real-time updates
       if (socket) {
         socket.emit('send-message', messageData);
       }
-      
-      // Also send through API as backup
       await axiosInstance.post('/chat/send-message', messageData);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -187,7 +179,7 @@ const ChatBox = () => {
         ) : (
           <Paper
             sx={{
-              width: 400,
+              width: 350,
               height: 500,
               display: 'flex',
               flexDirection: 'column'

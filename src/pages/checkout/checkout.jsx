@@ -31,6 +31,7 @@ import {
   Payment,
   CreditCard,
   MonetizationOn,
+  AccountBalanceWallet,
 } from "@mui/icons-material";
 import Header from "../components/header";
 import Footer from "../components/footer";
@@ -139,6 +140,21 @@ const CheckoutPage = () => {
     } catch (error) {
       console.error("Error clearing cart:", error);
       throw error;
+    }
+  };
+
+  const fetchWalletBalance = async () => {
+    try {
+      const response = await axiosInstance.get("/wallet/details");
+      console.log("Wallet balance",response);
+      
+      return response.data.balance + response.data.referralEarnings;
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+      setSnackbarMessage("Failed to fetch wallet balance");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return 0;
     }
   };
 
@@ -366,7 +382,7 @@ const CheckoutPage = () => {
   //     const response = await axiosInstance.post(
   //       "/checkout/create-checkout",
   //       checkoutPayload
-  //     )
+  //     );
 
   //     if (response.data.success) {
   //       await clearCart();
@@ -377,36 +393,39 @@ const CheckoutPage = () => {
   //         router.push("/orders/orders");
   //       }, 2000);
   //     }
-
   //   } catch (error) {
-  //     console.error("Checkout error:", error);
+  //     // Log the error for debugging
+  //     console.error("Checkout error:", error.response?.data || error.message);
 
   //     // Handle blocked products case
-  //     if (error.blockedProducts) {
-  //       const blockedItems = error.blockedProducts.join(", ");
+  //     if (error.response?.data?.blockedProducts) {
+  //       const blockedItems = error.response.data.blockedProducts.join(", ");
   //       setSnackbarMessage(
   //         `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
   //       );
   //     } else {
   //       // Handle other errors
-  //       setSnackbarMessage(error.message || "Failed to place order. Please try again.");
+  //       setSnackbarMessage(
+  //         error.response?.data?.message ||
+  //           "Failed to place order. Please try again."
+  //       );
   //     }
 
   //     setSnackbarSeverity("error");
   //     setSnackbarOpen(true);
 
   //     // If there are blocked products, redirect to cart after showing message
-  //     if (error.blockedProducts) {
+  //     if (error.response?.data?.blockedProducts) {
   //       setTimeout(() => {
   //         router.push("/cart/cartpage");
   //       }, 4000);
   //     }
-
   //   } finally {
   //     setLoading(false);
   //     setShowLoader(false);
   //   }
   // };
+
 
   const handlePaymentClick = async () => {
     try {
@@ -416,32 +435,55 @@ const CheckoutPage = () => {
         setSnackbarOpen(true);
         return;
       }
-
+  
       setLoading(true);
       setShowLoader(true);
-
+  
       const checkoutPayload = {
         cartId: checkoutData.cartId,
         addressId: selectedAddress._id,
         shippingMethod: "Standard",
         paymentMethod: paymentMethod,
-        transactionId: paymentMethod === "cod" ? "COD_" + Date.now() : null,
+        transactionId: paymentMethod === "cod" || "debit" ? "COD_" + Date.now() : null,
         paymentStatus: "pending",
         couponCode: selectedCoupon,
         finalTotal: previewTotal,
         discountAmount: previewDiscount,
       };
-
+  
       if (paymentMethod === "online") {
         handleOnlinePayment();
         return;
       }
-
+  
+      if (paymentMethod === "wallet") {
+        const walletBalance = await fetchWalletBalance();
+        if (walletBalance < previewTotal) {
+          setSnackbarMessage("Insufficient wallet balance");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+          setLoading(false);
+          setShowLoader(false);
+          return;
+        }
+  
+        // Deduct amount from wallet
+        const deductResponse = await axiosInstance.post("/wallet/transaction", {
+          amount: previewTotal,
+          type: "debit",
+          description: "Payment for order",
+        });
+  
+        if (!deductResponse.data.success) {
+          throw new Error("Failed to deduct amount from wallet");
+        }
+      }
+  
       const response = await axiosInstance.post(
         "/checkout/create-checkout",
         checkoutPayload
       );
-
+  
       if (response.data.success) {
         await clearCart();
         setSnackbarMessage("Order placed successfully!");
@@ -452,27 +494,23 @@ const CheckoutPage = () => {
         }, 2000);
       }
     } catch (error) {
-      // Log the error for debugging
       console.error("Checkout error:", error.response?.data || error.message);
-
-      // Handle blocked products case
+  
       if (error.response?.data?.blockedProducts) {
         const blockedItems = error.response.data.blockedProducts.join(", ");
         setSnackbarMessage(
           `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
         );
       } else {
-        // Handle other errors
         setSnackbarMessage(
           error.response?.data?.message ||
             "Failed to place order. Please try again."
         );
       }
-
+  
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-
-      // If there are blocked products, redirect to cart after showing message
+  
       if (error.response?.data?.blockedProducts) {
         setTimeout(() => {
           router.push("/cart/cartpage");
@@ -757,6 +795,24 @@ const CheckoutPage = () => {
                       <Typography variant="subtitle1">Pay Online</Typography>
                       <Typography variant="body2" color="textSecondary">
                         Credit/Debit Card, UPI, Net Banking
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ mb: 2 }}
+              />
+              <FormControlLabel
+                value="wallet"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <AccountBalanceWallet sx={{ mr: 1 }} />
+                    <Box>
+                      <Typography variant="subtitle1">
+                        Pay with Wallet
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Use your digital wallet balance
                       </Typography>
                     </Box>
                   </Box>

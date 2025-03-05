@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -13,43 +13,41 @@ import {
   Divider,
   Badge,
   CircularProgress,
-  Snackbar
-} from '@mui/material';
-import { Send } from '@mui/icons-material';
-import io from 'socket.io-client';
-import adminAxiosInstance from '@/utils/adminAxiosInstance';
+  Snackbar,
+} from "@mui/material";
+import { Send, Done, DoneAll } from "@mui/icons-material";
+import io from "socket.io-client";
+import adminAxiosInstance from "@/utils/adminAxiosInstance";
 
 const DisplayChat = () => {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [selectedChatId, setSelectedChatId] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Function to scroll to the bottom of the chat
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
-  // Modified handleScroll function
   const handleScroll = () => {
     const container = chatContainerRef.current;
     if (container) {
       const isNearBottom =
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+        container.scrollHeight - container.scrollTop <=
+        container.clientHeight + 50;
       setIsAutoScrolling(isNearBottom);
     }
   };
 
-  // Scroll to bottom on initial load and when new messages arrive
   useEffect(() => {
     if (selectedChat?.messages && isInitialLoad) {
       scrollToBottom();
@@ -59,42 +57,41 @@ const DisplayChat = () => {
     }
   }, [selectedChat?.messages, isInitialLoad]);
 
-  // Reset initial load state when changing chats
   useEffect(() => {
     if (selectedChatId) {
       setIsInitialLoad(true);
     }
   }, [selectedChatId]);
 
-  // Load chats when the component mounts
   useEffect(() => {
     loadChats();
 
-    const newSocket = io('http://localhost:9090', {
-      withCredentials: true
+    const newSocket = io("http://localhost:9090", {
+      withCredentials: true,
     });
 
-    newSocket.on('connect', () => {
-      console.log('Admin socket connected:', newSocket.id);
-      newSocket.emit('admin-join');
+    newSocket.on("connect", () => {
+      console.log("Admin socket connected:", newSocket.id);
+      newSocket.emit("admin-join");
     });
 
-    newSocket.on('new-message', (data) => {
-      console.log('New message received:', data);
+    newSocket.on("new-message", (data) => {
+      console.log("New message received:", data);
       if (data.message && data.chatId) {
-        setChats(prevChats => {
-          return prevChats.map(chat => {
+        setChats((prevChats) => {
+          return prevChats.map((chat) => {
             if (chat._id !== data.chatId) return chat;
 
-            // Check if message already exists
-            const messageExists = chat.messages.some(msg => msg._id === data.message._id);
+            const messageExists = chat.messages.some(
+              (msg) => msg._id === data.message._id
+            );
             if (messageExists) return chat;
 
-            // Add new message
             return {
               ...chat,
-              messages: [...chat.messages, data.message]
-                .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+              messages: [...chat.messages, data.message].sort(
+                (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+              ),
             };
           });
         });
@@ -106,10 +103,9 @@ const DisplayChat = () => {
     return () => newSocket.disconnect();
   }, []);
 
-  // Update selected chat when selectedChatId or chats change
   useEffect(() => {
     if (selectedChatId && chats.length > 0) {
-      const currentChat = chats.find(chat => chat._id === selectedChatId);
+      const currentChat = chats.find((chat) => chat._id === selectedChatId);
       if (currentChat) {
         setSelectedChat(currentChat);
         markChatAsRead(selectedChatId);
@@ -117,151 +113,286 @@ const DisplayChat = () => {
     }
   }, [chats, selectedChatId]);
 
-  // Function to load chats
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await adminAxiosInstance.get('/chat/admin-chats');
+      const response = await adminAxiosInstance.get("/chat/admin-chats");
       if (response.data) {
         setChats(response.data);
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error loading chats:', error);
-      setError('Failed to load chats');
+      console.error("Error loading chats:", error);
+      setError("Failed to load chats");
       setLoading(false);
     }
   };
 
-  // Function to send a message
+  const getLatestMessage = (chat) => {
+    if (chat.messages.length === 0) return "";
+    const latestMessage = chat.messages[chat.messages.length - 1];
+    return latestMessage.message;
+  };
+
+  const hasUnreadMessages = (chat) => {
+    return chat.messages.some((msg) => msg.senderType === "User" && !msg.read);
+  };
+
   const handleSend = async () => {
     if (!message.trim() || !selectedChat) return;
 
     const messageText = message.trim();
-    setMessage('');
+    setMessage("");
 
     try {
-      const response = await adminAxiosInstance.post('/chat/send-message', {
+      const response = await adminAxiosInstance.post("/chat/send-message", {
         userId: selectedChat.user._id,
         message: messageText,
-        senderType: 'Admin'
+        senderType: "Admin",
       });
 
       if (response.data.success) {
-        // Update the chat with the new message immediately
-        setChats(prevChats => {
-          return prevChats.map(chat => {
+        setChats((prevChats) => {
+          return prevChats.map((chat) => {
             if (chat._id !== selectedChat._id) return chat;
 
             return {
               ...chat,
-              messages: [...chat.messages, response.data.data]
-                .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+              messages: [...chat.messages, response.data.data].sort(
+                (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+              ),
             };
           });
         });
 
-        // Emit socket event
-        socket?.emit('send-message', {
+        socket?.emit("send-message", {
           userId: selectedChat.user._id,
           message: messageText,
-          senderType: 'Admin'
+          senderType: "Admin",
         });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      setError('Failed to send message');
+      console.error("Error sending message:", error);
+      setError("Failed to send message");
       setMessage(messageText);
     }
   };
 
-  // Function to handle chat selection
   const handleChatSelect = (chat) => {
     setSelectedChatId(chat._id);
-    setIsAutoScrolling(true); // Enable auto-scroll when a new chat is selected
+    setIsAutoScrolling(true);
   };
 
-  // Function to mark chat as read
   const markChatAsRead = async (chatId) => {
     try {
       await adminAxiosInstance.put(`/chat/mark-read/${chatId}`);
-      setChats(prevChats =>
-        prevChats.map(chat =>
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
           chat._id === chatId
             ? {
                 ...chat,
-                messages: chat.messages.map(msg =>
-                  msg.senderType === 'User' ? { ...msg, read: true } : msg
-                )
+                messages: chat.messages.map((msg) =>
+                  msg.senderType === "User" ? { ...msg, read: true } : msg
+                ),
               }
             : chat
         )
       );
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      console.error("Error marking messages as read:", error);
     }
   };
 
-  // Function to get unread message count
   const getUnreadCount = (chat) => {
-    return chat.messages.filter(msg => !msg.read && msg.senderType === 'User').length;
+    return chat.messages.filter((msg) => !msg.read && msg.senderType === "User")
+      .length;
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', p: 2, gap: 2 }}>
-      {/* Chat List */}
-      <Paper sx={{ width: 300, overflow: 'auto' }}>
-        <List>
-          {chats.map((chat) => (
-            <React.Fragment key={chat._id}>
-              <ListItem
-                button
-                selected={selectedChatId === chat._id}
-                onClick={() => handleChatSelect(chat)}
-              >
-                <ListItemAvatar>
-                  <Badge
-                    badgeContent={getUnreadCount(chat)}
-                    color="error"
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
+    <Box
+      sx={{ display: "flex", height: "95vh", p: 2, gap: 2, bgcolor: "#f0f2f5" }}
+    >
+      {/* Chat List Sidebar */}
+      <Paper
+        elevation={3}
+        sx={{
+          width: 320,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 2,
+        }}
+      >
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: "#f8f9fa",
+            borderBottom: "1px solid #e0e0e0",
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#2c3e50" }}>
+            Chats
+          </Typography>
+        </Box>
+
+        <List
+          sx={{
+            overflow: "auto",
+            flex: 1,
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "#f1f1f1",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "#bdc3c7",
+              borderRadius: "3px",
+            },
+          }}
+        >
+          {chats
+            .filter(
+              (chat, index, self) =>
+                chat.user &&
+                chat.user._id &&
+                index === self.findIndex((c) => c.user?._id === chat.user._id)
+            )
+            .map((chat) => {
+              console.log(chat);
+              return (
+                <React.Fragment key={chat._id}>
+                  <ListItem
+                    button
+                    selected={selectedChatId === chat._id}
+                    onClick={() => handleChatSelect(chat)}
+                    sx={{
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "rgba(0, 0, 0, 0.04)",
+                      },
+                      "&.Mui-selected": {
+                        bgcolor: "rgba(25, 118, 210, 0.08)",
+                        "&:hover": {
+                          bgcolor: "rgba(25, 118, 210, 0.12)",
+                        },
+                      },
                     }}
                   >
-                    <Avatar src={chat.user?.image}>
-                      {chat.user?.username?.[0]?.toUpperCase()}
-                    </Avatar>
-                  </Badge>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={chat.user?.username || 'Anonymous'}
-                  secondary={chat.user?.email}
-                />
-              </ListItem>
-              <Divider />
-            </React.Fragment>
-          ))}
+                    <ListItemAvatar>
+                      <Badge
+                        badgeContent={getUnreadCount(chat)}
+                        color="error"
+                        sx={{
+                          "& .MuiBadge-badge": {
+                            bgcolor: "#e74c3c",
+                            color: "white",
+                          },
+                        }}
+                      >
+                        <Avatar
+                          src={chat.user?.image}
+                          sx={{
+                            bgcolor: "#3498db",
+                            width: 45,
+                            height: 45,
+                          }}
+                        >
+                          {chat.user?.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                      </Badge>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          sx={{
+                            fontWeight: hasUnreadMessages(chat) ? 600 : 400,
+                            color: "#2c3e50",
+                          }}
+                        >
+                          {chat.user?.username || "Anonymous"}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: hasUnreadMessages(chat)
+                              ? "#2c3e50"
+                              : "#7f8c8d",
+                            fontWeight: hasUnreadMessages(chat) ? 500 : 400,
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {getLatestMessage(chat)}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                  <Divider variant="inset" component="li" />
+                </React.Fragment>
+              );
+            })}
         </List>
       </Paper>
 
-      {/* Chat Messages */}
       {selectedChat ? (
-        <Paper sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
-            <Typography variant="h6">
-              {selectedChat.user?.username || 'Anonymous'}
-            </Typography>
-            <Typography variant="body2">
-              {selectedChat.user?.email}
-            </Typography>
+        <Paper
+          elevation={3}
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "#f8f9fa",
+              borderBottom: "1px solid #e0e0e0",
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <Avatar
+              src={selectedChat.user?.image}
+              sx={{ width: 48, height: 48, bgcolor: "#3498db" }}
+            >
+              {selectedChat.user?.username?.[0]?.toUpperCase()}
+            </Avatar>
+
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "#2c3e50",
+                  fontWeight: 600,
+                }}
+              >
+                {selectedChat.user?.username || "Anonymous"}
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
+                {selectedChat.user?.email}
+              </Typography>
+            </Box>
           </Box>
 
           <Box
@@ -270,20 +401,18 @@ const DisplayChat = () => {
             sx={{
               flex: 1,
               p: 2,
-              overflow: 'auto',
-              scrollBehavior: 'smooth',
-              '&::-webkit-scrollbar': {
-                width: '8px',
+              overflow: "auto",
+              bgcolor: "#f8f9fa",
+              scrollBehavior: "smooth",
+              "&::-webkit-scrollbar": {
+                width: "6px",
               },
-              '&::-webkit-scrollbar-track': {
-                background: '#f1f1f1',
+              "&::-webkit-scrollbar-track": {
+                background: "#f1f1f1",
               },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#888',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                background: '#555',
+              "&::-webkit-scrollbar-thumb": {
+                background: "#bdc3c7",
+                borderRadius: "3px",
               },
             }}
           >
@@ -291,50 +420,116 @@ const DisplayChat = () => {
               <Box
                 key={msg._id}
                 sx={{
-                  display: 'flex',
-                  justifyContent: msg.senderType === 'Admin' ? 'flex-end' : 'flex-start',
-                  mb: 1
+                  display: "flex",
+                  justifyContent:
+                    msg.senderType === "Admin" ? "flex-end" : "flex-start",
+                  mb: 1.5,
                 }}
               >
                 <Paper
+                  elevation={0}
                   sx={{
-                    p: 1,
-                    bgcolor: msg.senderType === 'Admin' ? 'primary.light' : 'grey.100',
-                    color: msg.senderType === 'Admin' ? 'white' : 'inherit',
-                    maxWidth: '70%'
+                    p: 1.5,
+                    px: 2,
+                    bgcolor: msg.senderType === "Admin" ? "#e3f2fd" : "white",
+                    color: "#2c3e50",
+                    maxWidth: "70%",
+                    borderRadius: 2,
+                    position: "relative",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <Typography variant="body1">{msg.message}</Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  <Typography variant="body1" sx={{ mb: 0.5 }}>
+                    {msg.message}
                   </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#7f8c8d",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {new Date(msg.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Typography>
+                    {/* {msg.senderType === "Admin" && (
+                      msg.read ? (
+                        <DoneAll sx={{ fontSize: 16, color: '#3498db' }} />
+                      ) : (
+                        <Done sx={{ fontSize: 16, color: '#7f8c8d' }} />
+                      )
+                    )} */}
+                  </Box>
                 </Paper>
               </Box>
             ))}
             <div ref={messagesEndRef} />
           </Box>
 
-          <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "white",
+              borderTop: "1px solid #e0e0e0",
+              display: "flex",
+              gap: 1,
+            }}
+          >
             <TextField
               fullWidth
               size="small"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyPress={(e) => e.key === "Enter" && handleSend()}
               placeholder="Type a message..."
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  bgcolor: "#f8f9fa",
+                },
+              }}
             />
             <IconButton
               onClick={handleSend}
-              color="primary"
               disabled={!message.trim()}
+              sx={{
+                bgcolor: "#3498db",
+                color: "white",
+                "&:hover": {
+                  bgcolor: "#2980b9",
+                },
+                "&:disabled": {
+                  bgcolor: "#bdc3c7",
+                },
+              }}
             >
               <Send />
             </IconButton>
           </Box>
         </Paper>
       ) : (
-        <Paper sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Typography variant="h6" color="textSecondary">
+        <Paper
+          elevation={3}
+          sx={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 2,
+            bgcolor: "white",
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#7f8c8d" }}>
             Select a chat to start messaging
           </Typography>
         </Paper>
@@ -343,7 +538,7 @@ const DisplayChat = () => {
       <Snackbar
         open={!!error}
         autoHideDuration={6000}
-        onClose={() => setError('')}
+        onClose={() => setError("")}
         message={error}
       />
     </Box>
