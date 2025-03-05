@@ -20,10 +20,8 @@ export default function App({ Component, pageProps, emotionCache = clientSideEmo
   const isAdminRoute = router.pathname.startsWith('/admin');
 
   useEffect(() => {
-    // Setup global axios configuration
     setupAxios();
 
-    // Remove JSS styles
     const jssStyles = document.querySelector('#jss-server-side');
     if (jssStyles) {
       jssStyles.parentElement.removeChild(jssStyles);

@@ -71,7 +71,7 @@ import OrderManagement from "../components/orders/orders";
 import CouponManagement from "../components/coupons/coupons";
 import OfferManagement from "../components/offers/offfers";
 import BannerManagement from "../components/banners/banners";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import DisplayChat from "../components/chat/displayChat";
 
 const Dashboard = () => {
@@ -80,7 +80,7 @@ const Dashboard = () => {
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
   const [orders, setOrders] = useState([]);
   const [filterType, setFilterType] = useState("last7days");
-  
+
   const [customDates, setCustomDates] = useState({
     startDate: "",
     endDate: "",
@@ -103,7 +103,7 @@ const Dashboard = () => {
     totalRevenue: 0,
     totalExpenses: 0,
     netProfit: 0,
-    recentTransactions: []
+    recentTransactions: [],
   });
 
   const router = useRouter();
@@ -136,7 +136,7 @@ const Dashboard = () => {
     setLedgerPage(0);
   };
 
-  const [chartFilter, setChartFilter] = useState('monthly');
+  const [chartFilter, setChartFilter] = useState("monthly");
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
@@ -145,35 +145,35 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!orders.length) return;
-    
+
     const currentDate = new Date();
     let filteredOrders = [];
 
     switch (chartFilter) {
-      case 'yearly':
+      case "yearly":
         filteredOrders = orders;
         break;
 
-      case 'monthly':
-        filteredOrders = orders.filter(order => {
+      case "monthly":
+        filteredOrders = orders.filter((order) => {
           const orderDate = new Date(order.createdAt);
           return orderDate.getFullYear() === currentDate.getFullYear();
         });
         break;
 
-      case 'weekly':
+      case "weekly":
         const oneWeekAgo = new Date(currentDate);
         oneWeekAgo.setDate(currentDate.getDate() - 7);
-        filteredOrders = orders.filter(order => {
+        filteredOrders = orders.filter((order) => {
           const orderDate = new Date(order.createdAt);
           return orderDate >= oneWeekAgo;
         });
         break;
 
-      case 'daily':
+      case "daily":
         const today = new Date(currentDate);
         today.setHours(0, 0, 0, 0);
-        filteredOrders = orders.filter(order => {
+        filteredOrders = orders.filter((order) => {
           const orderDate = new Date(order.createdAt);
           return orderDate >= today;
         });
@@ -277,10 +277,10 @@ const Dashboard = () => {
   const handleConfirmLogout = async () => {
     try {
       await axiosInstance.post("/adminlogout");
-      
+
       localStorage.removeItem("admin-logged");
-      Cookies.remove('adminToken');
-      
+      Cookies.remove("adminToken");
+
       router.push("/admin/authentication/login");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -376,16 +376,16 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const [productsRes, categoriesRes, brandsRes] = await Promise.all([
-          axiosInstance.get('/products/get?page=1&limit=10'),
-          axiosInstance.get('/categories/get/admin'),
-          axiosInstance.get('/brands/get/admin')
+          axiosInstance.get("/products/get?page=1&limit=10"),
+          axiosInstance.get("/categories/get/admin"),
+          axiosInstance.get("/brands/get/admin"),
         ]);
-        
+
         setProducts(productsRes.data.products || []);
         setCategories(categoriesRes.data.categories || []);
         setBrands(brandsRes.data || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -398,34 +398,39 @@ const Dashboard = () => {
     const calculateLedgerData = () => {
       if (!orders || orders.length === 0) return;
 
-      const ledger = orders.reduce((acc, order) => {
-        // Calculate revenue
-        if (order.orderStatus !== "Cancelled") {
-          acc.totalRevenue += order.totalAmount;
+      const ledger = orders.reduce(
+        (acc, order) => {
+          // Calculate revenue
+          if (order.orderStatus !== "Cancelled") {
+            acc.totalRevenue += order.totalAmount;
+          }
+
+          // Add to transactions list
+          acc.recentTransactions.push({
+            id: order.orderId,
+            date: order.createdAt,
+            type: "CREDIT",
+            amount: order.totalAmount,
+            description: `Order #${order.orderId}`,
+            status: order.orderStatus,
+            paymentMethod: order.payment.method,
+          });
+
+          return acc;
+        },
+        {
+          totalRevenue: 0,
+          totalExpenses: 0,
+          netProfit: 0,
+          recentTransactions: [],
         }
-
-        // Add to transactions list
-        acc.recentTransactions.push({
-          id: order.orderId,
-          date: order.createdAt,
-          type: 'CREDIT',
-          amount: order.totalAmount,
-          description: `Order #${order.orderId}`,
-          status: order.orderStatus,
-          paymentMethod: order.payment.method
-        });
-
-        return acc;
-      }, {
-        totalRevenue: 0,
-        totalExpenses: 0,
-        netProfit: 0,
-        recentTransactions: []
-      });
+      );
 
       // Sort transactions by date
-      ledger.recentTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
+      ledger.recentTransactions.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
       // Calculate net profit
       ledger.netProfit = ledger.totalRevenue - ledger.totalExpenses;
 
@@ -439,12 +444,15 @@ const Dashboard = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Ledger");
-    XLSX.writeFile(workbook, `ledger_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `ledger_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   return (
     <>
-      <Box sx={{ display: "flex", width: "100%", height: "100vh" }}>
+      <Box sx={{ display: "flex", width: "100%" }}>
         <Drawer
           sx={{
             width: "25%",
@@ -649,7 +657,14 @@ const Dashboard = () => {
 
               <Card sx={{ mb: 3, backgroundColor: "#333" }}>
                 <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 2,
+                    }}
+                  >
                     <Typography variant="h6" sx={{ color: "white" }}>
                       Sales Overview
                     </Typography>
@@ -658,18 +673,18 @@ const Dashboard = () => {
                         value={chartFilter}
                         onChange={(e) => setChartFilter(e.target.value)}
                         sx={{
-                          color: 'white',
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                          color: "white",
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "rgba(255, 255, 255, 0.23)",
                           },
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(255, 255, 255, 0.23)',
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "rgba(255, 255, 255, 0.23)",
                           },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#FF9800',
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#FF9800",
                           },
-                          '& .MuiSvgIcon-root': {
-                            color: 'white',
+                          "& .MuiSvgIcon-root": {
+                            color: "white",
                           },
                         }}
                       >
@@ -774,21 +789,527 @@ const Dashboard = () => {
                 onRowsPerPageChange={handleRowsPerPageChange}
                 rowsPerPageOptions={[5, 10, 25]}
                 sx={{
-                  color: 'white',
-                  '.MuiTablePagination-select': {
-                    color: 'white'
+                  color: "white",
+                  ".MuiTablePagination-select": {
+                    color: "white",
                   },
-                  '.MuiTablePagination-selectIcon': {
-                    color: 'white'
+                  ".MuiTablePagination-selectIcon": {
+                    color: "white",
                   },
-                  '.MuiTablePagination-displayedRows': {
-                    color: 'white'
+                  ".MuiTablePagination-displayedRows": {
+                    color: "white",
                   },
-                  '.MuiTablePagination-actions': {
-                    color: 'white'
-                  }
+                  ".MuiTablePagination-actions": {
+                    color: "white",
+                  },
                 }}
               />
+              {/* Top Products, Categories, and Brands Overview */}
+              <Grid container spacing={3}>
+                {/* Products Column */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ backgroundColor: "#333", height: "100%" }}>
+                    <CardHeader
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="h6" sx={{ color: "#FF9800" }}>
+                            Top Products
+                          </Typography>
+                          <Chip
+                            label={`Total: ${products.length}`}
+                            sx={{ backgroundColor: "#FF9800", color: "white" }}
+                          />
+                        </Box>
+                      }
+                    />
+                    <CardContent>
+                      <List sx={{ maxHeight: 400, overflow: "auto" }}>
+                        {loading ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              p: 2,
+                            }}
+                          >
+                            <CircularProgress sx={{ color: "#FF9800" }} />
+                          </Box>
+                        ) : (
+                          products.slice(0, 10).map((product) => (
+                            <ListItem
+                              key={product._id}
+                              sx={{
+                                color: "white",
+                                "&:hover": { backgroundColor: "#444" },
+                                borderRadius: 1,
+                                mb: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <img
+                                  src={product.variants?.[0]?.mainImage}
+                                  alt={product.name}
+                                  style={{
+                                    width: 60,
+                                    height: 60,
+                                    marginRight: 10,
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                  }}
+                                />
+                                <Box sx={{ flexGrow: 1 }}>
+                                  <Typography variant="body1">
+                                    {product.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="gray">
+                                    {product.category.name} |{" "}
+                                    {product.brand.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="#FF9800">
+                                    ₹
+                                    {product.variants?.[0]?.sizes?.[0]?.price ||
+                                      "N/A"}
+                                  </Typography>
+                                </Box>
+                                {product.isDeleted && (
+                                  <Chip
+                                    label="Blocked"
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: "#f44336",
+                                      color: "white",
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </ListItem>
+                          ))
+                        )}
+                      </List>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Categories Column */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ backgroundColor: "#333", height: "100%" }}>
+                    <CardHeader
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="h6" sx={{ color: "#FF9800" }}>
+                            Categories
+                          </Typography>
+                          <Chip
+                            label={`Total: ${categories.length}`}
+                            sx={{ backgroundColor: "#FF9800", color: "white" }}
+                          />
+                        </Box>
+                      }
+                    />
+                    <CardContent>
+                      <List sx={{ maxHeight: 400, overflow: "auto" }}>
+                        {loading ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              p: 2,
+                            }}
+                          >
+                            <CircularProgress sx={{ color: "#FF9800" }} />
+                          </Box>
+                        ) : (
+                          categories.slice(0, 10).map((category) => (
+                            <ListItem
+                              key={category._id}
+                              sx={{
+                                color: "white",
+                                "&:hover": { backgroundColor: "#444" },
+                                borderRadius: 1,
+                                mb: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <CategoryIcon
+                                  sx={{ mr: 2, color: "#FF9800" }}
+                                />
+                                <Box sx={{ flexGrow: 1 }}>
+                                  <Typography variant="body1">
+                                    {category.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="gray">
+                                    Created:{" "}
+                                    {new Date(
+                                      category.createdAt
+                                    ).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                                {category.isDeleted && (
+                                  <Chip
+                                    label="Blocked"
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: "#f44336",
+                                      color: "white",
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </ListItem>
+                          ))
+                        )}
+                      </List>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Brands Column */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ backgroundColor: "#333", height: "100%" }}>
+                    <CardHeader
+                      title={
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="h6" sx={{ color: "#FF9800" }}>
+                            Brands
+                          </Typography>
+                          <Chip
+                            label={`Total: ${brands.length}`}
+                            sx={{ backgroundColor: "#FF9800", color: "white" }}
+                          />
+                        </Box>
+                      }
+                    />
+                    <CardContent>
+                      <List sx={{ maxHeight: 400, overflow: "auto" }}>
+                        {loading ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              p: 2,
+                            }}
+                          >
+                            <CircularProgress sx={{ color: "#FF9800" }} />
+                          </Box>
+                        ) : (
+                          brands.slice(0, 10).map((brand) => (
+                            <ListItem
+                              key={brand._id}
+                              sx={{
+                                color: "white",
+                                "&:hover": { backgroundColor: "#444" },
+                                borderRadius: 1,
+                                mb: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <img
+                                  src={brand.image}
+                                  alt={brand.name}
+                                  style={{
+                                    width: 60,
+                                    height: 60,
+                                    marginRight: 10,
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                  }}
+                                />
+                                <Box sx={{ flexGrow: 1 }}>
+                                  <Typography variant="body1">
+                                    {brand.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="gray">
+                                    Created:{" "}
+                                    {new Date(
+                                      brand.createdAt
+                                    ).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                                {brand.isDeleted && (
+                                  <Chip
+                                    label="Blocked"
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: "#f44336",
+                                      color: "white",
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </ListItem>
+                          ))
+                        )}
+                      </List>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {/* Ledger Book Section */}
+              <Card
+                sx={{
+                  backgroundColor: "#333",
+                  mb: 3,
+                  borderRadius: 2,
+                  boxShadow: 3,
+                  margin: "15px 0px",
+                }}
+              >
+                <CardHeader
+                  title={
+                    <Typography variant="h5" sx={{ color: "#FF9800" }}>
+                      Financial Ledger
+                    </Typography>
+                  }
+                />
+                <CardContent>
+                  {/* Summary Cards */}
+                  <Grid container spacing={3} sx={{ mb: 3 }}>
+                    <Grid item xs={12} md={4}>
+                      <Card
+                        sx={{
+                          backgroundColor: "#424242",
+                          p: 2,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ color: "#4CAF50" }}>
+                          Total Revenue
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: "white" }}>
+                          ₹{ledgerData.totalRevenue.toLocaleString("en-IN")}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Card
+                        sx={{
+                          backgroundColor: "#424242",
+                          p: 2,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ color: "#F44336" }}>
+                          Total Expenses
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: "white" }}>
+                          ₹{ledgerData.totalExpenses.toLocaleString("en-IN")}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Card
+                        sx={{
+                          backgroundColor: "#424242",
+                          p: 2,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Typography variant="h6" sx={{ color: "#FF9800" }}>
+                          Net Profit
+                        </Typography>
+                        <Typography variant="h4" sx={{ color: "white" }}>
+                          ₹{ledgerData.netProfit.toLocaleString("en-IN")}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  </Grid>
+
+                  {/* Transactions Table */}
+                  <TableContainer
+                    component={Paper}
+                    sx={{ backgroundColor: "#424242" }}
+                  >
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Date
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Transaction ID
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Description
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Type
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Amount
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Payment Method
+                          </TableCell>
+                          <TableCell
+                            sx={{ color: "#FF9800", fontWeight: "bold" }}
+                          >
+                            Status
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {paginatedLedgerTransactions.map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell sx={{ color: "white" }}>
+                              {new Date(transaction.date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell sx={{ color: "white" }}>
+                              {transaction.id}
+                            </TableCell>
+                            <TableCell sx={{ color: "white" }}>
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={transaction.type}
+                                sx={{
+                                  backgroundColor:
+                                    transaction.type === "CREDIT"
+                                      ? "#4CAF50"
+                                      : "#F44336",
+                                  color: "white",
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ color: "white" }}>
+                              ₹{transaction.amount.toLocaleString("en-IN")}
+                            </TableCell>
+                            <TableCell sx={{ color: "white" }}>
+                              {transaction.paymentMethod}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={transaction.status}
+                                sx={{
+                                  backgroundColor:
+                                    transaction.status === "Completed"
+                                      ? "#4CAF50"
+                                      : transaction.status === "Pending"
+                                      ? "#FF9800"
+                                      : transaction.status === "Cancelled"
+                                      ? "#F44336"
+                                      : "#757575",
+                                  color: "white",
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {/* Ledger Table Pagination */}
+                  <TablePagination
+                    component="div"
+                    count={ledgerData.recentTransactions.length}
+                    page={ledgerPage}
+                    onPageChange={handleLedgerPageChange}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                    rowsPerPageOptions={[5, 10, 25]}
+                    sx={{
+                      color: "white",
+                      ".MuiTablePagination-select": {
+                        color: "white",
+                      },
+                      ".MuiTablePagination-selectIcon": {
+                        color: "white",
+                      },
+                      ".MuiTablePagination-displayedRows": {
+                        color: "white",
+                      },
+                      ".MuiTablePagination-actions": {
+                        color: "white",
+                      },
+                    }}
+                  />
+
+                  {/* Export Buttons */}
+                  <Box
+                    sx={{
+                      mt: 2,
+                      display: "flex",
+                      gap: 2,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      startIcon={<GetApp />}
+                      onClick={() => generatePDF("ledger")}
+                      sx={{
+                        backgroundColor: "#FF9800",
+                        "&:hover": { backgroundColor: "#F57C00" },
+                      }}
+                    >
+                      Export as PDF
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<TableChart />}
+                      onClick={() =>
+                        exportToExcel(ledgerData.recentTransactions)
+                      }
+                      sx={{
+                        backgroundColor: "#4CAF50",
+                        "&:hover": { backgroundColor: "#388E3C" },
+                      }}
+                    >
+                      Export as Excel
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
             </Box>
           )}
 
@@ -800,373 +1321,7 @@ const Dashboard = () => {
           {selectedTopic === "Coupons" && <CouponManagement />}
           {selectedTopic === "Offers" && <OfferManagement />}
           {selectedTopic === "Banners" && <BannerManagement />}
-          {selectedTopic === "Chats" && <DisplayChat/>}
-
-          {/* Top Products, Categories, and Brands Overview */}
-          <Grid container spacing={3}>
-            {/* Products Column */}
-            <Grid item xs={12} md={4} >
-              <Card sx={{ backgroundColor: "#333", height: '100%' }}>
-                <CardHeader
-                  title={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" sx={{ color: "#FF9800" }}>Top Products</Typography>
-                      <Chip 
-                        label={`Total: ${products.length}`} 
-                        sx={{ backgroundColor: '#FF9800', color: 'white' }}
-                      />
-                    </Box>
-                  }
-                />
-                <CardContent>
-                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                    {loading ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                        <CircularProgress sx={{ color: '#FF9800' }} />
-                      </Box>
-                    ) : (
-                      products.slice(0, 10).map((product) => (
-                        <ListItem 
-                          key={product._id}
-                          sx={{ 
-                            color: "white",
-                            '&:hover': { backgroundColor: '#444' },
-                            borderRadius: 1,
-                            mb: 1
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                            <img 
-                              src={product.variants?.[0]?.mainImage} 
-                              alt={product.name}
-                              style={{ 
-                                width: 60, 
-                                height: 60, 
-                                marginRight: 10, 
-                                objectFit: 'cover',
-                                borderRadius: '4px'
-                              }}
-                            />
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="body1">{product.name}</Typography>
-                              <Typography variant="body2" color="gray">
-                                {product.category.name} | {product.brand.name}
-                              </Typography>
-                              <Typography variant="body2" color="#FF9800">
-                                ₹{product.variants?.[0]?.sizes?.[0]?.price || 'N/A'}
-                              </Typography>
-                            </Box>
-                            {product.isDeleted && (
-                              <Chip 
-                                label="Blocked" 
-                                size="small" 
-                                sx={{ backgroundColor: '#f44336', color: 'white' }}
-                              />
-                            )}
-                          </Box>
-                        </ListItem>
-                      ))
-                    )}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Categories Column */}
-            <Grid item xs={12} md={4}>
-              <Card sx={{ backgroundColor: "#333", height: '100%' }}>
-                <CardHeader
-                  title={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" sx={{ color: "#FF9800" }}>Categories</Typography>
-                      <Chip 
-                        label={`Total: ${categories.length}`} 
-                        sx={{ backgroundColor: '#FF9800', color: 'white' }}
-                      />
-                    </Box>
-                  }
-                />
-                <CardContent>
-                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                    {loading ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                        <CircularProgress sx={{ color: '#FF9800' }} />
-                      </Box>
-                    ) : (
-                      categories.slice(0, 10).map((category) => (
-                        <ListItem 
-                          key={category._id}
-                          sx={{ 
-                            color: "white",
-                            '&:hover': { backgroundColor: '#444' },
-                            borderRadius: 1,
-                            mb: 1
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                            <CategoryIcon sx={{ mr: 2, color: '#FF9800' }} />
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="body1">{category.name}</Typography>
-                              <Typography variant="body2" color="gray">
-                                Created: {new Date(category.createdAt).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                            {category.isDeleted && (
-                              <Chip 
-                                label="Blocked" 
-                                size="small" 
-                                sx={{ backgroundColor: '#f44336', color: 'white' }}
-                              />
-                            )}
-                          </Box>
-                        </ListItem>
-                      ))
-                    )}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Brands Column */}
-            <Grid item xs={12} md={4}>
-              <Card sx={{ backgroundColor: "#333", height: '100%' }}>
-                <CardHeader
-                  title={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" sx={{ color: "#FF9800" }}>Brands</Typography>
-                      <Chip 
-                        label={`Total: ${brands.length}`} 
-                        sx={{ backgroundColor: '#FF9800', color: 'white' }}
-                      />
-                    </Box>
-                  }
-                />
-                <CardContent>
-                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                    {loading ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                        <CircularProgress sx={{ color: '#FF9800' }} />
-                      </Box>
-                    ) : (
-                      brands.slice(0, 10).map((brand) => (
-                        <ListItem 
-                          key={brand._id}
-                          sx={{ 
-                            color: "white",
-                            '&:hover': { backgroundColor: '#444' },
-                            borderRadius: 1,
-                            mb: 1
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                            <img 
-                              src={brand.image} 
-                              alt={brand.name}
-                              style={{ 
-                                width: 60, 
-                                height: 60, 
-                                marginRight: 10, 
-                                objectFit: 'cover',
-                                borderRadius: '4px'
-                              }}
-                            />
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="body1">{brand.name}</Typography>
-                              <Typography variant="body2" color="gray">
-                                Created: {new Date(brand.createdAt).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                            {brand.isDeleted && (
-                              <Chip 
-                                label="Blocked" 
-                                size="small" 
-                                sx={{ backgroundColor: '#f44336', color: 'white' }}
-                              />
-                            )}
-                          </Box>
-                        </ListItem>
-                      ))
-                    )}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* Ledger Book Section */}
-          <Card sx={{ 
-            backgroundColor: "#333", 
-            mb: 3,
-            borderRadius: 2,
-            boxShadow: 3, 
-            margin:"15px 0px"
-          }}>
-            <CardHeader
-              title={
-                <Typography variant="h5" sx={{ color: "#FF9800" }}>
-                  Financial Ledger
-                </Typography>
-              }
-            />
-            <CardContent>
-              {/* Summary Cards */}
-              <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={4}>
-                  <Card sx={{ 
-                    backgroundColor: "#424242",
-                    p: 2,
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#4CAF50' }}>
-                      Total Revenue
-                    </Typography>
-                    <Typography variant="h4" sx={{ color: 'white' }}>
-                      ₹{ledgerData.totalRevenue.toLocaleString('en-IN')}
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Card sx={{ 
-                    backgroundColor: "#424242",
-                    p: 2,
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#F44336' }}>
-                      Total Expenses
-                    </Typography>
-                    <Typography variant="h4" sx={{ color: 'white' }}>
-                      ₹{ledgerData.totalExpenses.toLocaleString('en-IN')}
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Card sx={{ 
-                    backgroundColor: "#424242",
-                    p: 2,
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#FF9800' }}>
-                      Net Profit
-                    </Typography>
-                    <Typography variant="h4" sx={{ color: 'white' }}>
-                      ₹{ledgerData.netProfit.toLocaleString('en-IN')}
-                    </Typography>
-                  </Card>
-                </Grid>
-              </Grid>
-
-              {/* Transactions Table */}
-              <TableContainer component={Paper} sx={{ backgroundColor: "#424242" }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Date</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Transaction ID</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Description</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Type</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Amount</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Payment Method</TableCell>
-                      <TableCell sx={{ color: "#FF9800", fontWeight: 'bold' }}>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {paginatedLedgerTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell sx={{ color: 'white' }}>
-                          {new Date(transaction.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell sx={{ color: 'white' }}>
-                          {transaction.id}
-                        </TableCell>
-                        <TableCell sx={{ color: 'white' }}>
-                          {transaction.description}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={transaction.type}
-                            sx={{ 
-                              backgroundColor: transaction.type === 'CREDIT' ? '#4CAF50' : '#F44336',
-                              color: 'white'
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ color: 'white' }}>
-                          ₹{transaction.amount.toLocaleString('en-IN')}
-                        </TableCell>
-                        <TableCell sx={{ color: 'white' }}>
-                          {transaction.paymentMethod}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={transaction.status}
-                            sx={{ 
-                              backgroundColor: 
-                                transaction.status === 'Completed' ? '#4CAF50' :
-                                transaction.status === 'Pending' ? '#FF9800' :
-                                transaction.status === 'Cancelled' ? '#F44336' : '#757575',
-                              color: 'white'
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Ledger Table Pagination */}
-              <TablePagination
-                component="div"
-                count={ledgerData.recentTransactions.length}
-                page={ledgerPage}
-                onPageChange={handleLedgerPageChange}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleRowsPerPageChange}
-                rowsPerPageOptions={[5, 10, 25]}
-                sx={{
-                  color: 'white',
-                  '.MuiTablePagination-select': {
-                    color: 'white'
-                  },
-                  '.MuiTablePagination-selectIcon': {
-                    color: 'white'
-                  },
-                  '.MuiTablePagination-displayedRows': {
-                    color: 'white'
-                  },
-                  '.MuiTablePagination-actions': {
-                    color: 'white'
-                  }
-                }}
-              />
-
-              {/* Export Buttons */}
-              <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<GetApp />}
-                  onClick={() => generatePDF('ledger')}
-                  sx={{
-                    backgroundColor: "#FF9800",
-                    '&:hover': { backgroundColor: "#F57C00" }
-                  }}
-                >
-                  Export as PDF
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<TableChart />}
-                  onClick={() => exportToExcel(ledgerData.recentTransactions)}
-                  sx={{
-                    backgroundColor: "#4CAF50",
-                    '&:hover': { backgroundColor: "#388E3C" }
-                  }}
-                >
-                  Export as Excel
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
+          {selectedTopic === "Chats" && <DisplayChat />}
         </Box>
       </Box>
 
@@ -1178,21 +1333,12 @@ const Dashboard = () => {
         disablePortal
       >
         <DialogTitle id="logout-dialog-title">Confirm Logout</DialogTitle>
-        <DialogContent>
-          Are you sure you want to logout?
-        </DialogContent>
+        <DialogContent>Are you sure you want to logout?</DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleCancelLogout}
-            color="primary"
-            autoFocus
-          >
+          <Button onClick={handleCancelLogout} color="primary" autoFocus>
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirmLogout}
-            color="error"
-          >
+          <Button onClick={handleConfirmLogout} color="error">
             Logout
           </Button>
         </DialogActions>

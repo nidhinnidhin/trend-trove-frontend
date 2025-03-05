@@ -15,10 +15,9 @@ import {
   CircularProgress,
   Snackbar
 } from '@mui/material';
-import { Send, Circle } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import io from 'socket.io-client';
 import adminAxiosInstance from '@/utils/adminAxiosInstance';
-import getCookie from '@/utils/getCookie';
 
 const DisplayChat = () => {
   const [chats, setChats] = useState([]);
@@ -28,50 +27,48 @@ const DisplayChat = () => {
   const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [messageMap, setMessageMap] = useState(new Map());
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const addUniqueMessage = (chatId, newMessage) => {
-    if (!newMessage._id) return;
-
-    setChats(prevChats => {
-      return prevChats.map(chat => {
-        if (chat._id !== chatId) return chat;
-
-        const existingMessages = new Map(
-          chat.messages.map(msg => [msg._id.toString(), msg])
-        );
-
-        if (!existingMessages.has(newMessage._id.toString())) {
-          existingMessages.set(newMessage._id.toString(), newMessage);
-        }
-
-        return {
-          ...chat,
-          messages: Array.from(existingMessages.values())
-            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-        };
-      });
-    });
-  };
-
-  const loadChats = async () => {
-    try {
-      setLoading(true);
-      const response = await adminAxiosInstance.get('/chat/admin-chats');
-      if (response.data) {
-        setChats(response.data);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading chats:', error);
-      setError('Failed to load chats');
-      setLoading(false);
+  // Function to scroll to the bottom of the chat
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
+  // Modified handleScroll function
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (container) {
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+      setIsAutoScrolling(isNearBottom);
+    }
+  };
+
+  // Scroll to bottom on initial load and when new messages arrive
   useEffect(() => {
-    loadChats(); // Load chats immediately when component mounts
+    if (selectedChat?.messages && isInitialLoad) {
+      scrollToBottom();
+      setIsInitialLoad(false);
+    } else if (isAutoScrolling && selectedChat?.messages) {
+      scrollToBottom();
+    }
+  }, [selectedChat?.messages, isInitialLoad]);
+
+  // Reset initial load state when changing chats
+  useEffect(() => {
+    if (selectedChatId) {
+      setIsInitialLoad(true);
+    }
+  }, [selectedChatId]);
+
+  // Load chats when the component mounts
+  useEffect(() => {
+    loadChats();
 
     const newSocket = io('http://localhost:9090', {
       withCredentials: true
@@ -88,14 +85,11 @@ const DisplayChat = () => {
         setChats(prevChats => {
           return prevChats.map(chat => {
             if (chat._id !== data.chatId) return chat;
-            
+
             // Check if message already exists
-            const messageExists = chat.messages.some(msg => 
-              msg._id === data.message._id
-            );
-            
+            const messageExists = chat.messages.some(msg => msg._id === data.message._id);
             if (messageExists) return chat;
-            
+
             // Add new message
             return {
               ...chat,
@@ -112,6 +106,7 @@ const DisplayChat = () => {
     return () => newSocket.disconnect();
   }, []);
 
+  // Update selected chat when selectedChatId or chats change
   useEffect(() => {
     if (selectedChatId && chats.length > 0) {
       const currentChat = chats.find(chat => chat._id === selectedChatId);
@@ -122,9 +117,26 @@ const DisplayChat = () => {
     }
   }, [chats, selectedChatId]);
 
+  // Function to load chats
+  const loadChats = async () => {
+    try {
+      setLoading(true);
+      const response = await adminAxiosInstance.get('/chat/admin-chats');
+      if (response.data) {
+        setChats(response.data);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading chats:', error);
+      setError('Failed to load chats');
+      setLoading(false);
+    }
+  };
+
+  // Function to send a message
   const handleSend = async () => {
     if (!message.trim() || !selectedChat) return;
-    
+
     const messageText = message.trim();
     setMessage('');
 
@@ -140,7 +152,7 @@ const DisplayChat = () => {
         setChats(prevChats => {
           return prevChats.map(chat => {
             if (chat._id !== selectedChat._id) return chat;
-            
+
             return {
               ...chat,
               messages: [...chat.messages, response.data.data]
@@ -163,20 +175,23 @@ const DisplayChat = () => {
     }
   };
 
+  // Function to handle chat selection
   const handleChatSelect = (chat) => {
     setSelectedChatId(chat._id);
+    setIsAutoScrolling(true); // Enable auto-scroll when a new chat is selected
   };
 
+  // Function to mark chat as read
   const markChatAsRead = async (chatId) => {
     try {
       await adminAxiosInstance.put(`/chat/mark-read/${chatId}`);
-      setChats(prevChats => 
-        prevChats.map(chat => 
-          chat._id === chatId 
+      setChats(prevChats =>
+        prevChats.map(chat =>
+          chat._id === chatId
             ? {
-                ...chat, 
-                messages: chat.messages.map(msg => 
-                  msg.senderType === 'User' ? {...msg, read: true} : msg
+                ...chat,
+                messages: chat.messages.map(msg =>
+                  msg.senderType === 'User' ? { ...msg, read: true } : msg
                 )
               }
             : chat
@@ -187,6 +202,7 @@ const DisplayChat = () => {
     }
   };
 
+  // Function to get unread message count
   const getUnreadCount = (chat) => {
     return chat.messages.filter(msg => !msg.read && msg.senderType === 'User').length;
   };
@@ -206,14 +222,14 @@ const DisplayChat = () => {
         <List>
           {chats.map((chat) => (
             <React.Fragment key={chat._id}>
-              <ListItem 
-                button 
+              <ListItem
+                button
                 selected={selectedChatId === chat._id}
                 onClick={() => handleChatSelect(chat)}
               >
                 <ListItemAvatar>
-                  <Badge 
-                    badgeContent={getUnreadCount(chat)} 
+                  <Badge
+                    badgeContent={getUnreadCount(chat)}
                     color="error"
                     anchorOrigin={{
                       vertical: 'bottom',
@@ -225,8 +241,8 @@ const DisplayChat = () => {
                     </Avatar>
                   </Badge>
                 </ListItemAvatar>
-                <ListItemText 
-                  primary={chat.user?.username || 'Anonymous'} 
+                <ListItemText
+                  primary={chat.user?.username || 'Anonymous'}
                   secondary={chat.user?.email}
                 />
               </ListItem>
@@ -248,7 +264,29 @@ const DisplayChat = () => {
             </Typography>
           </Box>
 
-          <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
+          <Box
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+            sx={{
+              flex: 1,
+              p: 2,
+              overflow: 'auto',
+              scrollBehavior: 'smooth',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f1f1f1',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#888',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: '#555',
+              },
+            }}
+          >
             {selectedChat.messages.map((msg) => (
               <Box
                 key={msg._id}
@@ -285,8 +323,8 @@ const DisplayChat = () => {
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Type a message..."
             />
-            <IconButton 
-              onClick={handleSend} 
+            <IconButton
+              onClick={handleSend}
               color="primary"
               disabled={!message.trim()}
             >

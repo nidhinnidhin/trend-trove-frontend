@@ -14,11 +14,56 @@ import {
   Grid,
   Snackbar,
   Alert,
+  Paper,
 } from "@mui/material";
 import Image from "next/image";
 import { Edit } from "@mui/icons-material";
 import EditVariantModal from "./editVariantModel";
 import axiosInstance from "@/utils/adminAxiosInstance";
+import { styled } from "@mui/material/styles";
+
+const StyledModal = styled(Modal)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+const ModalContent = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  padding: theme.spacing(2),
+  borderRadius: '8px',
+  boxShadow: theme.shadows[5],
+  width: '60%',
+  maxHeight: '90vh',
+  overflowY: 'auto',
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 600,
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(1),
+}));
+
+const VariantCard = styled(Paper)(({ theme }) => ({
+  padding: '16px',
+  marginBottom: '16px',
+  borderRadius: '8px',
+  border: '1px solid #e0e0e0',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    borderColor: '#bdbdbd',
+  }
+}));
+
+const ImageContainer = styled(Box)({
+  position: 'relative',
+  width: '80px',
+  height: '80px',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  border: '1px solid #e0e0e0',
+});
 
 const EditProductModal = ({
   open,
@@ -106,23 +151,12 @@ const EditProductModal = ({
 
   return (
     <>
-      <Modal
+      <StyledModal
         open={open}
         onClose={handleClose}
         aria-labelledby="edit-product-modal"
       >
-        <Box
-          sx={{
-            width: "60%",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            backgroundColor: "white",
-            margin: "3% auto",
-            padding: "2rem",
-            borderRadius: "8px",
-            boxShadow: 24,
-          }}
-        >
+        <ModalContent elevation={3}>
           <Typography variant="h5" component="h2" gutterBottom>
             Edit Product
           </Typography>
@@ -170,82 +204,122 @@ const EditProductModal = ({
             />
           </Box>
 
-          <FormControl fullWidth sx={{ marginTop: 3 }}>
-            <InputLabel>Select Variant</InputLabel>
-            <Select
-              value={selectedVariant ? selectedVariant._id : ""}
-              onChange={(e) => {
-                const variant = variants.find((v) => v._id === e.target.value);
-                setSelectedVariant(variant);
-              }}
-              label="Select Variant"
-            >
-              {isLoading ? (
-                <MenuItem disabled>
-                  <CircularProgress size={24} />
-                </MenuItem>
-              ) : (
-                variants.map((variant) => (
-                  <MenuItem key={variant._id} value={variant._id}>
-                    <Grid
-                      container
-                      alignItems="center"
-                      justifyContent="space-between"
-                      spacing={2}
-                    >
-                      <Grid item>
-                        <Image
-                          src={variant.colorImage}
-                          alt="Color"
-                          width={40}
-                          height={40}
-                        />
-                      </Grid>
-                      <Grid item xs>
-                        <Typography variant="body1">{variant.color}</Typography>
-                      </Grid>
-                      <Grid item>
-                        <Image
-                          src={variant.mainImage}
-                          alt="Main"
-                          width={50}
-                          height={50}
-                        />
-                      </Grid>
-                      <Grid item>
-                        <Button
-                          variant="contained"
-                          sx={{ backgroundColor: "orange" }}
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => handleVariantEditClick(variant)}
-                        >
-                          Edit
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 2 
+            }}>
+              <SectionTitle>Product Variants</SectionTitle>
+              <Typography variant="body2" color="text.secondary">
+                {variants.length} variants
+              </Typography>
+            </Box>
 
-          <Box sx={{ marginTop: 3 }}>
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "orange",
-                width: "100%",
-                padding: "12px 0",
-                fontSize: "16px",
-              }}
-              onClick={handleUpdateProduct}
-            >
-              Update Product
-            </Button>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {variants.map((variant) => (
+                  <Grid item xs={12} key={variant._id}>
+                    <VariantCard>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item>
+                          <ImageContainer>
+                            <Image
+                              src={variant.colorImage}
+                              alt={variant.color}
+                              layout="fill"
+                              objectFit="cover"
+                            />
+                          </ImageContainer>
+                        </Grid>
+                        <Grid item xs>
+                          <Box>
+                            <Typography variant="subtitle1" sx={{ 
+                              fontWeight: 600,
+                              color: '#1a237e',
+                              mb: 1
+                            }}>
+                              {variant.color}
+                            </Typography>
+                            
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              {variant.sizes?.map((size) => (
+                                <Box
+                                  key={size._id}
+                                  sx={{
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    backgroundColor: size.inStock ? '#e8f5e9' : '#ffebee',
+                                    color: size.inStock ? '#2e7d32' : '#c62828',
+                                    fontSize: '0.875rem',
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {size.size}: {size.stockCount}
+                                </Box>
+                              ))}
+                            </Box>
+                          </Box>
+                        </Grid>
+                        <Grid item>
+                          <ImageContainer sx={{ width: '100px', height: '100px' }}>
+                            <Image
+                              src={variant.mainImage}
+                              alt="Main"
+                              layout="fill"
+                              objectFit="cover"
+                            />
+                          </ImageContainer>
+                        </Grid>
+                        <Grid item>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                              variant="contained"
+                              onClick={() => handleVariantEditClick(variant)}
+                              sx={{
+                                backgroundColor: '#FF9800',
+                                '&:hover': {
+                                  backgroundColor: '#F57C00',
+                                },
+                              }}
+                              startIcon={<Edit />}
+                            >
+                              Edit Variant
+                            </Button>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </VariantCard>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </Box>
-        </Box>
-      </Modal>
+
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleUpdateProduct}
+            sx={{
+              mt: 2,
+              py: 1.5,
+              backgroundColor: '#3f51b5',
+              fontSize: '16px',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#303f9f',
+              },
+            }}
+          >
+            Update Product
+          </Button>
+        </ModalContent>
+      </StyledModal>
 
       <EditVariantModal
         open={openVariantModal}

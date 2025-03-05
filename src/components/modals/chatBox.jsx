@@ -15,17 +15,23 @@ const ChatBox = () => {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
   };
 
   useEffect(() => {
-    // Load chat history first
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [isOpen]);
+  
+  useEffect(() => {
     if(localStorage.getItem("userId")){
 
       loadChatHistory();
     }
     
-    // Initialize socket connection
     const newSocket = io('http://localhost:9090', {
       withCredentials: true,
       reconnection: true,
@@ -37,8 +43,6 @@ const ChatBox = () => {
       console.log('Socket connected:', newSocket.id);
       setConnected(true);
       setError('');
-
-      // Get user ID from localStorage and join room
       const userId = localStorage.getItem('userId');
       if (userId) {
         newSocket.emit('join', userId);
@@ -81,12 +85,12 @@ const ChatBox = () => {
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
   
   useEffect(() => {
-    // Mark messages as read when chat is opened
     if (isOpen && chatId) {
       markMessagesAsRead();
     }
@@ -183,8 +187,8 @@ const ChatBox = () => {
         ) : (
           <Paper
             sx={{
-              width: 300,
-              height: 400,
+              width: 400,
+              height: 500,
               display: 'flex',
               flexDirection: 'column'
             }}
