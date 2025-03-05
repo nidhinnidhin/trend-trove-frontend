@@ -129,7 +129,6 @@ const UserProfilePage = () => {
             ...returnedOrders,
             ...cancelledOrders,
           ].reduce((sum, order) => sum + (order.payment?.amount || 0), 0);
-
           setWalletData((prev) => ({
             ...prev,
             returnedOrders,
@@ -137,6 +136,8 @@ const UserProfilePage = () => {
             totalAmount: totalOrderAmount,
           }));
         }
+        
+        
 
         if (cartResponse.status === "fulfilled" && cartResponse.value?.data) {
           setCart(cartResponse.value.data.cart || { items: [] });
@@ -169,6 +170,8 @@ const UserProfilePage = () => {
 
     fetchUserData();
   }, []);
+  console.log("orderssss",orders);
+  
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -783,6 +786,7 @@ const UserProfilePage = () => {
             type: transaction.type,
             amount: transaction.amount,
           })),
+          
           // Returned orders
           ...(walletData.returnedOrders || [])
             .map((order) =>
@@ -797,7 +801,7 @@ const UserProfilePage = () => {
                   date: order.orderDate,
                   description: `Refund for returned item: ${item.productName}`,
                   type: "credit",
-                  amount: item.price * item.quantity,
+                  amount: item.finalPrice * item.quantity,
                   status: "Returned",
                 }))
             )
@@ -817,7 +821,7 @@ const UserProfilePage = () => {
             )
             .flat(),
         ];
-        
+        console.log(allTransactions)
         // Calculate total wallet balance by summing all amounts in the transactions
         const totalWalletBalance = allTransactions.reduce(
           (sum, transaction) =>
@@ -1009,6 +1013,8 @@ const UserProfilePage = () => {
                                 fontWeight: "bold",
                               }}
                             >
+                              {console.log(transaction)
+                              }
                               ₹{transaction.amount}
                             </TableCell>
                           </TableRow>

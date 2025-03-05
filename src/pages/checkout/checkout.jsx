@@ -146,8 +146,8 @@ const CheckoutPage = () => {
   const fetchWalletBalance = async () => {
     try {
       const response = await axiosInstance.get("/wallet/details");
-      console.log("Wallet balance",response);
-      
+      console.log("Wallet balance", response);
+
       return response.data.balance + response.data.referralEarnings;
     } catch (error) {
       console.error("Error fetching wallet balance:", error);
@@ -426,7 +426,6 @@ const CheckoutPage = () => {
   //   }
   // };
 
-
   const handlePaymentClick = async () => {
     try {
       if (!selectedAddress) {
@@ -435,27 +434,28 @@ const CheckoutPage = () => {
         setSnackbarOpen(true);
         return;
       }
-  
+
       setLoading(true);
       setShowLoader(true);
-  
+
       const checkoutPayload = {
         cartId: checkoutData.cartId,
         addressId: selectedAddress._id,
         shippingMethod: "Standard",
         paymentMethod: paymentMethod,
-        transactionId: paymentMethod === "cod" || "debit" ? "COD_" + Date.now() : null,
+        transactionId:
+          paymentMethod === "cod" || "debit" ? "COD_" + Date.now() : null,
         paymentStatus: "pending",
         couponCode: selectedCoupon,
         finalTotal: previewTotal,
         discountAmount: previewDiscount,
       };
-  
+
       if (paymentMethod === "online") {
         handleOnlinePayment();
         return;
       }
-  
+
       if (paymentMethod === "wallet") {
         const walletBalance = await fetchWalletBalance();
         if (walletBalance < previewTotal) {
@@ -466,24 +466,24 @@ const CheckoutPage = () => {
           setShowLoader(false);
           return;
         }
-  
+
         // Deduct amount from wallet
         const deductResponse = await axiosInstance.post("/wallet/transaction", {
           amount: previewTotal,
           type: "debit",
           description: "Payment for order",
         });
-  
+
         if (!deductResponse.data.success) {
           throw new Error("Failed to deduct amount from wallet");
         }
       }
-  
+
       const response = await axiosInstance.post(
         "/checkout/create-checkout",
         checkoutPayload
       );
-  
+
       if (response.data.success) {
         await clearCart();
         setSnackbarMessage("Order placed successfully!");
@@ -495,7 +495,7 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error("Checkout error:", error.response?.data || error.message);
-  
+
       if (error.response?.data?.blockedProducts) {
         const blockedItems = error.response.data.blockedProducts.join(", ");
         setSnackbarMessage(
@@ -507,10 +507,10 @@ const CheckoutPage = () => {
             "Failed to place order. Please try again."
         );
       }
-  
+
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-  
+
       if (error.response?.data?.blockedProducts) {
         setTimeout(() => {
           router.push("/cart/cartpage");
@@ -766,24 +766,26 @@ const CheckoutPage = () => {
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
             >
-              <FormControlLabel
-                value="cod"
-                control={<Radio />}
-                label={
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <MonetizationOn sx={{ mr: 1 }} />
-                    <Box>
-                      <Typography variant="subtitle1">
-                        Cash on Delivery
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Pay when you receive
-                      </Typography>
+              {previewTotal < 1000 && (
+                <FormControlLabel
+                  value="cod"
+                  control={<Radio />}
+                  label={
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <MonetizationOn sx={{ mr: 1 }} />
+                      <Box>
+                        <Typography variant="subtitle1">
+                          Cash on Delivery
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          Pay when you receive
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                }
-                sx={{ mb: 2 }}
-              />
+                  }
+                  sx={{ mb: 2 }}
+                />
+              )}
 
               <FormControlLabel
                 value="online"
