@@ -29,6 +29,7 @@ import {
   FormControlLabel,
   FormGroup,
   Checkbox,
+  Drawer,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -59,6 +60,7 @@ const Orders = () => {
   const [isRejectReasonModalOpen, setIsRejectReasonModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -284,13 +286,9 @@ const Orders = () => {
   const applyFilters = () => {
     let result = [...orders];
 
-    // Return Status Filters
     if (filterOptions.returnStatus.returnRequested) {
       result = result.filter((order) =>
-        order.items.some(
-          (item) =>
-            item.returnRequested && item.returnStatus === "Return Pending"
-        )
+        order.items.some((item) => item.returnRequested && item.returnStatus === "Return Pending")
       );
     }
     if (filterOptions.returnStatus.returnAccepted) {
@@ -304,7 +302,6 @@ const Orders = () => {
       );
     }
 
-    // Order Status Filters
     if (filterOptions.orderStatus.cancelled) {
       result = result.filter((order) => order.orderStatus === "Cancelled");
     }
@@ -324,7 +321,6 @@ const Orders = () => {
       );
     }
 
-    // Order Amount Filters
     if (filterOptions.orderAmount.highToLow) {
       result.sort((a, b) => b.totalAmount - a.totalAmount);
     }
@@ -332,7 +328,6 @@ const Orders = () => {
       result.sort((a, b) => a.totalAmount - b.totalAmount);
     }
 
-    // Date Range Filter
     if (filterOptions.dateRange.startDate && filterOptions.dateRange.endDate) {
       result = result.filter((order) => {
         const orderDate = new Date(order.createdAt);
@@ -344,10 +339,60 @@ const Orders = () => {
     }
 
     setFilteredOrders(result);
-    setPage(0); // Reset to first page after filtering
+    setPage(0);
   };
 
+  // const resetFilters = () => {
+  //   setFilterOptions({
+  //     returnStatus: {
+  //       returnRequested: false,
+  //       returnAccepted: false,
+  //       returnRejected: false,
+  //     },
+  //     orderStatus: {
+  //       cancelled: false,
+  //       delivered: false,
+  //       processing: false,
+  //       shipped: false,
+  //     },
+  //     orderAmount: {
+  //       highToLow: false,
+  //       lowToHigh: false,
+  //     },
+  //     dateRange: {
+  //       startDate: null,
+  //       endDate: null,
+  //     },
+  //   });
+  //   setFilteredOrders(orders);
+  // };
+
   // Update filter options and apply filters
+  
+  // const resetFilters = () => {
+  //   setFilterOptions({
+  //     returnStatus: {
+  //       returnRequested: false,
+  //       returnAccepted: false,
+  //       returnRejected: false,
+  //     },
+  //     orderStatus: {
+  //       cancelled: false,
+  //       delivered: false,
+  //       processing: false,
+  //       shipped: false,
+  //     },
+  //     orderAmount: {
+  //       highToLow: false,
+  //       lowToHigh: false,
+  //     },
+  //     dateRange: {
+  //       startDate: null,
+  //       endDate: null,
+  //     },
+  //   });
+  //   setFilteredOrders(orders);
+  // };
   const handleFilterChange = (category, key) => {
     const updatedFilters = { ...filterOptions };
 
@@ -395,202 +440,204 @@ const Orders = () => {
 
   return (
     <Box sx={{ padding: 3, backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      {/* Header */}
-
-
       <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: "#3f51b5",
+          borderRadius: 2,
+          padding: 2,
+          marginBottom: 2,
+          boxShadow: 3,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: "#ffffff", fontWeight: "bold" }}>
+          Orders Management
+        </Typography>
+
+        <Button
+          variant="contained"
+          startIcon={<FilterListIcon />}
+          onClick={() => setIsFilterDrawerOpen(true)}
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            backgroundColor: "#3f51b5",
-            borderRadius: 2,
-            padding: 2,
-            marginBottom: 2,
-            boxShadow: 3,
+            backgroundColor: "#ffffff",
+            color: "#3f51b5",
+            "&:hover": { backgroundColor: "#e0e0e0" },
           }}
         >
-          <Typography variant="h6" sx={{ color: "#ffffff", fontWeight: "bold" }}>
-            Orders Management
+          Filters
+        </Button>
+      </Box>
+
+      <Drawer
+        anchor="left"
+        open={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+      >
+        <Box sx={{ width: 400, padding: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Advanced Filters
           </Typography>
 
-      
-          
-          {/* Filter Accordion */}
-          <Accordion 
-            sx={{ 
-              width: '400px', 
-              backgroundColor: 'white',
-              boxShadow: 3
-            }}
-          >
-            <AccordionSummary
-              expandIcon={<FilterListIcon />}
-              aria-controls="filter-content"
-              id="filter-header"
-            >
-              <Typography>Advanced Filters</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {/* Return Status Filters */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Return Status
-                  </Typography>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.returnStatus.returnRequested}
-                          onChange={() => handleFilterChange('returnStatus', 'returnRequested')}
-                        />
-                      }
-                      label="Return Requested"
+          <Grid container spacing={2}>
+            {/* Return Status Filters */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Return Status
+              </Typography>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.returnStatus.returnRequested}
+                      onChange={() => handleFilterChange('returnStatus', 'returnRequested')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.returnStatus.returnAccepted}
-                          onChange={() => handleFilterChange('returnStatus', 'returnAccepted')}
-                        />
-                      }
-                      label="Return Accepted"
+                  }
+                  label="Return Requested"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.returnStatus.returnAccepted}
+                      onChange={() => handleFilterChange('returnStatus', 'returnAccepted')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.returnStatus.returnRejected}
-                          onChange={() => handleFilterChange('returnStatus', 'returnRejected')}
-                        />
-                      }
-                      label="Return Rejected"
+                  }
+                  label="Return Accepted"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.returnStatus.returnRejected}
+                      onChange={() => handleFilterChange('returnStatus', 'returnRejected')}
                     />
-                  </FormGroup>
-                </Grid>
+                  }
+                  label="Return Rejected"
+                />
+              </FormGroup>
+            </Grid>
 
-                {/* Order Status Filters */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Order Status
-                  </Typography>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderStatus.cancelled}
-                          onChange={() => handleFilterChange('orderStatus', 'cancelled')}
-                        />
-                      }
-                      label="Cancelled Orders"
+            {/* Order Status Filters */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Order Status
+              </Typography>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderStatus.cancelled}
+                      onChange={() => handleFilterChange('orderStatus', 'cancelled')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderStatus.delivered}
-                          onChange={() => handleFilterChange('orderStatus', 'delivered')}
-                        />
-                      }
-                      label="Delivered Orders"
+                  }
+                  label="Cancelled Orders"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderStatus.delivered}
+                      onChange={() => handleFilterChange('orderStatus', 'delivered')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderStatus.processing}
-                          onChange={() => handleFilterChange('orderStatus', 'processing')}
-                        />
-                      }
-                      label="Processing Orders"
+                  }
+                  label="Delivered Orders"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderStatus.processing}
+                      onChange={() => handleFilterChange('orderStatus', 'processing')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderStatus.shipped}
-                          onChange={() => handleFilterChange('orderStatus', 'shipped')}
-                        />
-                      }
-                      label="Shipped Orders"
+                  }
+                  label="Processing Orders"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderStatus.shipped}
+                      onChange={() => handleFilterChange('orderStatus', 'shipped')}
                     />
-                  </FormGroup>
-                </Grid>
+                  }
+                  label="Shipped Orders"
+                />
+              </FormGroup>
+            </Grid>
 
-                {/* Order Amount Filters */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Order Amount
-                  </Typography>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderAmount.highToLow}
-                          onChange={() => handleFilterChange('orderAmount', 'highToLow')}
-                        />
-                      }
-                      label="High to Low"
+            {/* Order Amount Filters */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Order Amount
+              </Typography>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderAmount.highToLow}
+                      onChange={() => handleFilterChange('orderAmount', 'highToLow')}
                     />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filterOptions.orderAmount.lowToHigh}
-                          onChange={() => handleFilterChange('orderAmount', 'lowToHigh')}
-                        />
-                      }
-                      label="Low to High"
+                  }
+                  label="High to Low"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={filterOptions.orderAmount.lowToHigh}
+                      onChange={() => handleFilterChange('orderAmount', 'lowToHigh')}
                     />
-                  </FormGroup>
-                </Grid>
+                  }
+                  label="Low to High"
+                />
+              </FormGroup>
+            </Grid>
 
-                {/* Date Range Filter */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Date Range
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                      label="Start Date"
-                      value={filterOptions.dateRange.startDate}
-                      onChange={(date) => {
-                        setFilterOptions(prev => ({
-                          ...prev,
-                          dateRange: { ...prev.dateRange, startDate: date }
-                        }));
-                        applyFilters();
-                      }}
-                      renderInput={(params) => <TextField {...params} />}
-                    />
-                    <DatePicker
-                      label="End Date"
-                      value={filterOptions.dateRange.endDate}
-                      onChange={(date) => {
-                        setFilterOptions(prev => ({
-                          ...prev,
-                          dateRange: { ...prev.dateRange, endDate: date }
-                        }));
-                        applyFilters();
-                      }}
-                      renderInput={(params) => <TextField {...params} />}
-                    />
-                    </LocalizationProvider>
-                  </Box>
-                </Grid>
+            {/* Date Range Filter */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Date Range
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Start Date"
+                    value={filterOptions.dateRange.startDate}
+                    onChange={(date) => {
+                      setFilterOptions(prev => ({
+                        ...prev,
+                        dateRange: { ...prev.dateRange, startDate: date }
+                      }));
+                      applyFilters();
+                    }}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+                  <DatePicker
+                    label="End Date"
+                    value={filterOptions.dateRange.endDate}
+                    onChange={(date) => {
+                      setFilterOptions(prev => ({
+                        ...prev,
+                        dateRange: { ...prev.dateRange, endDate: date }
+                      }));
+                      applyFilters();
+                    }}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+                </LocalizationProvider>
+              </Box>
+            </Grid>
 
-                {/* Reset Filters Button */}
-                <Grid item xs={12}>
-                  <Button 
-                    variant="contained" 
-                    color="secondary" 
-                    onClick={resetFilters}
-                    fullWidth
-                  >
-                    Reset All Filters
-                  </Button>
-                </Grid>
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
+            {/* Reset Filters Button */}
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={resetFilters}
+                fullWidth
+              >
+                Reset All Filters
+              </Button>
+            </Grid>
+          </Grid>
         </Box>
+      </Drawer>
 
       {filteredOrders
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
