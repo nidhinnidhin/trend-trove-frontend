@@ -99,15 +99,20 @@ const CheckoutPage = () => {
   const handleCouponChange = async (event) => {
     const couponCode = event.target.value;
     setSelectedCoupon(couponCode);
-
+  
     if (couponCode) {
       try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        
         const response = await axiosInstance.post(`/coupon/apply`, {
           couponCode,
           totalPrice: checkoutData.totalPrice,
-          userId: localStorage.getItem("userId"),
+          userId: userId, // Make sure this is the correct user ID
         });
-
+  
         setPreviewDiscount(response.data.discountAmount);
         setSnackbarMessage(
           `Coupon applied! You'll save ₹${response.data.discountAmount} at checkout`
@@ -115,7 +120,8 @@ const CheckoutPage = () => {
         setSnackbarOpen(true);
       } catch (error) {
         console.error("Error applying coupon:", error);
-        setSnackbarMessage("Failed to apply coupon");
+        setSnackbarMessage(error.response?.data?.message || "Failed to apply coupon");
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
         setSelectedCoupon("");
         setPreviewDiscount(0);
@@ -349,82 +355,6 @@ const CheckoutPage = () => {
       setLoading(false);
     }
   };
-
-  // const handlePaymentClick = async () => {
-  //   try {
-  //     if (!selectedAddress) {
-  //       setSnackbarMessage("Please select a delivery address");
-  //       setSnackbarSeverity("error");
-  //       setSnackbarOpen(true);
-  //       return;
-  //     }
-
-  //     setLoading(true);
-  //     setShowLoader(true);
-
-  //     const checkoutPayload = {
-  //       cartId: checkoutData.cartId,
-  //       addressId: selectedAddress._id,
-  //       shippingMethod: "Standard",
-  //       paymentMethod: paymentMethod,
-  //       transactionId: paymentMethod === "cod" ? "COD_" + Date.now() : null,
-  //       paymentStatus: "pending",
-  //       couponCode: selectedCoupon,
-  //       finalTotal: previewTotal,
-  //       discountAmount: previewDiscount,
-  //     };
-
-  //     if (paymentMethod === "online") {
-  //       handleOnlinePayment();
-  //       return;
-  //     }
-
-  //     const response = await axiosInstance.post(
-  //       "/checkout/create-checkout",
-  //       checkoutPayload
-  //     );
-
-  //     if (response.data.success) {
-  //       await clearCart();
-  //       setSnackbarMessage("Order placed successfully!");
-  //       setSnackbarSeverity("success");
-  //       setSnackbarOpen(true);
-  //       setTimeout(() => {
-  //         router.push("/orders/orders");
-  //       }, 2000);
-  //     }
-  //   } catch (error) {
-  //     // Log the error for debugging
-  //     console.error("Checkout error:", error.response?.data || error.message);
-
-  //     // Handle blocked products case
-  //     if (error.response?.data?.blockedProducts) {
-  //       const blockedItems = error.response.data.blockedProducts.join(", ");
-  //       setSnackbarMessage(
-  //         `Cannot complete purchase. These items are currently unavailable: ${blockedItems}. Please remove them from your cart.`
-  //       );
-  //     } else {
-  //       // Handle other errors
-  //       setSnackbarMessage(
-  //         error.response?.data?.message ||
-  //           "Failed to place order. Please try again."
-  //       );
-  //     }
-
-  //     setSnackbarSeverity("error");
-  //     setSnackbarOpen(true);
-
-  //     // If there are blocked products, redirect to cart after showing message
-  //     if (error.response?.data?.blockedProducts) {
-  //       setTimeout(() => {
-  //         router.push("/cart/cartpage");
-  //       }, 4000);
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //     setShowLoader(false);
-  //   }
-  // };
 
   const handlePaymentClick = async () => {
     try {

@@ -18,6 +18,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { Close } from "@mui/icons-material";
+import { isBefore } from "date-fns";
 
 const EditCouponModal = ({
   open,
@@ -52,12 +53,23 @@ const EditCouponModal = ({
 
   const validateFields = () => {
     const newErrors = {};
-    if (!couponCode.trim()) newErrors.couponCode = "Coupon code is required";
-    if (!discountValue) newErrors.discountValue = "Discount value is required";
-    if (!startDate) newErrors.startDate = "Start date is required";
-    if (!endDate) newErrors.endDate = "End date is required";
-    if (!minOrderAmount)
-      newErrors.minOrderAmount = "Minimum order amount is required";
+    if (!couponCode.trim() || couponCode.length !== 10 || /[a-z]/.test(couponCode)) {
+      newErrors.couponCode = "Coupon code must be 10 characters long and contain no lowercase letters.";
+    }
+    if (discountType === "percentage" && (discountValue <= 0 || discountValue >= 100)) {
+      newErrors.discountValue = "Percentage discount must be between 0 and 100.";
+    }
+    if (discountType === "fixed" && (discountValue <= 0 || discountValue >= minOrderAmount)) {
+      newErrors.discountValue = "Fixed discount must be less than the minimum order amount.";
+    }
+    if (!startDate || isBefore(startDate, dayjs().startOf('day'))) {
+      newErrors.startDate = "Start date must be today or in the future.";
+    }
+    if (!endDate || isBefore(endDate, startDate)) {
+      newErrors.endDate = "End date must be after the start date.";
+    }
+    if (!minOrderAmount) newErrors.minOrderAmount = "Minimum order amount is required.";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -183,6 +195,7 @@ const EditCouponModal = ({
                     label="Start Date"
                     value={startDate}
                     onChange={setStartDate}
+                    minDate={dayjs()}
                     sx={{ bgcolor: "#fff", width: "100%" }}
                   />
                   {errors.startDate && (
@@ -196,6 +209,7 @@ const EditCouponModal = ({
                     label="End Date"
                     value={endDate}
                     onChange={setEndDate}
+                    minDate={startDate}
                     sx={{ bgcolor: "#fff", width: "100%" }}
                   />
                   {errors.endDate && (
