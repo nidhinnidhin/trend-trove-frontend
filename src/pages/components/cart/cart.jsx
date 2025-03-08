@@ -163,24 +163,31 @@ function Cart() {
   }, []);
 
   useEffect(() => {
-    const savedLocationPref = localStorage.getItem("locationPreference");
-    const savedLocation = localStorage.getItem("userLocation");
+    const checkAndSetLocation = async () => {
+      const savedLocationPref = localStorage.getItem("locationPreference");
+      const savedLocation = localStorage.getItem("userLocation");
 
-    if (savedLocationPref === "allow" && savedLocation) {
-      try {
-        const parsedLocation = JSON.parse(savedLocation);
-        setUserLocation(parsedLocation);
-        if (cart) {
-          updateDeliveryCharge(parsedLocation.city, parsedLocation.state);
+      // If we have saved location, use it
+      if (savedLocationPref === "allow" && savedLocation) {
+        try {
+          const parsedLocation = JSON.parse(savedLocation);
+          setUserLocation(parsedLocation);
+          if (cart) {
+            updateDeliveryCharge(parsedLocation.city, parsedLocation.state);
+          }
+        } catch (error) {
+          console.log("Error parsing saved location:", error);
+          // If there's an error with saved location, try to get new location
+          await detectUserLocation();
         }
-      } catch (error) {
-        console.log("Error parsing saved location:", error);
-        setShowLocationConsent(true);
+      } else {
+        // If no saved location preference, automatically try to get location
+        await detectUserLocation();
       }
-    } else if (!savedLocationPref) {
-      setShowLocationConsent(true);
-    }
-  }, [cart]);
+    };
+
+    checkAndSetLocation();
+  }, [cart]); // Dependencies array includes cart
 
   useEffect(() => {
     if (cart?.items) {
@@ -268,15 +275,19 @@ function Cart() {
           }`
         );
         setSnackbarSeverity("success");
+        
+        // Save location preference and data
+        localStorage.setItem("locationPreference", "allow");
         localStorage.setItem("userLocation", JSON.stringify(location));
       }
     } catch (error) {
       console.log("Location detection error:", error);
       setSnackbarMessage(
-        "Location access denied. You can select your delivery address manually."
+        "Location access denied. Please select your delivery address manually."
       );
       setSnackbarSeverity("info");
       localStorage.removeItem("userLocation");
+      localStorage.setItem("locationPreference", "deny");
     } finally {
       setIsLoadingLocation(false);
       setSnackbarOpen(true);
@@ -933,25 +944,18 @@ function Cart() {
                     {isLoadingLocation ? 'Detecting Location...' : 'Use My Location'}
                   </Button> */}
 
-                  {!userLocation && locationPreference !== "allow" && (
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={handleGetLocation}
-                      disabled={isLoadingLocation}
-                      startIcon={<LocationOnIcon />}
-                      sx={{ mb: 2 }}
-                    >
-                      {isLoadingLocation
-                        ? "Detecting Location..."
-                        : "Use My Location"}
-                    </Button>
-                  )}
-
-                  {locationError && (
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      {locationError}
-                    </Alert>
+                  {!userLocation && (
+                    <Box sx={{ mb: 2 }}>
+                      {isLoadingLocation ? (
+                        <Typography variant="body2" color="textSecondary">
+                          Detecting your location...
+                        </Typography>
+                      ) : locationError ? (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          {locationError}
+                        </Alert>
+                      ) : null}
+                    </Box>
                   )}
 
                   {userLocation && (
