@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:9090/api/",
+  baseURL: "http://13.126.18.175/api/",
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 
 const fetchCSRFToken = async () => {
   try {
-    const response = await axios.get('http://localhost:9090/api/csrf-token', {
+    const response = await axios.get('http://13.126.18.175/api/csrf-token', {
       withCredentials: true
     });
     return response.data.csrfToken;

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:9090/api/admin", 
+  baseURL: "http://13.126.18.175/api/admin", 
   withCredentials: true,  // Important for sending/receiving cookies
   headers: {
     'Content-Type': 'application/json'
@@ -14,7 +14,7 @@ axiosInstance.interceptors.request.use(
     // Only fetch CSRF token for non-GET requests
     if (config.method !== 'get') {
       try {
-        const response = await axios.get("http://localhost:9090/api/csrf-token", {
+        const response = await axios.get("http://13.126.18.175/api/csrf-token", {
           withCredentials: true,
         });
         config.headers["x-csrf-token"] = response.data.csrfToken;

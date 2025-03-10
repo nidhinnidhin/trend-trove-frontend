@@ -277,7 +277,7 @@ const SignupDrawer = ({ open, onClose }) => {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = 'http://localhost:9090/api/users/auth/google';
+    window.location.href = 'http://13.126.18.175/api/users/auth/google';
   };
 
   return (

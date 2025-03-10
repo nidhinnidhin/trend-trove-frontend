@@ -97,7 +97,7 @@ const NewArrival = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          "http://localhost:9090/api/products/get?page=1&limit=12"
+          "http://13.126.18.175/api/products/get?page=1&limit=12"
         );
         const data = await response.json();
         const transformedProducts = data.products.map((product) => {

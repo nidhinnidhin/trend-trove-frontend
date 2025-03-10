@@ -88,7 +88,7 @@ const EditCouponModal = ({
 
     try {
       const response = await axios.put(
-        `http://localhost:9090/api/admin/coupon/edit/${coupon._id}`, // Ensure this matches your backend route
+        `http://13.126.18.175/api/admin/coupon/edit/${coupon._id}`, // Ensure this matches your backend route
         updatedCoupon,
         { withCredentials: true }
       );

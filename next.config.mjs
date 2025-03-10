@@ -19,7 +19,7 @@ const nextConfig = {
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: '13.126.18.175',
       },
       {
         protocol: 'https',

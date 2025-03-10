@@ -32,7 +32,7 @@ const ChatBox = () => {
       loadChatHistory();
     }
     
-    const newSocket = io('http://localhost:9090', {
+    const newSocket = io('http://13.126.18.175', {
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: 5,

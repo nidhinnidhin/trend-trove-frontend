@@ -96,7 +96,7 @@ const TrendingWears = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          "http://localhost:9090/api/products/get?page=1&limit=8"
+          "http://13.126.18.175/api/products/get?page=1&limit=8"
         );
         const data = await response.json();
         
