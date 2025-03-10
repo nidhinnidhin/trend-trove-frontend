@@ -244,6 +244,7 @@ const Products = ({ products, loading }) => {
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const filterProducts = (products) => {
+    if (!products) return [];
     return products.filter((product) => {
       const price = product.price;
       if (

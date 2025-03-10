@@ -25,7 +25,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
 import GenderFilter from "../components/genderFilter";
-import PriceRangeFilter from "./priceRangeFilter";
 
 const Filter = () => {
   const theme = useTheme();

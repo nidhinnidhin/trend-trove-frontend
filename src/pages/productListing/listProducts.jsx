@@ -330,6 +330,9 @@ const ListProducts = memo(({
   }, [onPageChange]);
 
   const filterProducts = useCallback((products) => {
+    if (!products || !Array.isArray(products)) {
+      return [];
+    }
     return products.filter((product) => {
       if (
         searchQuery &&
@@ -396,6 +399,9 @@ const ListProducts = memo(({
   }, [filterState, searchQuery]);
 
   const sortProducts = useCallback((products) => {
+    if (!products || !Array.isArray(products)) {
+      return [];
+    }
     const sorted = [...products];
     switch (filterState.sortBy) {
       case "asc":
