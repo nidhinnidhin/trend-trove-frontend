@@ -51,29 +51,16 @@ const nextConfig = {
     emotion: true
   },
   images: {
-    domains: ['13.126.18.175'], // Add your EC2 instance IP
+    domains: ['13.126.18.175'],
     unoptimized: true
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://13.126.18.175/api/:path*'
-      }
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*'
-          }
-        ]
-      }
-    ];
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@emotion/core': '@emotion/react',
+      'emotion-theming': '@emotion/react',
+    };
+    return config;
   }
 };
 
