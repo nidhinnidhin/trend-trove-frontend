@@ -41,7 +41,7 @@ const CategoryCarousel = ({ categories, onCategoryClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState(null); 
   const itemsPerSlide = 5;
-  const totalCategories = categories.length;
+  // const totalCategories = categories.length;
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % totalCategories);
