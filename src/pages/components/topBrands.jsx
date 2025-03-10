@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import Image from "next/image";
 import styled from "@emotion/styled";
@@ -9,22 +9,46 @@ import axios from "axios";
 const CarouselContainer = styled(Box)`
   width: 100%;
   max-width: 1400px;
-  margin: 40px auto;
-  padding: 0 40px;
+  margin: 20px auto;
+  padding: 0 20px;
   position: relative;
+
+  @media (min-width: 600px) {
+    margin: 40px auto;
+    padding: 0 40px;
+  }
 `;
 
 const ProductsWrapper = styled(Box)`
   display: flex;
-  gap: 20px;
+  gap: 10px;
   transition: transform 0.5s ease;
+
+  @media (min-width: 600px) {
+    gap: 20px;
+  }
 `;
 
 const BrandCard = styled(Box)`
-  flex: 0 0 calc(16.666% - 16px);
+  flex: 0 0 calc(100% - 10px);
   position: relative;
   cursor: pointer;
-  height: 500px;
+  height: 300px;
+
+  @media (min-width: 600px) {
+    flex: 0 0 calc(50% - 10px);
+    height: 400px;
+  }
+
+  @media (min-width: 960px) {
+    flex: 0 0 calc(33.333% - 13.333px);
+    height: 450px;
+  }
+
+  @media (min-width: 1200px) {
+    flex: 0 0 calc(16.666% - 16px);
+    height: 500px;
+  }
   
   &:hover {
     .overlay {
@@ -100,6 +124,10 @@ const TopBrands = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [brands, setBrands] = useState([]);
   const router = useRouter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
   useEffect(() => {
     const fetchBrands = async () => {
@@ -114,12 +142,25 @@ const TopBrands = () => {
     fetchBrands();
   }, []);
 
+  const getVisibleItems = () => {
+    if (isMobile) return 1;
+    if (isTablet) return 2;
+    if (isDesktop) return 3;
+    return 6;
+  };
+
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % (brands.length - 5));
+    const visibleItems = getVisibleItems();
+    setCurrentIndex((prev) => 
+      (prev + 1) % (brands.length - visibleItems + 1)
+    );
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + (brands.length - 5)) % (brands.length - 5));
+    const visibleItems = getVisibleItems();
+    setCurrentIndex((prev) => 
+      (prev - 1 + (brands.length - visibleItems + 1)) % (brands.length - visibleItems + 1)
+    );
   };
 
   const handleBrandClick = (brandId) => {
@@ -128,14 +169,15 @@ const TopBrands = () => {
 
   return (
     <CarouselContainer>
-    <Typography 
+      <Typography 
         variant="h5" 
         sx={{ 
           textAlign: "center", 
-          marginBottom: 5,
+          marginBottom: { xs: 3, sm: 5 },
           fontWeight: 600,
           color: "#333",
           fontFamily: "'Poppins', sans-serif",
+          fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" }
         }}
       >
         Top Brands
@@ -143,7 +185,7 @@ const TopBrands = () => {
       <Box sx={{ position: "relative", overflow: "hidden" }}>
         <ProductsWrapper
           sx={{
-            transform: `translateX(-${currentIndex * (100 / 6)}%)`,
+            transform: `translateX(-${currentIndex * (100 / getVisibleItems())}%)`,
           }}
         >
           {brands.map((brand) => (
@@ -153,7 +195,7 @@ const TopBrands = () => {
                   src={brand.image}
                   alt={brand.name}
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 16.666vw"
+                  sizes="(max-width: 600px) 100vw, (max-width: 960px) 50vw, (max-width: 1200px) 33.333vw, 16.666vw"
                   style={{
                     objectFit: 'cover',
                   }}
@@ -165,13 +207,18 @@ const TopBrands = () => {
                     sx={{
                       color: "white",
                       fontWeight: 500,
-                      fontSize: "24px",
+                      fontSize: { xs: "20px", sm: "22px", md: "24px" },
                       marginBottom: 1
                     }}
                   >
                     {brand.name}
                   </Typography>
-                  <ShopNowButton>
+                  <ShopNowButton
+                    sx={{
+                      fontSize: { xs: "12px", sm: "13px", md: "14px" },
+                      padding: { xs: "6px 12px", sm: "8px 16px" }
+                    }}
+                  >
                     Shop Now
                   </ShopNowButton>
                 </Overlay>
@@ -183,6 +230,10 @@ const TopBrands = () => {
         <NavigationButton 
           className="left"
           onClick={handlePrev}
+          sx={{
+            width: { xs: '30px', sm: '35px', md: '40px' },
+            height: { xs: '30px', sm: '35px', md: '40px' }
+          }}
         >
           <ChevronLeft />
         </NavigationButton>
@@ -190,6 +241,10 @@ const TopBrands = () => {
         <NavigationButton 
           className="right"
           onClick={handleNext}
+          sx={{
+            width: { xs: '30px', sm: '35px', md: '40px' },
+            height: { xs: '30px', sm: '35px', md: '40px' }
+          }}
         >
           <ChevronRight />
         </NavigationButton>

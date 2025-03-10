@@ -31,6 +31,7 @@ import {
   IconButton,
   TableContainer,
   Stack,
+  Pagination,
 } from "@mui/material";
 import {
   LocalShipping,
@@ -482,6 +483,8 @@ const OrdersPage = () => {
     message: "",
     severity: "success",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 5; // You can adjust this number
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -763,6 +766,18 @@ const OrdersPage = () => {
     }, 0);
   };
 
+  // Calculate pagination values
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
+
+  // Handle page change
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return <Typography>Loading...</Typography>;
   }
@@ -774,7 +789,7 @@ const OrdersPage = () => {
         My Orders
       </Typography>
 
-      {orders.map((order) => {
+      {currentOrders.map((order) => {
         const orderTotal = calculateOrderTotal(order);
         console.log("Ordered date", order);
 
@@ -1235,6 +1250,21 @@ const OrdersPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Add pagination at the bottom */}
+      {orders.length > ordersPerPage && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
       <Footer />
     </Container>

@@ -297,38 +297,34 @@ const Header = () => {
         <Toolbar
           sx={{
             justifyContent: "space-between",
-            width: {
-              xs: "100%",
-              md: "90%",
-            },
-            margin: "0 auto",
-            paddingX: isMobile ? 2 : 0,
+            width: "100%",
+            padding: isMobile ? "8px 16px" : "8px 5%",
             borderBottom: "1px solid #eee",
           }}
         >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Link href="/">
-              <Image src={logo} height={50} width={150} alt="Logo" />
-            </Link>
-          </motion.div>
-
           {isMobile && (
             <IconButton
               edge="start"
               color="inherit"
               aria-label="menu"
               onClick={handleDrawerToggle}
-              sx={{
-                position: "absolute",
-                left: 10,
-              }}
+              sx={{ color: "#333" }}
             >
               <MenuIcon />
             </IconButton>
           )}
+
+          <Box sx={{ flexShrink: 0 }}>
+            <Link href="/">
+              <Image
+                src={logo}
+                height={isMobile ? 25 : 50}
+                width={isMobile ? 80 : 150}
+                alt="Logo"
+                priority
+              />
+            </Link>
+          </Box>
 
           {!isMobile && (
             <Box
@@ -565,37 +561,15 @@ const Header = () => {
         open={drawerOpen}
         onClose={handleDrawerToggle}
         sx={{
-          "& .MuiDrawer-paper": {
-            width: 280,
-            boxSizing: "border-box",
-          },
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { width: 280 },
         }}
       >
-        <Box sx={{ width: "100%" }}>
-          <Box
-            sx={{
-              p: 2,
-              borderBottom: "1px solid #eaeaea",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image src={logo} height={30} width={100} alt="Logo" />
-          </Box>
-
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Categories
+          </Typography>
           <List>
-            <ListItem>
-              <ListItemText
-                primary="Categories"
-                sx={{
-                  "& .MuiTypography-root": {
-                    fontWeight: 600,
-                    color: "#333",
-                  },
-                }}
-              />
-            </ListItem>
             {categories.map((category) => (
               <ListItem
                 button
@@ -604,63 +578,31 @@ const Header = () => {
                   handleCategoryClick(category);
                   handleDrawerToggle();
                 }}
-                sx={{
-                  pl: 4,
-                  "&:hover": {
-                    bgcolor: "#f5f5f5",
-                  },
-                }}
               >
                 <ListItemText primary={category.name} />
               </ListItem>
             ))}
-            <Divider />
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.text}
-                onClick={() =>
-                  item.category
-                    ? handleCategoryClick(item.category)
-                    : router.push(item.path)
-                }
-              >
-                <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={{
-                    "& .MuiTypography-root": {
-                      fontSize: "15px",
-                      fontWeight: 500,
-                    },
-                  }}
-                />
-              </MenuItem>
-            ))}
           </List>
 
-          {!isLoggedIn && (
-            <Box sx={{ p: 2 }}>
-              <Button
-                fullWidth
-                variant="contained"
-                sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  "&:hover": {
-                    bgcolor: "#333",
-                  },
-                  textTransform: "none",
-                  py: 1,
-                }}
+          <Divider sx={{ my: 2 }} />
+
+          <List>
+            {menuItems.map((item) => (
+              <ListItem
+                button
+                key={item.text}
                 onClick={() => {
-                  router.push("/authentication/loginSignup");
+                  item.category
+                    ? handleCategoryClick(item.category)
+                    : router.push(item.path);
                   handleDrawerToggle();
                 }}
               >
-                Login
-              </Button>
-            </Box>
-          )}
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItem>
+            ))}
+          </List>
         </Box>
       </Drawer>
 

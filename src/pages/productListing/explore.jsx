@@ -27,58 +27,38 @@ export default function Explore() {
           params: {
             page: currentPage,
             limit: 12,
+            colors: filterState.selectedColors,
+            sizes: filterState.selectedSizes,
+            minPrice: filterState.priceRange[0],
+            maxPrice: filterState.priceRange[1],
           },
         });
 
+        console.log(response)
+
         const data = response.data;
-        console.log("API response:", data);
-
-        // const transformedProducts = data.products.map((product) => {
-        //   let originalPrice = 0;
-        //   let discountedPrice = 0;
-        //   let discountPercentage = 0;
-
-        //   if (product.variants && product.variants.length > 0) {
-        //     const variant = product.variants[0];
-        //     if (variant.sizes && variant.sizes.length > 0) {
-        //       const firstSize = variant.sizes[0];
-        //       originalPrice = firstSize.price || 0;
-        //       discountedPrice = firstSize.discountPrice || originalPrice;
-
-        //       // Check for active offer (either product or category)
-        //       if (product.activeOffer) {
-        //         discountPercentage = product.activeOffer._id.discountPercentage || 0;
-        //         if (!firstSize.discountPrice) {
-        //           discountedPrice = originalPrice * (1 - discountPercentage / 100);
-        //         }
-        //       }
-        //     }
-        //   }
-
-        //   return {
-        //     id: product._id,
-        //     image: product.variants?.[0]?.mainImage || "",
-        //     title: product.name || "Unknown Product",
-        //     description: product.description || "",
-        //     rating: product.ratings || 0,
-        //     price: discountedPrice,
-        //     originalPrice: originalPrice,
-        //     discountPercentage: discountPercentage,
-        //     variantsCount: product.variants?.length || 0,
-        //     category: product.category?.name || "Uncategorized",
-        //     gender: product.gender || "Unisex",
-        //     isDeleted: product.isDeleted || false,
-        //   };
-        // });
-
         const transformedProducts = data.products.map((product) => {
           let originalPrice = 0;
           let discountedPrice = 0;
           let discountPercentage = 0;
           let isOfferActive = false;
           let colorImages = [];
+          let availableColors = [];
+          let availableSizes = [];
 
           if (product.variants && product.variants.length > 0) {
+            // Extract all colors and sizes
+            product.variants.forEach(variant => {
+              availableColors.push({
+                color: variant.color,
+                colorImage: variant.colorImage
+              });
+              variant.sizes.forEach(size => {
+                availableSizes.push(size.size);
+              });
+            });
+
+            // Get default variant and size
             const variant = product.variants[0];
             if (variant.sizes && variant.sizes.length > 0) {
               const firstSize = variant.sizes[0];
@@ -86,20 +66,14 @@ export default function Explore() {
               discountedPrice = firstSize.discountPrice || originalPrice;
 
               if (product.activeOffer && product.activeOffer._id.isActive) {
-                discountPercentage =
-                  product.activeOffer._id.discountPercentage || 0;
+                discountPercentage = product.activeOffer._id.discountPercentage || 0;
                 isOfferActive = true;
                 if (!firstSize.discountPrice) {
-                  discountedPrice =
-                    originalPrice * (1 - discountPercentage / 100);
+                  discountedPrice = originalPrice * (1 - discountPercentage / 100);
                 }
-              } else {
-                discountedPrice = originalPrice;
               }
             }
-            colorImages = product.variants
-              .map((variant) => variant.colorImage)
-              .filter(Boolean);
+            colorImages = availableColors;
           }
 
           return {
@@ -114,6 +88,7 @@ export default function Explore() {
             discountPercentage: isOfferActive ? discountPercentage : 0,
             variantsCount: product.variants?.length || 0,
             colorImages: colorImages,
+            availableSizes: [...new Set(availableSizes)],
             category: product.category?.name || "Uncategorized",
             gender: product.gender || "Unisex",
             isDeleted: product.isDeleted || false,

@@ -19,6 +19,18 @@ import {
   Alert,
   Chip,
   IconButton,
+  Rating,
+  Modal,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useState } from "react";
@@ -45,6 +57,21 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { setWishlistLength } from "@/redux/features/wishlistSlice";
+import CloseIcon from "@mui/icons-material/Close";
+import StraightenIcon from "@mui/icons-material/Straighten";
+import InfoIcon from "@mui/icons-material/Info";
+
+const theme = {
+  primary: '#2c3e50',
+  secondary: '#f8f9fa',
+  accent: '#3498db',
+  border: '#e0e0e0',
+  text: {
+    primary: '#2c3e50',
+    secondary: '#34495e',
+    light: '#7f8c8d'
+  }
+};
 
 const DetailProduct = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -61,14 +88,19 @@ const DetailProduct = () => {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [openSizeGuide, setOpenSizeGuide] = useState(false);
+  const [openColorGuide, setOpenColorGuide] = useState(false);
 
   const settings = {
-    dots: false, // Hide default dots
+    dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 3,
     slidesToScroll: 1,
-    arrows: false, // Hide default arrows
+    arrows: false,
     responsive: [
       {
         breakpoint: 1024,
@@ -151,6 +183,19 @@ const DetailProduct = () => {
             isDeleted: productData.isDeleted,
           });
 
+          // Fetch reviews to get average rating
+          const reviewsResponse = await axiosInstance.get(
+            `/user/review/get/${productData._id}`
+          );
+          const reviews = reviewsResponse.data.reviews;
+          
+          // Calculate average rating
+          if (reviews.length > 0) {
+            const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+            setAverageRating((sum / reviews.length).toFixed(1));
+            setReviewCount(reviews.length);
+          }
+
           const relatedResponse = await axiosInstance.get(
             `/products/related/${productData.category._id}/${id}`
           );
@@ -163,6 +208,14 @@ const DetailProduct = () => {
       fetchProduct();
     }
   }, [id]);
+
+  const handleSizeGuideOpen = () => {
+    setSizeGuideOpen(true);
+  };
+
+  const handleSizeGuideClose = () => {
+    setSizeGuideOpen(false);
+  };
 
   const itemsPerView = {
     xs: 1,
@@ -341,6 +394,11 @@ const DetailProduct = () => {
     }
   };
 
+  const handleBuyNow = () => {
+    // Implement buy now functionality
+    console.log("Buy Now clicked");
+  };
+
   const handleImageHover = (e) => {
     if (!product?.image) return;
 
@@ -378,6 +436,150 @@ const DetailProduct = () => {
     alignItems: "center",
     zIndex: 1,
   });
+
+  // Size guide data - normally this would come from an API
+  const sizeGuideData = {
+    gender: product?.gender || "Unisex",
+    categories: [
+      {
+        name: "Small (S)",
+        chest: "36-38",
+        waist: "30-32",
+        hips: "36-38"
+      },
+      {
+        name: "Medium (M)",
+        chest: "38-40",
+        waist: "32-34",
+        hips: "38-40"
+      },
+      {
+        name: "Large (L)",
+        chest: "40-42",
+        waist: "34-36",
+        hips: "40-42"
+      },
+      {
+        name: "Extra Large (XL)",
+        chest: "42-44",
+        waist: "36-38",
+        hips: "42-44"
+      },
+      {
+        name: "XXL",
+        chest: "44-46",
+        waist: "38-40",
+        hips: "44-46"
+      }
+    ]
+  };
+
+  // Size Guide Dialog Component
+  const SizeGuideDialog = () => (
+    <Dialog
+      open={openSizeGuide}
+      onClose={() => setOpenSizeGuide(false)}
+      maxWidth="md"
+      PaperProps={{
+        sx: {
+          borderRadius: '12px',
+          minWidth: { xs: '95%', sm: '600px' }
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        borderBottom: `1px solid ${theme.border}`,
+        bgcolor: theme.secondary,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        p: 2.5
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <StraightenIcon sx={{ color: theme.primary }} />
+          <Typography variant="h6" sx={{ color: theme.text.primary }}>
+            Size Guide
+          </Typography>
+        </Box>
+        <IconButton 
+          onClick={() => setOpenSizeGuide(false)}
+          sx={{ color: theme.text.primary }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ p: 3 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: theme.text.primary,
+                  bgcolor: theme.secondary
+                }}>
+                  Size
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: theme.text.primary,
+                  bgcolor: theme.secondary
+                }}>
+                  Chest (inches)
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: theme.text.primary,
+                  bgcolor: theme.secondary
+                }}>
+                  Length (inches)
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: theme.text.primary,
+                  bgcolor: theme.secondary
+                }}>
+                  Shoulder (inches)
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {[
+                { size: 'S', chest: '36-38', length: '27', shoulder: '17' },
+                { size: 'M', chest: '38-40', length: '28', shoulder: '18' },
+                { size: 'L', chest: '40-42', length: '29', shoulder: '19' },
+                { size: 'XL', chest: '42-44', length: '30', shoulder: '20' }
+              ].map((row) => (
+                <TableRow 
+                  key={row.size}
+                  sx={{
+                    '&:hover': { bgcolor: theme.secondary }
+                  }}
+                >
+                  <TableCell sx={{ color: theme.text.primary, fontWeight: 500 }}>
+                    {row.size}
+                  </TableCell>
+                  <TableCell sx={{ color: theme.text.secondary }}>{row.chest}</TableCell>
+                  <TableCell sx={{ color: theme.text.secondary }}>{row.length}</TableCell>
+                  <TableCell sx={{ color: theme.text.secondary }}>{row.shoulder}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Box sx={{ mt: 3, p: 2, bgcolor: theme.secondary, borderRadius: '8px' }}>
+          <Typography variant="subtitle2" sx={{ color: theme.text.primary, mb: 1 }}>
+            How to Measure
+          </Typography>
+          <Typography variant="body2" sx={{ color: theme.text.secondary }}>
+            • Chest: Measure around the fullest part of your chest
+            • Length: Measure from shoulder point to desired length
+            • Shoulder: Measure across the back from shoulder point to shoulder point
+          </Typography>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <motion.div
@@ -513,7 +715,7 @@ const DetailProduct = () => {
                 sx={{
                   position: "fixed",
                   top: "50%",
-                  left: "50%",
+                  left: "60%",
                   transform: "translate(-50%, -50%)",
                   width: "600px",
                   height: "600px",
@@ -630,12 +832,32 @@ const DetailProduct = () => {
                 variant="h4"
                 sx={{
                   fontWeight: 600,
-                  marginBottom: "1rem",
+                  marginBottom: "0.5rem",
                   color: "#2c3e50",
                 }}
               >
                 {product?.title}
               </Typography>
+
+              {/* Product Rating - New Addition */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <Rating 
+                  value={Number(averageRating)} 
+                  precision={0.5} 
+                  readOnly 
+                  size="small"
+                />
+                <Typography variant="body2" sx={{ color: "#757575" }}>
+                  {averageRating} ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+                </Typography>
+              </Box>
 
               {/* Coming Soon Banner */}
               {product?.isDeleted && (
@@ -744,54 +966,95 @@ const DetailProduct = () => {
                 ))}
               </Grid>
 
-              <Box sx={{ marginBottom: "2rem", width: "100%" }}>
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{
-                    backgroundColor: "#fff",
-                    borderRadius: "8px",
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#bdc3c7",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#7f8c8d",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#3498db",
-                      },
-                    },
-                  }}
-                  disabled={product?.isDeleted}
-                >
-                  <InputLabel sx={{ color: "#34495e" }}>Size</InputLabel>
-                  <Select
-                    value={selectedSize}
-                    onChange={(e) => handleSizeChange(e.target.value)}
-                    IconComponent={ExpandMoreIcon}
-                    sx={{
-                      "& .MuiSelect-select": {
-                        padding: "12px",
-                      },
+              {/* Improved Size Selection with Guide */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ 
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2
+                }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: theme.text.primary,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
                     }}
                   >
-                    {variants[variantIndex]?.sizes?.map((size, index) => (
-                      <MenuItem
-                        key={index}
-                        value={size.size}
-                        sx={{
-                          transition: "background 0.3s ease",
-                          "&:hover": {
-                            backgroundColor: "#ecf0f1",
-                          },
-                        }}
-                      >
-                        {size.size}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                    <StraightenIcon sx={{ color: theme.primary }} />
+                    Select Size
+                  </Typography>
+                  <Button
+                    onClick={() => setOpenSizeGuide(true)}
+                    startIcon={<InfoIcon />}
+                    sx={{
+                      color: theme.primary,
+                      '&:hover': { bgcolor: `${theme.primary}10` }
+                    }}
+                  >
+                    Size Guide
+                  </Button>
+                </Box>
+
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 1.5 
+                }}>
+                  {variants[variantIndex]?.sizes.map((size) => (
+                    <Button
+                      key={size._id}
+                      onClick={() => size.inStock && handleSizeChange(size.size)}
+                      disabled={!size.inStock}
+                      sx={{
+                        minWidth: '70px',
+                        height: '50px',
+                        border: selectedSize === size.size 
+                          ? `2px solid ${theme.primary}` 
+                          : `1px solid ${theme.border}`,
+                        borderRadius: '8px',
+                        bgcolor: size.inStock ? 'white' : theme.secondary,
+                        color: size.inStock ? theme.text.primary : theme.text.light,
+                        transition: 'all 0.2s ease',
+                        '&:hover': size.inStock && {
+                          border: `2px solid ${theme.primary}`,
+                          bgcolor: `${theme.primary}10`
+                        },
+                        '&.Mui-disabled': {
+                          bgcolor: theme.secondary,
+                          color: theme.text.light
+                        }
+                      }}
+                    >
+                      <Box>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            fontWeight: selectedSize === size.size ? 600 : 400,
+                            mb: 0.5
+                          }}
+                        >
+                          {size.size}
+                        </Typography>
+                        {size.inStock && size.stockCount <= 5 && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: '#e74c3c',
+                              display: 'block',
+                              fontSize: '0.7rem'
+                            }}
+                          >
+                            Only {size.stockCount} left
+                          </Typography>
+                        )}
+                      </Box>
+                    </Button>
+                  ))}
+                </Box>
               </Box>
 
               <Box sx={{ marginBottom: "2rem" }}>
@@ -906,8 +1169,8 @@ const DetailProduct = () => {
                     sx={{
                       backgroundColor: product?.isDeleted
                         ? "#E0D5C1"
-                        : "#FAD4C0", // Soft peach tone
-                      color: "#5A5A5A", // Deep gray text for readability
+                        : "#2c3e50", // Soft peach tone
+                      color: "#fff", // Deep gray text for readability
                       padding: "1rem",
                       fontWeight: "bold",
                       fontSize: "1rem",
@@ -957,8 +1220,8 @@ const DetailProduct = () => {
                     sx={{
                       backgroundColor: product?.isDeleted
                         ? "#E0D5C1"
-                        : "#F5E6CC", // Soft sand tone
-                      color: "#5A5A5A", // Classy deep gray text
+                        : "  #ff9800;", // Soft sand tone
+                      color: "white", // Classy deep gray text
                       padding: "1rem",
                       fontWeight: "bold",
                       fontSize: "1rem",
@@ -1003,8 +1266,8 @@ const DetailProduct = () => {
                   onClick={handleAddToWishlist}
                   disabled={!isLoggedIn}
                   sx={{
-                    backgroundColor: "#F8F4E1", // Soft ivory base
-                    color: "#5A5A5A", // Elegant deep gray text
+                    backgroundColor: "#6c757d", 
+                    color: "white", 
                     fontSize: "1rem",
                     marginTop: "10px",
                     py: 1.5,
@@ -1160,6 +1423,8 @@ const DetailProduct = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <SizeGuideDialog />
     </motion.div>
   );
 };

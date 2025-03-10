@@ -17,6 +17,8 @@ export const FilterProvider = ({ children }) => {
     selectedGenders: [],
     selectedRatings: [],
     selectedDiscounts: [],
+    selectedColors: [],
+    selectedSizes: [],
     sortBy: "default",
   });
 

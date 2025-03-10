@@ -12,7 +12,7 @@ import {
   CircularProgress,
   Chip,
   TextField,
-  IconButton, Tooltip
+  IconButton, Tooltip, Rating
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "@emotion/styled";
@@ -108,6 +108,16 @@ const StyledEyeIcon = styled(IconButton)`
 `;
 
 const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, handleMouseLeave, handleProductDetail, cardVariants }) => {
+  const { filterState, updateFilters } = useFilter();
+
+  const handleColorClick = (e, color) => {
+    e.stopPropagation(); // Prevent triggering product detail click
+    const newColors = filterState.selectedColors.includes(color)
+      ? filterState.selectedColors.filter(c => c !== color)
+      : [...filterState.selectedColors, color];
+    updateFilters({ selectedColors: newColors });
+  };
+
   return (
     <Grid item xs={12} sm={6} md={4} lg={3}>
       <motion.div
@@ -116,146 +126,152 @@ const ProductCard = memo(({ product, index, hoveredProductId, handleMouseEnter, 
         animate="visible"
         transition={{ delay: index * 0.1, duration: 0.5 }}
       >
-        <Grid
+        <Box
           sx={{
-            height: "520px",
+            height: "100%",
             display: "flex",
             flexDirection: "column",
-            position: "relative",
-            opacity: product.isDeleted ? 0.7 : 1, // Reduce opacity for unavailable products
+            transition: "transform 0.3s, box-shadow 0.3s",
+            borderRadius: "2px",
             overflow: "hidden",
+            "&:hover": {
+              transform: "translateY(-5px)",
+              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
+            },
           }}
+          onMouseEnter={() => handleMouseEnter(product.id)}
+          onMouseLeave={handleMouseLeave}
         >
-          {product.isOfferActive &&
-            product.discountPercentage > 0 && (
-              <OfferBadge
+          <Box sx={{ position: "relative" }}>
+            <CardMedia
+              component="img"
+              image={hoveredProductId === product.id && product.subImage ? product.subImage : product.image}
+              alt={product.title}
+              sx={{
+                height: 380,
+                objectFit: "cover",
+                transition: "transform 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                },
+              }}
+              onClick={() => handleProductDetail(product.id)}
+            />
+            {product.discountPercentage > 0 && (
+              <Chip
                 label={`${product.discountPercentage}% OFF`}
                 sx={{
-                  "& .MuiChip-label": {
-                    padding: "0 4px",
-                    fontSize: "0.575rem",
-                    lineHeight: "1.2",
-                  },
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  backgroundColor: "#ff6b6b",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "0.85rem",
                 }}
               />
             )}
-
-          {product.isDeleted && (
-            <Chip
-              label="Coming Soon"
-              color="secondary"
-              sx={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                zIndex: 1,
-                backgroundColor: '#ff6f61',
-                color: 'white',
-                fontWeight: 'bold'
-              }}
-            />
-          )}
-
-          <Box sx={{ position: "relative" }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0 }} 
-              transition={{
-                duration: 0.6, 
-                ease: "easeInOut",
-              }}
-            >
-              <CardMedia
-                component="img"
-                onClick={() => handleProductDetail(product.id)}
-                image={
-                  hoveredProductId === product.id
-                    ? product.subImage 
-                    : product.image 
-                }
-                alt={product.title}
-                sx={{
-                  height: 400,
-                  objectFit: "cover",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={() => handleMouseEnter(product.id)} 
-                onMouseLeave={handleMouseLeave} 
-              />
-            </motion.div>
           </Box>
 
-          <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{
-                fontWeight: 600,
-                color: '#333',
-                fontSize: '16px',
-              }}
-            >
-              {product.title.slice(0, 40)}...
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "10px",
-              }}
-            >
-              <Box>
+          <CardContent sx={{ flexGrow: 1, p: 2 }}>
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  color: "#2d3436",
+                  mb: 1,
+                  height: "48px",
+                  overflow: "hidden",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                }}
+              >
+                {product.title}
+              </Typography>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
                 <Typography
                   variant="h6"
                   sx={{
-                    fontWeight: 600,
-                    color: '#333',
-                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: "#2d3436",
+                    fontSize: "1.1rem",
                   }}
                 >
-                  ₹{product.isDeleted ? "Price Coming Soon" : product.price.toFixed(1)}
+                  ₹{product.price.toLocaleString()}
                 </Typography>
-                {product.isOfferActive &&
-                  product.originalPrice > product.price && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        textDecoration: "line-through",
-                        marginLeft: "4px",
-                      }}
-                    >
-                      ₹{product.originalPrice}
-                    </Typography>
-                  )}
+                {product.originalPrice > product.price && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#636e72",
+                      textDecoration: "line-through",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    ₹{product.originalPrice.toLocaleString()}
+                  </Typography>
+                )}
               </Box>
-              <Box sx={{ display: "flex", gap: "5px" }}>
-                {product.colorImages.map((colorVariant) => {
-                  console.log("COLORRRR", colorVariant);
 
-                  return (
+              {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <Rating value={product.rating} precision={0.5} size="small" readOnly />
+                <Typography variant="body2" color="text.secondary">
+                  ({product.rating})
+                </Typography>
+              </Box> */}
+            </Box>
+
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box sx={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                {product.colorImages.slice(0, 4).map((colorVariant) => (
+                  <Box
+                    key={colorVariant.color}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      border: "1px solid #ddd",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
+                      "&:hover": {
+                        transform: "scale(1.1)",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
                     <img
-                      key={colorVariant.color}
-                      src={colorVariant}
+                      src={colorVariant.colorImage}
                       alt={colorVariant.color}
                       style={{
-                        width: "30px",
-                        height: "30px",
-                        borderRadius: "50%",
-                        border: "2px solid #ff6f61",
-                        cursor: "pointer",
-                        objectFit: "contain",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
                       }}
                       title={colorVariant.color}
                     />
-                  );
-                })}
+                  </Box>
+                ))}
+                {product.colorImages.length > 4 && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      ml: 0.5,
+                      color: "#636e72",
+                      alignSelf: "center",
+                    }}
+                  >
+                    +{product.colorImages.length - 4}
+                  </Typography>
+                )}
               </Box>
             </Box>
           </CardContent>
-        </Grid>
+        </Box>
       </motion.div>
     </Grid>
   );
@@ -360,6 +376,21 @@ const ListProducts = memo(({
         );
       }
 
+      // Color filter
+      if (filterState.selectedColors.length > 0) {
+        const productColors = product.colorImages.map(c => c.color);
+        if (!filterState.selectedColors.some(color => productColors.includes(color))) {
+          return false;
+        }
+      }
+
+      // Size filter
+      if (filterState.selectedSizes.length > 0) {
+        if (!filterState.selectedSizes.some(size => product.availableSizes.includes(size))) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [filterState, searchQuery]);
@@ -404,7 +435,7 @@ const ListProducts = memo(({
       }}
     >
       <Typography
-        variant="h4"
+        variant="h5"
         align="center"
         gutterBottom
         sx={{
@@ -412,6 +443,7 @@ const ListProducts = memo(({
           color: "#333",
           marginBottom: "30px",
           fontFamily: "'Poppins', sans-serif",
+          marginTop:"20px"
         }}
       >
         All Products

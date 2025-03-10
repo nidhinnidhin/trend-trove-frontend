@@ -27,21 +27,31 @@ const SearchResults = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 8; // Items per page
-  const { filterState } = useFilter();
+  const { filterState, updateFilters } = useFilter();
 
   useEffect(() => {
     if (search || brand || category || router.query.gender) {
       setLoading(true);
       let endpoint = '';
       
+      // Add filter parameters to the endpoint
+      const filterParams = new URLSearchParams({
+        colors: filterState.selectedColors.join(','),
+        sizes: filterState.selectedSizes.join(','),
+        minPrice: filterState.priceRange[0],
+        maxPrice: filterState.priceRange[1],
+        page,
+        limit
+      }).toString();
+      
       if (brand) {
-        endpoint = `/products/brand/${brand}`;
+        endpoint = `/products/brand/${brand}?${filterParams}`;
       } else if (category) {
-        endpoint = `/products/category/${category}?page=${page}&limit=${limit}`;
+        endpoint = `/products/category/${category}?${filterParams}`;
       } else if (router.query.gender) {
-        endpoint = `/products/gender/${router.query.gender}?page=${page}&limit=${limit}`;
+        endpoint = `/products/gender/${router.query.gender}?${filterParams}`;
       } else {
-        endpoint = `/products/product/search/related?query=${search}`;
+        endpoint = `/products/product/search/related?query=${search}&${filterParams}`;
       }
 
       axiosInstance
@@ -62,10 +72,19 @@ const SearchResults = () => {
 
           const transformedProducts = productsToTransform.map((item) => {
             const product = category || brand ? item : (item.product || item);
-            const colorImages = product.variants.map(variant => ({
-              color: variant.color,
-              colorImage: variant.colorImage,
-            }));
+            const availableColors = [];
+            const availableSizes = [];
+
+            // Extract all colors and sizes
+            product.variants.forEach(variant => {
+              availableColors.push({
+                color: variant.color,
+                colorImage: variant.colorImage,
+              });
+              variant.sizes.forEach(size => {
+                availableSizes.push(size.size);
+              });
+            });
 
             return {
               id: product._id,
@@ -78,7 +97,8 @@ const SearchResults = () => {
               variantsCount: product.variants.length,
               category: product.category?.name,
               gender: product.gender,
-              colorImages,
+              colorImages: availableColors,
+              availableSizes: [...new Set(availableSizes)],
             };
           });
 
@@ -90,38 +110,44 @@ const SearchResults = () => {
           setLoading(false);
         });
     }
-  }, [search, brand, category, router.query.gender, page]);
+  }, [search, brand, category, router.query.gender, page, filterState]);
 
   const filterProducts = (products) => {
     return products.filter((product) => {
+      // Price filter
       const price = product.price;
-      if (
-        price < filterState.priceRange[0] ||
-        price > filterState.priceRange[1]
-      )
+      if (price < filterState.priceRange[0] || price > filterState.priceRange[1]) {
         return false;
-      if (
-        filterState.categories.length > 0 &&
-        !filterState.categories.includes(product.category)
-      )
+      }
+
+      // Color filter
+      if (filterState.selectedColors.length > 0) {
+        const productColors = product.colorImages.map(c => c.color);
+        if (!filterState.selectedColors.some(color => productColors.includes(color))) {
+          return false;
+        }
+      }
+
+      // Size filter
+      if (filterState.selectedSizes.length > 0) {
+        if (!filterState.selectedSizes.some(size => product.availableSizes.includes(size))) {
+          return false;
+        }
+      }
+
+      // Other existing filters...
+      if (filterState.categories.length > 0 && !filterState.categories.includes(product.category)) {
         return false;
-      if (
-        filterState.selectedGenders.length > 0 &&
-        !filterState.selectedGenders.includes(product.gender)
-      )
+      }
+      if (filterState.selectedGenders.length > 0 && !filterState.selectedGenders.includes(product.gender)) {
         return false;
-      if (
-        filterState.selectedRatings.length > 0 &&
-        !filterState.selectedRatings.includes(Math.floor(product.rating))
-      )
+      }
+      if (filterState.selectedRatings.length > 0 && !filterState.selectedRatings.includes(Math.floor(product.rating))) {
         return false;
+      }
       if (filterState.selectedDiscounts.length > 0) {
-        const discount =
-          ((product.originalPrice - product.price) / product.originalPrice) *
-          100;
-        return filterState.selectedDiscounts.some(
-          (d) => discount >= parseInt(d)
-        );
+        const discount = ((product.originalPrice - product.price) / product.originalPrice) * 100;
+        return filterState.selectedDiscounts.some((d) => discount >= parseInt(d));
       }
       return true;
     });
@@ -153,6 +179,14 @@ const SearchResults = () => {
   const handlePageChange = (event, value) => {
     setPage(value);
     window.scrollTo(0, 0);
+  };
+
+  const handleColorClick = (e, color) => {
+    e.stopPropagation();
+    const newColors = filterState.selectedColors.includes(color)
+      ? filterState.selectedColors.filter(c => c !== color)
+      : [...filterState.selectedColors, color];
+    updateFilters({ selectedColors: newColors });
   };
 
   const filteredProducts = sortProducts(filterProducts(products));
@@ -307,19 +341,34 @@ const SearchResults = () => {
                             </Typography>
                             <Box sx={{ display: "flex", gap: "5px" }}>
                               {product.colorImages.map((colorVariant) => (
-                                <img
+                                <Box
                                   key={colorVariant.color}
-                                  src={colorVariant.colorImage}
-                                  alt={colorVariant.color}
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "50%",
-                                    border: "2px solid #ff6f61",
-                                    cursor: "pointer",
+                                  onClick={(e) => handleColorClick(e, colorVariant.color)}
+                                  sx={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    border: filterState.selectedColors.includes(colorVariant.color)
+                                      ? '2px solid #ff6f61'
+                                      : '1px solid #ddd',
+                                    overflow: 'hidden',
+                                    '&:hover': {
+                                      transform: 'scale(1.1)',
+                                    },
                                   }}
-                                  title={colorVariant.color}
-                                />
+                                >
+                                  <img
+                                    src={colorVariant.colorImage}
+                                    alt={colorVariant.color}
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover',
+                                    }}
+                                    title={colorVariant.color}
+                                  />
+                                </Box>
                               ))}
                             </Box>
                           </Box>
