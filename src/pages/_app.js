@@ -24,11 +24,11 @@ export default function App({ Component, pageProps, emotionCache = clientSideEmo
 
     const jssStyles = document.querySelector('#jss-server-side');
     if (jssStyles) {
-      jssStyles.parentElement.removeChild(jssStyles);
+      jssStyles?.parentElement?.removeChild(jssStyles);
     }
   }, []);
 
-   return (
+  return (
     <CacheProvider value={emotionCache}>
       <Provider store={store}>
         <FilterProvider>
