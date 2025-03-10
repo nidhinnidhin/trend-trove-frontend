@@ -2,9 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   compiler: {
-    styledComponents: true, 
-    emotion: true, 
+    styledComponents: true,
+    emotion: true
   },
+  transpilePackages: ['@mui/material', '@emotion/react', '@emotion/styled'],
   images: {
     remotePatterns: [
       {

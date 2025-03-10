@@ -13,7 +13,19 @@ import ChatBox from "@/components/modals/chatBox";
 
 const clientSideEmotionCache = createEmotionCache();
 
-const theme = createTheme();
+const theme = createTheme({
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: `
+        body {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+      `
+    }
+  }
+});
 
 export default function App({ Component, pageProps, emotionCache = clientSideEmotionCache }) {
   const router = useRouter()
@@ -33,7 +45,20 @@ export default function App({ Component, pageProps, emotionCache = clientSideEmo
       <Provider store={store}>
         <FilterProvider>
           <ThemeProvider theme={theme}>
-            <CssBaseline />
+            <CssBaseline enableColorScheme />
+            <style jsx global>{`
+              html,
+              body {
+                padding: 0;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+                  Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+                  sans-serif;
+              }
+              * {
+                box-sizing: border-box;
+              }
+            `}</style>
             <Component {...pageProps} />
             {!isAdminRoute && <ChatBox />}
           </ThemeProvider>
