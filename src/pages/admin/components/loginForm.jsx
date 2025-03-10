@@ -28,7 +28,7 @@ const LoginForm = () => {
 
   const getCsrfToken = async () => {
     try {
-      const response = await axios.get("http://13.126.18.175/api/csrf-token", {
+      const response = await axios.get("http://13.126.18.175:9090/api/csrf-token", {
         withCredentials: true,
       });
       return response.data.csrfToken;
@@ -54,7 +54,7 @@ const LoginForm = () => {
       }
       
       const response = await axios.post(
-        "http://13.126.18.175/api/admin/adminlogin",
+        "http://13.126.18.175:9090/api/admin/adminlogin",
         { email, password },
         {
           headers: {

@@ -473,7 +473,7 @@ const CheckoutPage = () => {
     if (selectedCoupon) {
       try {
         const couponResponse = await fetch(
-          `http://13.126.18.175/api/coupon/apply`,
+          `http://13.126.18.175:9090/api/coupon/apply`,
           {
             method: "POST",
             headers: {
@@ -506,7 +506,7 @@ const CheckoutPage = () => {
 
     try {
       const response = await fetch(
-        "http://13.126.18.175/api/checkout/create-checkout",
+        "http://13.126.18.175:9090/api/checkout/create-checkout",
         {
           method: "POST",
           headers: {

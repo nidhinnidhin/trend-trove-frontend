@@ -66,7 +66,7 @@ const DisplayChat = () => {
   useEffect(() => {
     loadChats();
 
-    const newSocket = io("http://13.126.18.175", {
+    const newSocket = io("http://13.126.18.175:9090", {
       withCredentials: true,
     });
 

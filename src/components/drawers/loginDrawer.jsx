@@ -152,7 +152,7 @@ const LoginDrawer = ({ onClose }) => {
 
   const handleGoogleLogin = () => {
     // Use the complete URL
-    window.location.href = 'http://13.126.18.175/api/users/auth/google';
+    window.location.href = 'http://13.126.18.175:9090/api/users/auth/google';
   };
 
   return (

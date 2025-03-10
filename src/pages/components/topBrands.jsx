@@ -132,7 +132,7 @@ const TopBrands = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await axios.get('http://13.126.18.175/api/brands');
+        const response = await axios.get('http://13.126.18.175:9090/api/brands');
         setBrands(response.data);
       } catch (error) {
         console.error("Error fetching brands:", error);

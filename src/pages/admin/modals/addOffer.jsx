@@ -51,7 +51,7 @@ const AddOfferModal = ({ open, handleClose, handleOfferAdded }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("http://13.126.18.175/api/categories");
+      const response = await axios.get("http://13.126.18.175:9090/api/categories");
       setCategories(response.data.categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -61,7 +61,7 @@ const AddOfferModal = ({ open, handleClose, handleOfferAdded }) => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        "http://13.126.18.175/api/products/get"
+        "http://13.126.18.175:9090/api/products/get"
       );
       setProducts(response.data.products);
       console.log(response.data.products);
