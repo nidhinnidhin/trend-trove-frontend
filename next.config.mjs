@@ -30,7 +30,7 @@ const nextConfig = {
     emotion: true
   },
   images: {
-    domains: ['13.126.18.175'],
+    domains: ['https://www.trendrove.shop'],
     unoptimized: true
   },
   webpack: (config) => {
@@ -46,7 +46,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://13.126.18.175:9090/api/:path*',
+        destination: 'https://www.trendrove.shop/api/:path*',
       },
     ];
   },

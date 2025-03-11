@@ -3,7 +3,7 @@ import axios from 'axios';
 export const setupAxios = () => {
   // Set default configs
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = 'http://13.126.18.175:9090/api/';
+  axios.defaults.baseURL = 'https://www.trendrove.shop/api/';
   
   // Add global request interceptor
   axios.interceptors.request.use(
