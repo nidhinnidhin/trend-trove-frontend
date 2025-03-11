@@ -22,6 +22,7 @@ const SendOtp = () => {
     message: "",
     type: "",
   });
+  // data
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
   const router = useRouter();
