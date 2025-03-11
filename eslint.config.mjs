@@ -9,7 +9,7 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-// asdfas
+// asdfaswe
 const eslintConfig = [...compat.extends("next/core-web-vitals")];
 
 export default eslintConfig;
