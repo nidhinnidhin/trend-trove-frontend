@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://13.126.18.175:9090/api";
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api";
 
 const axiosInstance = axios.create({
   baseURL,
@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
 // csrf
 const fetchCSRFToken = async () => {
   try {
-    const response = await axios.get('http://13.126.18.175:9090/api/csrf-token', {
+    const response = await axios.get('https://www.trendrove.shop/api/csrf-token', {
       withCredentials: true
     });
     return response.data.csrfToken;
