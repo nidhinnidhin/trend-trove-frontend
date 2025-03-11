@@ -27,23 +27,10 @@ axiosInstance.interceptors.request.use(
       config.headers["Authorization"] = `Bearer ${token}`;
     }
 
-    // Don't fetch CSRF token for these endpoints
-    const excludedUrls = [
-      '/users/login',
-      '/users/register',
-      '/users/auth/google',
-      '/otp/send-otp',
-      '/otp/verify-otp'
-    ];
-
-    if (!excludedUrls.some(url => config.url.includes(url))) {
-      try {
-        const csrfToken = await fetchCSRFToken();
-        if (csrfToken) {
-          config.headers["x-csrf-token"] = csrfToken;
-        }
-      } catch (error) {
-        console.error('Error fetching CSRF token:', error);
+    if (config.method !== 'get') {
+      const csrfToken = await fetchCSRFToken();
+      if (csrfToken) {
+        config.headers["x-csrf-token"] = csrfToken;
       }
     }
 
