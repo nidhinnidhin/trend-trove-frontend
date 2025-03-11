@@ -66,7 +66,7 @@ const DisplayChat = () => {
   useEffect(() => {
     loadChats();
 
-    const newSocket = io("http://13.126.18.175:9090", {
+    const newSocket = io("https://www.trendrove.shop", {
       withCredentials: true,
     });
 

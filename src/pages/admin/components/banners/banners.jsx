@@ -43,7 +43,7 @@ const Banners = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://13.126.18.175:9090/api/banners");
+        const response = await axios.get("https://www.trendrove.shop/api/banners");
         setBannersData(response.data);
       } catch (err) {
         setError("Failed to fetch banners data");

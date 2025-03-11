@@ -14,7 +14,7 @@ const Slider = () => {
   useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const response = await axios.get("http://13.126.18.175:9090/api/banners");
+        const response = await axios.get("https://www.trendrove.shop/api/banners");
         // Filter only active banners
         const activeBanners = response.data.filter(banner => banner.isActive);
         setBanners(activeBanners);

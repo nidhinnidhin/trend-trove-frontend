@@ -97,7 +97,7 @@ const EditProductModal = ({
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `http://13.126.18.175:9090/api/variants/variant/get/${productId}`
+        `https://www.trendrove.shop/api/variants/variant/get/${productId}`
       );
       setVariants(response.data.variants || []);
     } catch (error) {
