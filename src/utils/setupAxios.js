@@ -3,14 +3,14 @@ import axios from 'axios';
 export const setupAxios = () => {
   // Set default configs
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = 'https://www.trendrove.shop/api/';
+  axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL;
   
   // Add global request interceptor
   axios.interceptors.request.use(
     async (config) => {
       if (config.method !== 'get') {
         try {
-          const response = await axios.get('/csrf-token', {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
             withCredentials: true
           });
           config.headers["x-csrf-token"] = response.data.csrfToken;

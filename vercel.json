@@ -15,6 +15,12 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://www.trendrove.shop/api",
     "NEXT_PUBLIC_SOCKET_URL": "https://www.trendrove.shop"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://www.trendrove.shop/api/:path*"
+    }
+  ]
 }
   
