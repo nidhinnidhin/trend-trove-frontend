@@ -1,15 +1,13 @@
 import axios from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api";
-
 const axiosInstance = axios.create({
-  baseURL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api",
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
-// csrf
+
 const fetchCSRFToken = async () => {
   try {
     const response = await axios.get('https://www.trendrove.shop/api/csrf-token', {
@@ -29,20 +27,31 @@ axiosInstance.interceptors.request.use(
       config.headers["Authorization"] = `Bearer ${token}`;
     }
 
-    if (config.method !== 'get') {
-      const csrfToken = await fetchCSRFToken();
-      if (csrfToken) {
-        config.headers["x-csrf-token"] = csrfToken;
+    // Don't fetch CSRF token for these endpoints
+    const excludedUrls = [
+      '/users/login',
+      '/users/register',
+      '/users/auth/google',
+      '/otp/send-otp',
+      '/otp/verify-otp'
+    ];
+
+    if (!excludedUrls.some(url => config.url.includes(url))) {
+      try {
+        const csrfToken = await fetchCSRFToken();
+        if (csrfToken) {
+          config.headers["x-csrf-token"] = csrfToken;
+        }
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
       }
     }
 
     return config;
   },
-  
   (error) => {
     return Promise.reject(error);
   }
-
 );
 
 axiosInstance.interceptors.response.use(
@@ -50,8 +59,8 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 403 && 
-        error.response?.data?.message?.includes('CSRF') && 
+    if (error.response?.status === 403 &&
+        error.response?.data?.message?.includes('CSRF') &&
         !originalRequest._retry) {
       originalRequest._retry = true;
       try {
