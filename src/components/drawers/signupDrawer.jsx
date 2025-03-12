@@ -1,112 +1,162 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router"; // Import the useRouter hook
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import {
-  TextField,
-  Grid,
-  Avatar,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  InputAdornment,
-  IconButton,
-} from "@mui/material";
+import styled, { keyframes, css } from 'styled-components';
+import { Box, Typography, TextField, Grid, Avatar, CircularProgress, Snackbar, Alert, InputAdornment, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { styled, width } from "@mui/system";
+import { width } from "@mui/system";
 import axios from "axios";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import OtpVerificationModal from "../modals/openOtpVerification";
 import axiosInstance from "@/utils/axiosInstance";
 
-const FileInput = styled("input")({
-  display: "none",
-});
-
-const StyledBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  width: 450,
-  height: '100vh',
-  backgroundColor: '#ffffff',
-  padding: '2rem',
-  position: 'relative',
-  overflowY: 'auto',
-  '&::-webkit-scrollbar': {
-    width: '6px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#cbd5e1',
-    borderRadius: '6px',
-  },
-}));
-
-const StyledForm = styled('form')({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1.5rem',
-  width: '100%',
-  maxWidth: '400px',
-  margin: '0 auto',
-});
-
-const StyledWrapper = styled("div")`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const StyledButton = styled(Button)`
-  width: 100%;
-  height: 56px;
-  display: flex;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  text-align: center;
-  text-transform: none;
-  align-items: center;
-  border-radius: 8px;
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
-  gap: 1rem;
-  color: #1f2937;
-  background-color: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f3f4f6;
-    border-color: rgba(0, 0, 0, 0.2);
+// Animations
+const slideIn = keyframes`
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 `;
 
-const GoogleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    preserveAspectRatio="xMidYMid"
-    viewBox="0 0 256 262"
-    style={{ height: 24 }}
-  >
-    <path
-      fill="#4285F4"
-      d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"
-    />
-    <path
-      fill="#34A853"
-      d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"
-    />
-    <path
-      fill="#FBBC05"
-      d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"
-    />
-    <path
-      fill="#EB4335"
-      d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
-    />
-  </svg>
-);
+const pulseAnimation = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+// Styled Components
+const StyledBox = styled(Box)`
+  width: 600px;
+  height: 100vh;
+  padding: 2rem 3rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  position: relative;
+  animation: ${css`${slideIn}`} 0.3s ease-out;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+`;
+
+const StyledForm = styled('form')`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+`;
+
+const AvatarWrapper = styled(Box)`
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &::after {
+    content: '${props => props.hasImage ? 'Change Photo' : 'Add Photo'}';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ff3366;
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+`;
+
+const StyledAvatar = styled(Avatar)`
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  animation: ${css`${pulseAnimation}`} 2s infinite;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const StyledButton = styled.button`
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  background: ${props => props.variant === 'google' ? '#fff' : 'linear-gradient(135deg, #ff3366 0%, #ff6b6b 100%)'};
+  color: ${props => props.variant === 'google' ? '#666' : '#fff'};
+  box-shadow: ${props => props.variant === 'google' ? '0 2px 10px rgba(0,0,0,0.1)' : '0 4px 15px rgba(255, 51, 102, 0.2)'};
+  border: ${props => props.variant === 'google' ? '1px solid #ddd' : 'none'};
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${props => props.variant === 'google' 
+      ? '0 4px 15px rgba(0,0,0,0.15)' 
+      : '0 6px 20px rgba(255, 51, 102, 0.3)'};
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const CloseButton = styled(IconButton)`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #666;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #ff3366;
+    transform: rotate(90deg);
+  }
+`;
+
+const GoogleIcon = styled.div`
+  width: 24px;
+  height: 24px;
+  background-image: url('/google-icon.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+`;
 
 const SignupDrawer = ({ open, onClose }) => {
   const router = useRouter();
@@ -276,52 +326,33 @@ const SignupDrawer = ({ open, onClose }) => {
     setOpenSnackbar(false);
   };
 
-  const handleGoogleSignup = () => {
-    window.location.href = 'https://www.trendrove.shop/api/users/auth/google';
+  const handleGoogleSignup = (e) => {
+    e.preventDefault(); // Prevent form submission
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/users/auth/google`;
   };
 
   return (
-    <StyledBox role="presentation" sx={{width:"600px"}}>
-      <IconButton
-        onClick={onClose}
+    <StyledBox>
+      <CloseButton onClick={onClose}>
+        <CloseIcon />
+      </CloseButton>
+
+      <Typography
+        variant="h4"
         sx={{
-          position: 'absolute',
-          right: 16,
-          top: 16,
-          color: '#64748b',
-          '&:hover': {
-            backgroundColor: 'rgba(100, 116, 139, 0.08)',
-          },
+          textAlign: 'center',
+          fontWeight: 700,
+          marginBottom: "2rem",
+          background: "linear-gradient(135deg, #1a1a1a 0%, #ff3366 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
         }}
       >
-        <CloseIcon />
-      </IconButton>
-
-      <Box sx={{ textAlign: 'center', mb: 4, mt: 2}}>
-        <Typography
-          variant="h4"
-          sx={{
-            color: '#1e293b',
-            fontWeight: 600,
-            fontSize: '1.875rem',
-            lineHeight: 1.2,
-          }}
-        >
-          Create Account
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: '#64748b',
-            mt: 1,
-          }}
-        >
-          Fill in your details to get started
-        </Typography>
-      </Box>
+        Create Account
+      </Typography>
 
       <StyledForm onSubmit={handleSubmit} noValidate>
-        <Box sx={{ width: '100%', textAlign: 'center' }}>
+        <AvatarWrapper hasImage={!!image}>
           <input
             accept="image/*"
             style={{ display: 'none' }}
@@ -330,41 +361,11 @@ const SignupDrawer = ({ open, onClose }) => {
             onChange={(e) => setImage(e.target.files[0])}
           />
           <label htmlFor="profile-image">
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-              }}
-            >
-              <Avatar
-                src={image ? URL.createObjectURL(image) : ''}
-                sx={{
-                  width: 100,
-                  height: 100,
-                  cursor: 'pointer',
-                  border: '2px dashed #e2e8f0',
-                  backgroundColor: '#f8fafc',
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    borderColor: '#2563eb',
-                  },
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  '&:hover': { color: '#2563eb' },
-                }}
-              >
-                {image ? 'Change Profile Picture' : 'Upload Profile Picture'}
-              </Typography>
-            </Box>
+            <StyledAvatar
+              src={image ? URL.createObjectURL(image) : ''}
+            />
           </label>
-        </Box>
+        </AvatarWrapper>
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
@@ -457,50 +458,45 @@ const SignupDrawer = ({ open, onClose }) => {
           placeholder="Enter referral code if you have one"
         />
 
-        <Button
+        <StyledButton
           type="submit"
-          variant="contained"
           disabled={loading}
-          sx={{
-            height: '48px',
-            backgroundColor: 'rgb(237, 161, 20)',
-            fontSize: '1rem',
-            textTransform: 'none',
-            fontWeight: 500,
-            boxShadow: 'none',
-            '&:hover': {
-              backgroundColor: 'rgb(238, 169, 41)',
-              boxShadow: 'none',
-            },
-            '&:disabled': {
-              backgroundColor: '#94a3b8',
-            },
-          }}
+          loading={loading}
         >
           {loading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={20} sx={{ color: 'white' }} />
+            <>
+              <CircularProgress size={24} sx={{ color: "white" }} />
               <span>Creating Account...</span>
-            </Box>
+            </>
           ) : (
             'Create Account'
           )}
-        </Button>
+        </StyledButton>
 
-        <Box sx={{ display: "flex", alignItems: "center", margin: "1rem 0" }}>
-          <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
-          <Typography sx={{ margin: "0 1rem", color: "#6b7280" }}>or</Typography>
-          <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          margin: "1rem 0",
+          color: '#666',
+          '&::before, &::after': {
+            content: '""',
+            flex: 1,
+            height: '1px',
+            background: 'rgba(0, 0, 0, 0.1)',
+            margin: '0 1rem',
+          }
+        }}>
+          or
         </Box>
 
-        <StyledWrapper>
-          <StyledButton
-            onClick={handleGoogleSignup}
-            startIcon={<GoogleIcon />}
-          >
-            Continue with Google
-          </StyledButton>
-        </StyledWrapper>
+        <StyledButton
+          type="button"
+          variant="google"
+          onClick={handleGoogleSignup}
+        >
+          <GoogleIcon />
+          Continue with Google
+        </StyledButton>
       </StyledForm>
 
       <OtpVerificationModal
@@ -538,26 +534,28 @@ const SignupDrawer = ({ open, onClose }) => {
 // Common TextField styling
 const textFieldStyle = {
   '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    backgroundColor: 'white',
+    transition: 'all 0.3s ease',
     '& fieldset': {
       borderColor: '#e2e8f0',
     },
     '&:hover fieldset': {
-      borderColor: '#2563eb',
+      borderColor: '#ff3366',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#2563eb',
+      borderColor: '#ff3366',
+      borderWidth: '2px',
     },
   },
   '& .MuiInputLabel-root': {
     color: '#64748b',
+    '&.Mui-focused': {
+      color: '#ff3366',
+    },
   },
-  '& .MuiInputLabel-root.Mui-focused': {
-    color: '#2563eb',
-  },
-  '& .MuiOutlinedInput-input': {
-    color: '#1e293b',
+  '& .MuiInputBase-input': {
+    padding: '16px',
   },
 };
 

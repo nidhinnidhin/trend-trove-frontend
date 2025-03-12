@@ -32,7 +32,7 @@ const ChatBox = () => {
       loadChatHistory();
     }
     
-    const newSocket = io('https://www.trendrove.shop', {
+    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: 5,

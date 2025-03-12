@@ -28,9 +28,8 @@ const LoginForm = () => {
 
   const getCsrfToken = async () => {
     try {
-      const response = await axios.get("https://www.trendrove.shop/api/csrf-token", {
-        withCredentials: true,
-      });
+      // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`);
       return response.data.csrfToken;
     } catch (error) {
       console.error("Error fetching CSRF token:", error);
@@ -53,15 +52,15 @@ const LoginForm = () => {
         return; // Stop if we couldn't get CSRF token
       }
       
-      const response = await axios.post(
-        "https://www.trendrove.shop/api/admin/adminlogin",
+      const response = await axiosInstance.post(
+        // "/adminlogin",
+        "/adminlogin",
         { email, password },
         {
           headers: {
             "Content-Type": "application/json",
             "x-csrf-token": csrfToken,
-          },
-          withCredentials: true,
+          }
         }
       );
       console.log(response);

@@ -106,7 +106,8 @@ const Product = () => {
   const handleVariantFetch = async (productId) => {
     try {
       const response = await fetch(
-        `https://www.trendrove.shop/api/variants/variant/get/${productId}`
+        // `${process.env.NEXT_PUBLIC_API_URL}/variants/variant/get/${productId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/variants/variant/get/${productId}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -131,8 +132,9 @@ const Product = () => {
 
   const handleSizesFetch = async (variantId) => {
     try {
-      const response = await axios.get(
-        `https://www.trendrove.shop/api/sizes/sizes/${variantId}`
+      const response = await axiosInstance.get(
+        // `${process.env.NEXT_PUBLIC_API_URL}/sizes/sizes/${variantId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/sizes/sizes/${variantId}`
       );
       if (response.status === 200) {
         setSizeVariantsData((prev) => ({

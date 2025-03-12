@@ -66,7 +66,8 @@ const DisplayChat = () => {
   useEffect(() => {
     loadChats();
 
-    const newSocket = io("https://www.trendrove.shop", {
+    // const newSocket = io("https://www.trendrove.shop", {
+    const newSocket = io(process.env.BACKEND_API_URL, {
       withCredentials: true,
     });
 

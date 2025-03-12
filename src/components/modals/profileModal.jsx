@@ -15,6 +15,45 @@ import {
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import axiosInstance from "@/utils/axiosInstance";
+import { styled } from '@mui/material/styles';
+
+// Styled components
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+}));
+
+const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
+  backgroundColor: '#1a1a1a',
+  color: 'white',
+  padding: theme.spacing(2),
+}));
+
+const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
+  backgroundColor: '#f8f8f8',
+  padding: theme.spacing(3),
+}));
+
+const StyledDialogActions = styled(DialogActions)(({ theme }) => ({
+  backgroundColor: '#f8f8f8',
+  padding: theme.spacing(2),
+}));
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#FF9800',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#FF9800',
+    },
+  },
+}));
 
 const ProfileModal = ({
   open,
@@ -97,127 +136,114 @@ const ProfileModal = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      {editMode ? (
-        <DialogTitle sx={{ backgroundColor: "#1e1e1e", color: "white" }}>
-          Edit Profile
-        </DialogTitle>
-      ) : (
-        <DialogTitle sx={{ backgroundColor: "#1e1e1e", color: "white" }}>
-          User Profile
-        </DialogTitle>
-      )}
-      <DialogContent sx={{ backgroundColor: "#f8f8f8", color: "black" }}>
+    <StyledDialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <StyledDialogTitle>
+        {editMode ? "Edit Profile" : "User Profile"}
+      </StyledDialogTitle>
+      
+      <StyledDialogContent>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           <Box position="relative">
             <Avatar
               src={selectedImage || profileImage || "/default-avatar.png"}
               alt="Profile"
-              sx={{ width: 100, height: 100 }}
+              sx={{ 
+                width: 100, 
+                height: 100,
+                border: '3px solid #FF9800',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
             />
             {editMode && (
               <IconButton
-                color="primary"
                 component="label"
                 sx={{
-                  position: "absolute",
+                  position: 'absolute',
                   bottom: 0,
                   right: 0,
-                  bgcolor: "white",
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: '#F57C00',
+                  },
                 }}
               >
-                <PhotoCamera sx={{ color: "#1e1e1e" }} />
                 <input
                   type="file"
                   hidden
                   accept="image/*"
                   onChange={handleImageChange}
                 />
+                <PhotoCamera />
               </IconButton>
             )}
           </Box>
-          <TextField
+
+          <StyledTextField
             label="First Name"
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
-            sx={{
-              backgroundColor: "white",
-              borderRadius: "4px",
-            }}
           />
-          <TextField
+          <StyledTextField
             label="Last Name"
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
-            sx={{
-              backgroundColor: "white",
-              borderRadius: "4px",
-            }}
           />
-          <TextField
+          <StyledTextField
             label="User Name"
             name="userName"
             value={formData.userName}
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
-            sx={{
-              backgroundColor: "white",
-              borderRadius: "4px",
-            }}
           />
-          <TextField
+          <StyledTextField
             label="Email"
             name="email"
             value={formData.email}
             onChange={handleChange}
             fullWidth
             disabled={!editMode}
-            sx={{
-              backgroundColor: "white",
-              borderRadius: "4px",
-            }}
           />
         </Box>
-      </DialogContent>
-      <DialogActions sx={{ backgroundColor: "#f8f8f8", color: "black" }}>
+      </StyledDialogContent>
+
+      <StyledDialogActions>
         {editMode ? (
           <Button
             onClick={handleSave}
-            color="primary"
             variant="contained"
             fullWidth
             sx={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              "&:hover": {
-                backgroundColor: "#333333",
+              backgroundColor: '#FF9800',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#F57C00',
+              },
+              '&:disabled': {
+                backgroundColor: '#FFB74D',
               },
             }}
+            disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} sx={{ color: "white" }} />
-            ) : (
-              "Save"
-            )}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Save"}
           </Button>
         ) : (
           <Button
             onClick={() => setEditMode(true)}
-            color="#1e1e1e"
             variant="contained"
             fullWidth
             sx={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              "&:hover": {
-                backgroundColor: "black",
+              backgroundColor: '#FF9800',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#F57C00',
               },
             }}
           >
@@ -226,18 +252,20 @@ const ProfileModal = ({
         )}
         <Button
           onClick={handleClose}
-          color="#1e1e1e"
+          variant="outlined"
           fullWidth
           sx={{
-            backgroundColor: "#eeeeee",
-            "&:hover": {
-              backgroundColor: "#cccccc",
+            borderColor: '#FF9800',
+            color: '#FF9800',
+            '&:hover': {
+              borderColor: '#F57C00',
+              backgroundColor: 'rgba(255, 152, 0, 0.08)',
             },
           }}
         >
           Close
         </Button>
-      </DialogActions>
+      </StyledDialogActions>
 
       <Snackbar
         open={snackbarOpen}
@@ -253,7 +281,7 @@ const ProfileModal = ({
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Dialog>
+    </StyledDialog>
   );
 };
 

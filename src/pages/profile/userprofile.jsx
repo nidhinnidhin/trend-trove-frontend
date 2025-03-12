@@ -46,6 +46,23 @@ import Image from "next/image";
 import ProfileModal from "@/components/modals/profileModal";
 import ResetPasswordModal from "@/components/modals/resetPasswordModal";
 import axiosInstance from "@/utils/axiosInstance";
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+// Create a theme instance
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#FF9800',
+    },
+    secondary: {
+      main: '#1a1a1a',
+    },
+    background: {
+      default: '#f8f9fa',
+      paper: '#ffffff',
+    },
+  },
+});
 
 const UserProfilePage = () => {
   const [selectedSection, setSelectedSection] = useState("profile");
@@ -136,8 +153,6 @@ const UserProfilePage = () => {
             totalAmount: totalOrderAmount,
           }));
         }
-        
-        
 
         if (cartResponse.status === "fulfilled" && cartResponse.value?.data) {
           setCart(cartResponse.value.data.cart || { items: [] });
@@ -170,8 +185,7 @@ const UserProfilePage = () => {
 
     fetchUserData();
   }, []);
-  console.log("orderssss",orders);
-  
+  console.log("orderssss", orders);
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -257,7 +271,8 @@ const UserProfilePage = () => {
       case "profile":
         return (
           <Card
-            sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3 }}
+            sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3, marginTop:"50px"
+             }}
           >
             <CardContent>
               {/* Existing Profile Header */}
@@ -786,7 +801,7 @@ const UserProfilePage = () => {
             type: transaction.type,
             amount: transaction.amount,
           })),
-          
+
           // Returned orders
           ...(walletData.returnedOrders || [])
             .map((order) =>
@@ -821,7 +836,7 @@ const UserProfilePage = () => {
             )
             .flat(),
         ];
-        console.log(allTransactions)
+        console.log(allTransactions);
         // Calculate total wallet balance by summing all amounts in the transactions
         const totalWalletBalance = allTransactions.reduce(
           (sum, transaction) =>
@@ -830,7 +845,7 @@ const UserProfilePage = () => {
               : sum - transaction.amount,
           0
         );
-        
+
         // Update wallet data with the calculated total balance
         const updatedWalletData = {
           ...walletData,
@@ -856,12 +871,12 @@ const UserProfilePage = () => {
                     Wallet Balance
                   </Typography>
                   <Typography
-            variant="h4"
-            fontWeight="bold"
-            sx={{ color: "#4CAF50" }}
-          >
-            ₹{updatedWalletData.totalWalletBalance || 0}
-          </Typography>
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ color: "#4CAF50" }}
+                  >
+                    ₹{updatedWalletData.totalWalletBalance || 0}
+                  </Typography>
                 </Box>
                 <AccountBalanceWalletIcon
                   sx={{ fontSize: 40, color: "#4CAF50" }}
@@ -1013,9 +1028,7 @@ const UserProfilePage = () => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {console.log(transaction)
-                              }
-                              ₹{transaction.amount}
+                              {console.log(transaction)}₹{transaction.amount}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1049,133 +1062,134 @@ const UserProfilePage = () => {
   };
 
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "#f0f2f5",
-        p: { xs: 2, sm: 4, md: 6 },
-      }}
-    >
-      <Header />
-      <Box
-        display="flex"
-        mt={4}
-        gap={3}
-        flexDirection={{ xs: "column", md: "row" }}
-      >
-        {/* Sidebar */}
-        <Paper
-          elevation={0}
-          sx={{
-            width: { xs: "100%", md: 280 },
-            backgroundColor: "#1a1a1a",
-            borderRadius: 2,
-            p: 2,
-          }}
-        >
-          <List>
-            <ListItem
-              button
-              onClick={() => setSelectedSection("profile")}
-              sx={{ cursor: "pointer", color: "#ffffff" }}
-            >
-              <ListItemIcon sx={{ color: "#ffffff" }}>
-                <PersonIcon />
-              </ListItemIcon>
-              <ListItemText primary="Profile" sx={{ color: "#ffffff" }} />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => setSelectedSection("addresses")}
-              sx={{ cursor: "pointer" }}
-            >
-              <ListItemIcon sx={{ color: "#ffffff" }}>
-                <LocationOnIcon />
-              </ListItemIcon>
-              <ListItemText primary="Addresses" sx={{ color: "#ffffff" }} />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => setSelectedSection("orders")}
-              sx={{ cursor: "pointer" }}
-            >
-              <ListItemIcon sx={{ color: "#ffffff" }}>
-                <ReceiptIcon />
-              </ListItemIcon>
-              <ListItemText primary="Orders" sx={{ color: "#ffffff" }} />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => setSelectedSection("cart")}
-              sx={{ cursor: "pointer" }}
-            >
-              <ListItemIcon sx={{ color: "#ffffff" }}>
-                <ShoppingCartIcon />
-              </ListItemIcon>
-              <ListItemText primary="Cart" sx={{ color: "#ffffff" }} />
-            </ListItem>
-            <ListItem
-              button
-              onClick={() => setSelectedSection("wallet")}
-              sx={{ cursor: "pointer" }}
-            >
-              <ListItemIcon sx={{ color: "#ffffff" }}>
-                <AccountBalanceWalletIcon />
-              </ListItemIcon>
-              <ListItemText primary="Wallet" sx={{ color: "#ffffff" }} />
-            </ListItem>
-          </List>
-        </Paper>
-
-        {/* Main Content */}
-        <Box flexGrow={1}>
-          {loading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight="50vh"
-            >
-              <CircularProgress />
-            </Box>
-          ) : (
-            renderContent()
-          )}
-        </Box>
-      </Box>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+    <ThemeProvider theme={theme}>
+      <Container
+        maxWidth="xl"
         sx={{
-          backgroundColor: "black",
-          color: "white",
+          minHeight: "100vh",
+          backgroundColor: "background.default",
+          p: { xs: 2, sm: 4, md: 6 },
         }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        <Header />
+        <Box
+          display="flex"
+          mt={4}
+          gap={3}
+          flexDirection={{ xs: "column", md: "row" }}
+        >
+          {/* Sidebar */}
+          <Paper
+            elevation={0}
+            sx={{
+              width: { xs: "100%", md: 280 },
+              backgroundColor: "#1a1a1a",
+              borderRadius: 2,
+              p: 2,
+              marginTop:"50px"
+            }}
+          >
+            <List>
+              <ListItem
+                button
+                onClick={() => setSelectedSection("profile")}
+                sx={{ cursor: "pointer", color: "#ffffff" }}
+              >
+                <ListItemIcon sx={{ color: "#ffffff" }}>
+                  <PersonIcon />
+                </ListItemIcon>
+                <ListItemText primary="Profile" sx={{ color: "#ffffff" }} />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => setSelectedSection("addresses")}
+                sx={{ cursor: "pointer" }}
+              >
+                <ListItemIcon sx={{ color: "#ffffff" }}>
+                  <LocationOnIcon />
+                </ListItemIcon>
+                <ListItemText primary="Addresses" sx={{ color: "#ffffff" }} />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => setSelectedSection("orders")}
+                sx={{ cursor: "pointer" }}
+              >
+                <ListItemIcon sx={{ color: "#ffffff" }}>
+                  <ReceiptIcon />
+                </ListItemIcon>
+                <ListItemText primary="Orders" sx={{ color: "#ffffff" }} />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => setSelectedSection("cart")}
+                sx={{ cursor: "pointer" }}
+              >
+                <ListItemIcon sx={{ color: "#ffffff" }}>
+                  <ShoppingCartIcon />
+                </ListItemIcon>
+                <ListItemText primary="Cart" sx={{ color: "#ffffff" }} />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => setSelectedSection("wallet")}
+                sx={{ cursor: "pointer" }}
+              >
+                <ListItemIcon sx={{ color: "#ffffff" }}>
+                  <AccountBalanceWalletIcon />
+                </ListItemIcon>
+                <ListItemText primary="Wallet" sx={{ color: "#ffffff" }} />
+              </ListItem>
+            </List>
+          </Paper>
 
-      <ResetPasswordModal
-        open={isResetPasswordModalOpen}
-        handleClose={() => setIsResetPasswordModalOpen(false)}
-        onPasswordReset={handlePasswordReset}
-      />
-
-      <ProfileModal
-        open={isProfileModalOpen}
-        handleClose={() => setIsProfileModalOpen(false)}
-        user={user}
-        profileImage={user?.image}
-        onProfileUpdate={handleProfileUpdate} // Pass the update handler
-      />
-      <Footer />
-    </Container>
+          {/* Main Content */}
+          <Box flexGrow={1}>
+            {loading ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="50vh"
+              >
+                <CircularProgress />
+              </Box>
+            ) : (
+              renderContent()
+            )}
+          </Box>
+        </Box>
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          sx={{
+            backgroundColor: "black",
+            color: "white",
+          }}
+        >
+          <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+        <ResetPasswordModal
+          open={isResetPasswordModalOpen}
+          handleClose={() => setIsResetPasswordModalOpen(false)}
+          onPasswordReset={handlePasswordReset}
+        />
+        <ProfileModal
+          open={isProfileModalOpen}
+          handleClose={() => setIsProfileModalOpen(false)}
+          user={user || {}}
+          profileImage={user?.image}
+          onProfileUpdate={handleProfileUpdate}
+          theme={{ dark: true }} 
+        />
+        <Footer />
+      </Container>
+    </ThemeProvider>
   );
 };
 

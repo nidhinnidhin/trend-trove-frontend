@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://www.trendrove.shop/api/admin", 
+  // baseURL: "https://www.trendrove.shop/api/admin", 
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/admin`, 
   withCredentials: true,  // Important for sending/receiving cookies
   headers: {
     'Content-Type': 'application/json'
@@ -14,7 +15,8 @@ axiosInstance.interceptors.request.use(
     // Only fetch CSRF token for non-GET requests
     if (config.method !== 'get') {
       try {
-        const response = await axios.get("https://www.trendrove.shop/api/csrf-token", {
+        // const response = await axios.get("https://www.trendrove.shop/api/csrf-token", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
           withCredentials: true,
         });
         config.headers["x-csrf-token"] = response.data.csrfToken;

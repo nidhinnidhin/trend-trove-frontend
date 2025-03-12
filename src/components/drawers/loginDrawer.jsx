@@ -17,36 +17,214 @@ import google from "../../media/google.png";
 import { useRouter } from "next/router";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { styled } from "@mui/system";
+import CloseIcon from "@mui/icons-material/Close";
+import styled, { keyframes } from 'styled-components';
 import axiosInstance from "@/utils/axiosInstance";
 
-const StyledWrapper = styled("div")`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+// Animations
+const slideIn = keyframes`
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 `;
 
-const StyledButton = styled(Button)`
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+// Styled Components
+const DrawerContainer = styled(Box)`
   width: 100%;
-  height: 56px;
-  display: flex;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  text-align: center;
-  text-transform: none;
-  align-items: center;
-  border-radius: 8px;
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
-  gap: 1rem;
-  color: #1f2937;
-  background-color: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  max-width: 600px;
+  height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 2rem;
+  position: relative;
+  animation: ${slideIn} 0.3s ease-out;
+  overflow-y: auto;
+
+  @media (min-width: 600px) {
+    padding: 3rem;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+`;
+
+const FormContainer = styled.form`
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  animation: ${fadeIn} 0.5s ease-out;
+  padding: 0 1rem;
+
+  @media (min-width: 600px) {
+    padding: 0;
+  }
+`;
+
+const CloseButton = styled(IconButton)`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #666;
+  transition: all 0.3s ease;
+
+  @media (min-width: 600px) {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
 
   &:hover {
-    background-color: #f3f4f6;
+    color: #ff3366;
+    transform: rotate(90deg);
+  }
+`;
+
+const StyledButton = styled.button`
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  background: ${props => props.variant === 'contained' ? '#ff3366' : 'transparent'};
+  color: ${props => props.variant === 'contained' ? 'white' : '#1a1a1a'};
+  border: ${props => props.variant === 'outlined' ? '2px solid #1a1a1a' : 'none'};
+
+  @media (min-width: 600px) {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${props => props.variant === 'contained' ? '0 4px 12px rgba(255, 51, 102, 0.2)' : 'none'};
+    background: ${props => props.variant === 'contained' ? '#e62e5c' : props.variant === 'outlined' ? '#1a1a1a' : 'transparent'};
+    color: ${props => props.variant === 'outlined' && 'white'};
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 2rem 0;
+  color: #666;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 0 1rem;
+  }
+`;
+
+const GoogleButton = styled(StyledButton)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+  font-size: 0.9rem;
+
+  @media (min-width: 600px) {
+    gap: 1rem;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: #f8f9fa;
     border-color: rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const StyledTextField = styled(TextField)`
+  .MuiOutlinedInput-root {
+    border-radius: 12px;
+    background: white;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+
+    @media (min-width: 600px) {
+      font-size: 1rem;
+    }
+
+    &:hover fieldset {
+      border-color: #ff3366;
+    }
+
+    &.Mui-focused fieldset {
+      border-color: #ff3366;
+    }
+  }
+
+  .MuiInputLabel-root {
+    font-size: 0.9rem;
+    
+    @media (min-width: 600px) {
+      font-size: 1rem;
+    }
+    
+    &.Mui-focused {
+      color: #ff3366;
+    }
+  }
+`;
+
+const ForgotPassword = styled(Typography)`
+  color: #ff3366;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: right;
+  margin-top: 1rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const WelcomeText = styled(Typography)`
+  font-weight: 700;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #ff3366 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  @media (min-width: 600px) {
+    font-size: 2.2rem;
+    text-align: left;
   }
 `;
 
@@ -151,192 +329,91 @@ const LoginDrawer = ({ onClose }) => {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   const handleGoogleLogin = () => {
-    // Use the complete URL
-    window.location.href = 'https://www.trendrove.shop/api/users/auth/google';
+    // window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/users/auth/google`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/users/auth/google`;
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: 600,
-        height: "100vh",
-        position: "relative",
-        backgroundColor: "#ffffff",
-        padding: "2rem",
-        textAlign: "center",
-      }}
-      role="presentation"
-    >
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "400px",
-        }}
-      >
-        <form onSubmit={handleSubmit} noValidate>
-          <Typography
-            variant="h4"
-            gutterBottom
-            sx={{
-              color: "#1f2937",
-              fontWeight: 600,
-              marginBottom: "2rem",
-              fontSize: "2rem",
-            }}
-          >
-            Welcome Back
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                fullWidth
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "& fieldset": {
-                      borderColor: "rgba(0, 0, 0, 0.12)",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#2563eb",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#2563eb",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "#6b7280",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#2563eb",
-                  },
-                }}
-              />
-            </Grid>
+    <DrawerContainer>
+      <CloseButton onClick={onClose}>
+        <CloseIcon />
+      </CloseButton>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                fullWidth
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  endAdornment: password && (
-                    <InputAdornment position="end">
-                      <IconButton 
-                        onClick={togglePasswordVisibility}
-                        edge="end"
-                        sx={{ color: "#6b7280" }}
-                      >
-                        {showPassword ? <Visibility /> : <VisibilityOff />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "& fieldset": {
-                      borderColor: "rgba(0, 0, 0, 0.12)",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#2563eb",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#2563eb",
-                    },
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "#6b7280",
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#2563eb",
-                  },
-                }}
-              />
-            </Grid>
+      <FormContainer onSubmit={handleSubmit} noValidate>
+        <WelcomeText variant="h4">
+          Welcome Back
+        </WelcomeText>
 
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                disabled={loading}
-                sx={{
-                  height: "56px",
-                  backgroundColor: "rgb(237, 161, 20)",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  fontSize: "1rem",
-                  fontWeight: 500,
-                  "&:hover": {
-                    backgroundColor: "rgb(237, 156, 7)",
-                  },
-                }}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={24} sx={{ color: "white", marginRight: 1 }} />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign in"
-                )}
-              </Button>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Typography
-                variant="body2"
-                sx={{
-                  textAlign: "right",
-                  cursor: "pointer",
-                  color: "#2563eb",
-                  fontWeight: 500,
-                  "&:hover": {
-                    textDecoration: "underline",
-                  },
-                }}
-                onClick={() => router.push("/forgotPassword/forgotpassword")}
-              >
-                Forgot password?
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", alignItems: "center", margin: "1rem 0" }}>
-                <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
-                <Typography sx={{ margin: "0 1rem", color: "#6b7280" }}>or</Typography>
-                <Box sx={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.12)" }} />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <StyledWrapper>
-                <StyledButton
-                  onClick={handleGoogleLogin}
-                  startIcon={<GoogleIcon />}
-                >
-                  Continue with Google
-                </StyledButton>
-              </StyledWrapper>
-            </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <StyledTextField
+              label="Email"
+              name="email"
+              type="email"
+              fullWidth
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </Grid>
-        </form>
-      </Box>
 
-      {/* Snackbar for Success or Error */}
+          <Grid item xs={12}>
+            <StyledTextField
+              label="Password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              fullWidth
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                endAdornment: password && (
+                  <InputAdornment position="end">
+                    <IconButton onClick={togglePasswordVisibility}>
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <StyledButton
+              type="submit"
+              variant="contained"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={24} sx={{ color: "white", marginRight: 1 }} />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </StyledButton>
+          </Grid>
+
+          <Grid item xs={12}>
+            <ForgotPassword onClick={() => router.push("/forgotPassword/forgotpassword")}>
+              Forgot password?
+            </ForgotPassword>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Divider>or</Divider>
+          </Grid>
+
+          <Grid item xs={12}>
+            <GoogleButton onClick={handleGoogleLogin}>
+              <GoogleIcon />
+              Continue with Google
+            </GoogleButton>
+          </Grid>
+        </Grid>
+      </FormContainer>
+
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
@@ -349,12 +426,16 @@ const LoginDrawer = ({ onClose }) => {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbarSeverity}
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+    </DrawerContainer>
   );
 };
 

@@ -100,7 +100,8 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("https://www.trendrove.shop/api/categories");
+      // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
       setCategories(response.data.categories);
     } catch (error) {
       setSnackbar({
@@ -113,7 +114,8 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
 
   const fetchBrands = async () => {
     try {
-      const response = await axios.get("https://www.trendrove.shop/api/brands");
+      // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/brands`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/brands`);
       setBrands(response.data);
     } catch (error) {
       setSnackbar({

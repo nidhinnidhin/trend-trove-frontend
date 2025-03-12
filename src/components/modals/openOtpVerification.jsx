@@ -11,6 +11,80 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
+import styled from "styled-components";
+
+const ModalContent = styled(Box)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  
+  @media (max-width: 600px) {
+    width: 95%;
+    padding: 24px;
+  }
+`;
+
+const Title = styled(Typography)` 
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  background: linear-gradient(45deg, #FF9800, #FF5722);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const StyledTextField = styled(TextField)`
+  margin-bottom: 24px;
+  
+  .MuiOutlinedInput-root {
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: #fff;
+      box-shadow: 0 0 0 2px #FF980033;
+    }
+    
+    &.Mui-focused {
+      background: #fff;
+      box-shadow: 0 0 0 2px #FF9800;
+    }
+  }
+`;
+
+const VerifyButton = styled(Button)`
+  background: linear-gradient(45deg, #FF9800, #FF5722);
+  border-radius: 12px;
+  padding: 12px;
+  text-transform: none;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  
+  &:hover {
+    background: linear-gradient(45deg, #FF5722, #FF9800);
+  }
+`;
+
+const ResendButton = styled(Button)`
+  color: #FF9800;
+  border-color: #FF9800;
+  border-radius: 12px;
+  text-transform: none;
+  
+  &:hover {
+    border-color: #FF5722;
+    background: rgba(255, 152, 0, 0.08);
+  }
+`;
 
 const OtpVerificationModal = ({ open, onClose, email }) => {
   const [otp, setOtp] = useState("");
@@ -102,64 +176,45 @@ const OtpVerificationModal = ({ open, onClose, email }) => {
 
   return (
     <Modal open={open} onClose={() => onClose(false)}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 400,
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
-        }}
-      >
-        <Typography variant="h6" gutterBottom>
+      <ModalContent>
+        <Title variant="h6">
           Verify OTP
-        </Typography>
+        </Title>
         <form onSubmit={handleVerifyOtp}>
-          <TextField
-            label="OTP"
+          <StyledTextField
+            label="Enter OTP"
             fullWidth
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            sx={{ mb: 2 }}
           />
-          <Button
+          <VerifyButton
             type="submit"
             variant="contained"
             fullWidth
             disabled={loading}
-            sx={{ mb: 2 }}
           >
             {loading ? <CircularProgress size={24} /> : "Verify OTP"}
-          </Button>
+          </VerifyButton>
           {timerExpired ? (
-            <Button
+            <ResendButton
               variant="outlined"
               fullWidth
               onClick={handleResendOtp}
               disabled={loading}
             >
               Resend OTP
-            </Button>
+            </ResendButton>
           ) : (
-            <Typography variant="body2" align="center">
+            <Typography 
+              variant="body2" 
+              align="center"
+              sx={{ color: '#FF9800', fontWeight: 500 }}
+            >
               OTP expires in: {timer} seconds
             </Typography>
           )}
         </form>
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={3000}
-          onClose={handleCloseSnackbar}
-        >
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.type}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
+      </ModalContent>
     </Modal>
   );
 };

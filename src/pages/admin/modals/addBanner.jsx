@@ -45,7 +45,8 @@ const AddBanner = ({ open, handleClose, onSuccess }) => {
       formDataToSend.append('discount', formData.discount);
       formDataToSend.append('image', formData.image);
 
-      const response = await axios.post('https://www.trendrove.shop/api/banners/add', formDataToSend, {
+      // const response = await axios.post('https://www.trendrove.shop/api/banners/add', formDataToSend, {
+      const response = await axios.post(`${process.env.BAC}/banners/add`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

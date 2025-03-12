@@ -97,7 +97,8 @@ const NewArrival = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://www.trendrove.shop/api/products/get?page=1&limit=12"
+          // `${process.env.NEXT_PUBLIC_API_URL}/products/get?page=1&limit=12`
+          `${process.env.NEXT_PUBLIC_API_URL}/products/get?page=1&limit=12`
         );
         const data = await response.json();
         const transformedProducts = data.products.map((product) => {

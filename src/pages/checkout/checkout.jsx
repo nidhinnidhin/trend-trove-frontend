@@ -473,7 +473,8 @@ const CheckoutPage = () => {
     if (selectedCoupon) {
       try {
         const couponResponse = await fetch(
-          `https://www.trendrove.shop/api/coupon/apply`,
+          // `${process.env.NEXT_PUBLIC_API_URL}/coupon/apply`,
+          `${process.env.NEXT_PUBLIC_API_URL}/coupon/apply`,
           {
             method: "POST",
             headers: {
@@ -506,7 +507,8 @@ const CheckoutPage = () => {
 
     try {
       const response = await fetch(
-        "https://www.trendrove.shop/api/checkout/create-checkout",
+        // `${process.env.NEXT_PUBLIC_API_URL}/checkout/create-checkout`,
+        `${process.env.NEXT_PUBLIC_API_URL}/checkout/create-checkout`,
         {
           method: "POST",
           headers: {

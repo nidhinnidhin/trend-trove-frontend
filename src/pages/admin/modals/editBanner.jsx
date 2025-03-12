@@ -71,7 +71,8 @@ const EditBanner = ({ open, onClose, banner, handleBannerUpdated }) => {
       }
 
       const response = await axios.put(
-        `https://www.trendrove.shop/api/banners/update/${banner._id}`,
+        // `${process.env.NEXT_PUBLIC_API_URL}/banners/update/${banner._id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/banners/update/${banner._id}`,
         formDataToSend,
         {
           headers: {

@@ -50,7 +50,8 @@ const EditVariantModal = ({ open, onClose, variant }) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `https://www.trendrove.shop/api/sizes/sizes/${variantId}`
+        // `${process.env.NEXT_PUBLIC_API_URL}/sizes/sizes/${variantId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/sizes/sizes/${variantId}`
       );
       setFormData((prevData) => ({
         ...prevData,

@@ -51,7 +51,8 @@ const AddOfferModal = ({ open, handleClose, handleOfferAdded }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("https://www.trendrove.shop/api/categories");
+      // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
       setCategories(response.data.categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -61,7 +62,8 @@ const AddOfferModal = ({ open, handleClose, handleOfferAdded }) => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        "https://www.trendrove.shop/api/products/get"
+        // "`${process.env.NEXT_PUBLIC_API_URL}/products/get"
+        `${process.env.NEXT_PUBLIC_API_URL}/products/get`
       );
       setProducts(response.data.products);
       console.log(response.data.products);

@@ -19,6 +19,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { Close } from "@mui/icons-material";
 import { isBefore } from "date-fns";
+import axiosInstance from "@/utils/adminAxiosInstance";
 
 const EditCouponModal = ({
   open,
@@ -87,8 +88,9 @@ const EditCouponModal = ({
     };
 
     try {
-      const response = await axios.put(
-        `https://www.trendrove.shop/api/admin/coupon/edit/${coupon._id}`, // Ensure this matches your backend route
+      const response = await axiosInstance.put(
+        // `/coupon/edit/${coupon._id}`,
+        `/coupon/edit/${coupon._id}`,
         updatedCoupon,
         { withCredentials: true }
       );
