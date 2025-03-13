@@ -1,9 +1,10 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api";
+
 const axiosInstance = axios.create({
-  baseURL: "https://www.trendrove.shop/api/admin", 
-  // baseURL: `${process.env.NEXT_PUBLIC_API_URL}/admin`, 
-  withCredentials: true,  // Important for sending/receiving cookies
+  baseURL: `${API_URL}/admin`,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -15,8 +16,7 @@ axiosInstance.interceptors.request.use(
     // Only fetch CSRF token for non-GET requests
     if (config.method !== 'get') {
       try {
-        const response = await axios.get("https://www.trendrove.shop/api/csrf-token", {
-        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
+        const response = await axios.get(`${API_URL}/csrf-token`, {
           withCredentials: true,
         });
         config.headers["x-csrf-token"] = response.data.csrfToken;
@@ -37,7 +37,9 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Redirect to admin login page if unauthorized
-      window.location.href = '/admin/authentication/login';
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/authentication/login';
+      }
       return Promise.reject(error);
     }
     return Promise.reject(error);

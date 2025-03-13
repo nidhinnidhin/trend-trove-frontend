@@ -1,8 +1,9 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api";
+
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://www.trendrove.shop/api",
-  // baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api",
+  baseURL: API_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -11,8 +12,7 @@ const axiosInstance = axios.create({
 
 const fetchCSRFToken = async () => {
   try {
-    const response = await axios.get('https://www.trendrove.shop/api/csrf-token', {
-    // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
+    const response = await axios.get(`${API_URL}/csrf-token`, {
       withCredentials: true
     });
     return response.data.csrfToken;
@@ -24,18 +24,18 @@ const fetchCSRFToken = async () => {
 
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const token = localStorage.getItem("usertoken");
+    const token = typeof window !== 'undefined' ? localStorage.getItem("usertoken") : null;
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
-
+    
     if (config.method !== 'get') {
       const csrfToken = await fetchCSRFToken();
       if (csrfToken) {
         config.headers["x-csrf-token"] = csrfToken;
       }
     }
-
+    
     return config;
   },
   (error) => {
@@ -47,7 +47,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
+    
     if (error.response?.status === 403 &&
         error.response?.data?.message?.includes('CSRF') &&
         !originalRequest._retry) {
@@ -62,7 +62,7 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(retryError);
       }
     }
-
+    
     return Promise.reject(error);
   }
 );
