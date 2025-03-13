@@ -202,7 +202,7 @@ const styles = {
 };
 
 const LoadMoreButton = styled(Button)`
-  background-color: #00a69c;
+  background-color:#FF9800;
   color: white;
   padding: 12px 24px;
   border-radius: 4px;
@@ -213,7 +213,7 @@ const LoadMoreButton = styled(Button)`
   transition: all 0.3s ease;
   
   &:hover {
-    background-color: #008c82;
+    background-color: #FF9800;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }

@@ -65,7 +65,7 @@ const NavigationButton = styled(IconButton)`
 
   &:hover {
     background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   & .MuiSvgIcon-root {
@@ -78,7 +78,7 @@ const PaginationDot = styled(Box)`
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: ${props => props.active ? '#333' : '#ddd'};
+  background-color: ${(props) => (props.active ? "#333" : "#ddd")};
   margin: 0 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -100,10 +100,10 @@ const TrendingWears = () => {
           `${process.env.NEXT_PUBLIC_API_URL}/products/get?page=1&limit=8`
         );
         const data = await response.json();
-        
+
         // Filter products for trending wears category
         const trendingProducts = data.products.filter(
-          product => product.category?.name === "Trending Wears"
+          (product) => product.category?.name === "Trending Wears"
         );
 
         const transformedProducts = trendingProducts.map((product) => {
@@ -128,15 +128,17 @@ const TrendingWears = () => {
   }, []);
 
   const handleNext = () => {
-    setCurrentIndex(prev => 
-      prev + itemsPerView >= products.length ? 0 : prev + 1
-    );
+    setCurrentIndex((prev) => {
+      const maxIndex = Math.ceil(products.length / itemsPerView) - 1;
+      return prev < maxIndex ? prev + 1 : 0;
+    });
   };
 
   const handlePrev = () => {
-    setCurrentIndex(prev => 
-      prev === 0 ? products.length - itemsPerView : prev - 1
-    );
+    setCurrentIndex((prev) => {
+      const maxIndex = Math.ceil(products.length / itemsPerView) - 1;
+      return prev > 0 ? prev - 1 : maxIndex;
+    });
   };
 
   const handleProductClick = (productId) => {
@@ -145,7 +147,14 @@ const TrendingWears = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "400px",
+        }}
+      >
         {/* You can add a loading spinner here if you want */}
       </Box>
     );
@@ -158,10 +167,10 @@ const TrendingWears = () => {
 
   return (
     <CarouselContainer>
-      <Typography 
-        variant="h5" 
-        sx={{ 
-          textAlign: "center", 
+      <Typography
+        variant="h5"
+        sx={{
+          textAlign: "center",
           marginBottom: 5,
           fontWeight: 600,
           color: "#333",
@@ -172,22 +181,19 @@ const TrendingWears = () => {
       </Typography>
 
       <CarouselViewport>
-        <NavigationButton 
-          onClick={handlePrev}
-          sx={{ left: 0 }}
-        >
+        <NavigationButton onClick={handlePrev} sx={{ left: 0 }}>
           <ChevronLeft />
         </NavigationButton>
 
         <ProductsWrapper
           sx={{
-            transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-            display:"flex",
-            justifyContent:"center"
+            transform: `translateX(-${currentIndex * 100}%)`,
+            display: "flex",
+            flexWrap: "nowrap",
           }}
         >
           {products.map((product) => (
-            <ProductCard 
+            <ProductCard
               key={product.id}
               onClick={() => handleProductClick(product.id)}
             >
@@ -198,19 +204,19 @@ const TrendingWears = () => {
                   alt={product.name}
                 />
               </Box>
-              <CardContent 
-                sx={{ 
-                  textAlign: "center", 
+              <CardContent
+                sx={{
+                  textAlign: "center",
                   padding: "16px 12px",
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
-                  gap: "8px"
+                  gap: "8px",
                 }}
               >
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
+                <Typography
+                  variant="body1"
+                  sx={{
                     fontWeight: 500,
                     color: "#333",
                     fontSize: "14px",
@@ -220,9 +226,9 @@ const TrendingWears = () => {
                 >
                   {product.name}
                 </Typography>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  sx={{
                     color: "#666",
                     fontSize: "14px",
                     fontFamily: "'Poppins', sans-serif",
@@ -235,14 +241,10 @@ const TrendingWears = () => {
           ))}
         </ProductsWrapper>
 
-        <NavigationButton 
-          onClick={handleNext}
-          sx={{ right: 0 }}
-        >
+        <NavigationButton onClick={handleNext} sx={{ right: 0 }}>
           <ChevronRight />
         </NavigationButton>
       </CarouselViewport>
-
     </CarouselContainer>
   );
 };

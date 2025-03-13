@@ -152,16 +152,21 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
           severity: "success",
         });
 
-        // Call the callback to update parent component
+        // Store the newly created product ID for variant modal
+        const newProductId = response.data.product._id;
+
+        // Call the callback to update parent component with complete product data
         if (onProductAdded) {
           onProductAdded(response.data.product);
         }
 
         reset(); // Reset form
-        onClose(); // Close modal
-        setShowVariantModal(true);
+        
+        // Close the product modal
+        onClose();
       }
     } catch (error) {
+      console.error("Error adding product:", error);
       setSnackbar({
         open: true,
         message: "Failed to add product. Please try again.",

@@ -66,7 +66,7 @@ const UploadButton = styled(Button)({
   },
 });
 
-const AddVariantModal = ({ open, onClose, productId }) => {
+const AddVariantModal = ({ open, onClose, productId, onVariantAdded }) => {
   const [color, setColor] = useState("");
   const [colorImage, setColorImage] = useState(null);
   const [mainImage, setMainImage] = useState(null);
@@ -150,12 +150,33 @@ const AddVariantModal = ({ open, onClose, productId }) => {
         }
       );
 
-      setSnackbar({
-        open: true,
-        message: "Variant added successfully",
-        severity: "success"
-      });
-      setTimeout(() => onClose(), 1000);
+      if (response.status === 201 && response.data.variant) {
+        // Ensure the variant has the productId
+        const newVariant = {
+          ...response.data.variant,
+          productId: productId
+        };
+
+        // Call the callback with the complete variant data
+        if (onVariantAdded) {
+          await onVariantAdded(newVariant);
+        }
+
+        // Reset form
+        setColor("");
+        setColorImage(null);
+        setMainImage(null);
+        setSubImages([]);
+        setPreviewImages([]);
+
+        setSnackbar({
+          open: true,
+          message: "Variant added successfully",
+          severity: "success"
+        });
+
+        onClose();
+      }
     } catch (error) {
       setSnackbar({
         open: true,

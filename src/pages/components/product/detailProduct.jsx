@@ -1203,7 +1203,7 @@ const DetailProduct = () => {
                   </Button>
                 </motion.div>
 
-                <motion.div
+                {/* <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   style={{ flex: 1 }}
@@ -1252,7 +1252,7 @@ const DetailProduct = () => {
                       ? "Buy Now"
                       : "Login to Buy"}
                   </Button>
-                </motion.div>
+                </motion.div> */}
               </Box>
               <motion.div
                 whileHover={{ scale: 1.05 }}

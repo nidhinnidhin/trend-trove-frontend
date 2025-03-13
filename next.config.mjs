@@ -28,6 +28,14 @@ const nextConfig = {
     styledComponents: true,
     emotion: true
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://trendrove.shop/api/:path*",
+      },
+    ];
+  },
   images: {
     domains: ['www.trendrove.shop', 'res.cloudinary.com'],
     unoptimized: true

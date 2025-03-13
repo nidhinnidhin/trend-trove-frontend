@@ -34,10 +34,12 @@ export default function Explore() {
           },
         });
 
-        console.log(response)
+        console.log("res", response);
 
         const data = response.data;
+        const products = response.data.products;
         const transformedProducts = data.products.map((product) => {
+          const firstVariant = product.variants?.[0] || {};
           let originalPrice = 0;
           let discountedPrice = 0;
           let discountPercentage = 0;
@@ -45,15 +47,16 @@ export default function Explore() {
           let colorImages = [];
           let availableColors = [];
           let availableSizes = [];
+          let rating = 0;
 
           if (product.variants && product.variants.length > 0) {
             // Extract all colors and sizes
-            product.variants.forEach(variant => {
+            product.variants.forEach((variant) => {
               availableColors.push({
                 color: variant.color,
-                colorImage: variant.colorImage
+                colorImage: variant.colorImage,
               });
-              variant.sizes.forEach(size => {
+              variant.sizes.forEach((size) => {
                 availableSizes.push(size.size);
               });
             });
@@ -66,10 +69,12 @@ export default function Explore() {
               discountedPrice = firstSize.discountPrice || originalPrice;
 
               if (product.activeOffer && product.activeOffer._id.isActive) {
-                discountPercentage = product.activeOffer._id.discountPercentage || 0;
+                discountPercentage =
+                  product.activeOffer._id.discountPercentage || 0;
                 isOfferActive = true;
                 if (!firstSize.discountPrice) {
-                  discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                  discountedPrice =
+                    originalPrice * (1 - discountPercentage / 100);
                 }
               }
             }
@@ -82,7 +87,8 @@ export default function Explore() {
             subImage: product.variants?.[0]?.subImages[1],
             title: product.name || "Unknown Product",
             description: product.description || "",
-            rating: product.ratings || 0,
+            reviewCount: firstVariant.reviewCount || 0,
+            averageRating: firstVariant.averageRating || 0,
             price: discountedPrice,
             originalPrice: originalPrice,
             discountPercentage: isOfferActive ? discountPercentage : 0,
@@ -110,6 +116,8 @@ export default function Explore() {
     fetchProducts();
   }, [currentPage, filterState]);
 
+  console.log("products", products);
+
   // Memoize handlePageChange function
   const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
@@ -130,11 +138,20 @@ export default function Explore() {
         >
           <Box sx={{ display: "flex", flexGrow: 1 }}>
             <Filter />
-            <Suspense fallback={
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-                <CircularProgress />
-              </Box>
-            }>
+            <Suspense
+              fallback={
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              }
+            >
               <ListProducts
                 products={products}
                 totalPages={totalPages}

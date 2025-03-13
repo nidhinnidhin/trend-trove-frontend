@@ -52,7 +52,7 @@ const SectionTitle = styled(Typography)({
   marginBottom: '16px',
 });
 
-const AddSizeVariantModal = ({ open, onClose, variantId }) => {
+const AddSizeVariantModal = ({ open, onClose, variantId, onSizeAdded }) => {
   const [formData, setFormData] = useState({
     size: "",
     price: "",
@@ -86,23 +86,46 @@ const AddSizeVariantModal = ({ open, onClose, variantId }) => {
         });
         return;
       }
-
+  
       const response = await axiosInstance.post("/sizes/size/add", {
         variantId,
         ...formData
       });
-
-      setSnackbar({
-        open: true,
-        message: "Size variant added successfully",
-        severity: "success"
-      });
-
-      setTimeout(() => {
-        onClose();
-      }, 1000);
-
+  
+      if (response.status === 201 && response.data.sizeVariant) {
+        // Create an object with all required properties that the parent component expects
+        const newSizeVariant = {
+          ...response.data.sizeVariant,
+          variantId: variantId,
+          _id: response.data.sizeVariant._id // Make sure _id is included
+        };
+        
+        // Call the callback function if it exists
+        if (onSizeAdded) {
+          onSizeAdded(newSizeVariant);
+        }
+  
+        setFormData({
+          size: "",
+          price: "",
+          discountPrice: "",
+          inStock: true,
+          stockCount: "",
+          description: "",
+        });
+  
+        setSnackbar({
+          open: true,
+          message: "Size variant added successfully",
+          severity: "success"
+        });
+  
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      }
     } catch (error) {
+      console.error("Error adding size variant:", error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || "Error adding size variant",

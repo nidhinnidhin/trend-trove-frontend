@@ -68,7 +68,6 @@ const Product = () => {
   const [productToBlock, setProductToBlock] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  
 
   const limit = 8;
 
@@ -79,8 +78,8 @@ const Product = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 1000); 
-  
+    }, 1000);
+
     return () => {
       clearTimeout(handler);
     };
@@ -105,15 +104,13 @@ const Product = () => {
 
   const handleVariantFetch = async (productId) => {
     try {
-      const response = await fetch(
-        // `${process.env.NEXT_PUBLIC_API_URL}/variants/variant/get/${productId}`
+      const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/variants/variant/get/${productId}`
       );
-      const data = await response.json();
-      if (response.ok) {
+      if (response.data.variants) {
         setVariantsData((prev) => ({
           ...prev,
-          [productId]: data.variants,
+          [productId]: response.data.variants,
         }));
       }
     } catch (error) {
@@ -236,6 +233,62 @@ const Product = () => {
   const handleAddSize = (variantId) => {
     setVariantId(variantId);
     setSizeVariantModalOpen(true);
+  };
+
+  const handleProductAdded = (newProduct) => {
+    setProductsData((prevProducts) => [newProduct, ...prevProducts]);
+
+    setSnackbar({
+      open: true,
+      message: "Product added successfully!",
+      severity: "success",
+    });
+  };
+
+  const handleVariantAdded = async (newVariant) => {
+    try {
+      // First, update the local state with the new variant
+      setVariantsData((prevVariants) => {
+        const existingVariants = prevVariants[newVariant.productId] || [];
+        return {
+          ...prevVariants,
+          [newVariant.productId]: [...existingVariants, newVariant],
+        };
+      });
+
+      // Fetch the updated variants list to ensure synchronization
+      await handleVariantFetch(newVariant.productId);
+
+      setSnackbar({
+        open: true,
+        message: "Variant added successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error updating variants:", error);
+      setSnackbar({
+        open: true,
+        message: "Error updating variants list",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleSizeVariantAdded = (newSizeVariant) => {
+    // Update the sizeVariantsData state with the new size variant
+    setSizeVariantsData(prevSizeVariants => {
+      const existingVariantSizes = prevSizeVariants[newSizeVariant.variantId] || [];
+      return {
+        ...prevSizeVariants,
+        [newSizeVariant.variantId]: [...existingVariantSizes, newSizeVariant]
+      };
+    });
+  
+    setSnackbar({
+      open: true,
+      message: "Size variant added successfully!",
+      severity: "success",
+    });
   };
 
   if (loading) {
@@ -474,29 +527,38 @@ const Product = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {sizeVariantsData[variant._id]?.map((size) => (
-                          <TableRow key={size._id}>
-                            <TableCell>{size.size}</TableCell>
-                            <TableCell>₹{size.price}</TableCell>
-                            <TableCell>₹{size.discountPrice}</TableCell>
-                            <TableCell>{size.stockCount}</TableCell>
-                            {/* <TableCell> */}
+                        {sizeVariantsData[variant._id] &&
+                        sizeVariantsData[variant._id].length > 0 ? (
+                          sizeVariantsData[variant._id].map((size) => (
+                            <TableRow key={size._id}>
+                              <TableCell>{size.size}</TableCell>
+                              <TableCell>₹{size.price}</TableCell>
+                              <TableCell>₹{size.discountPrice}</TableCell>
+                              <TableCell>{size.stockCount}</TableCell>
+                              {/* <TableCell> */}
                               {/* <Button
-                                variant="contained"
-                                color="primary"
-                                startIcon={<EditIcon />}
-                                onClick={() => handleEditSizeVariant(size)}
-                                sx={{
-                                  backgroundColor: "#FF9800",
-                                  color: "white",
-                                  "&:hover": { backgroundColor: "#FFB74D" },
-                                }}
-                              >
-                                Edit
-                              </Button> */}
-                            {/* </TableCell> */}
+                                  variant="contained"
+                                  color="primary"
+                                  startIcon={<EditIcon />}
+                                  onClick={() => handleEditSizeVariant(size)}
+                                  sx={{
+                                    backgroundColor: "#FF9800",
+                                    color: "white",
+                                    "&:hover": { backgroundColor: "#FFB74D" },
+                                  }}
+                                >
+                                  Edit
+                                </Button> */}
+                              {/* </TableCell> */}
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} align="center">
+                              No size variants available
+                            </TableCell>
                           </TableRow>
-                        ))}
+                        )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -525,6 +587,7 @@ const Product = () => {
       <AddProductModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onProductAdded={handleProductAdded}
       />
 
       <EditProductModal
@@ -538,11 +601,13 @@ const Product = () => {
         open={isVariantModalOpen}
         onClose={() => setIsVariantModalOpen(false)}
         productId={selectedProductId}
+        onVariantAdded={handleVariantAdded}
       />
       <AddSizeVariantModal
         open={sizeVariantModalOpen}
         onClose={closeSizeVariantModal}
         variantId={variantId}
+        onSizeAdded={handleSizeVariantAdded} // Add this line
       />
       <EditVariantModal
         open={isEditVariantModalOpen}
