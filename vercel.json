@@ -1,0 +1,14 @@
+{
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/node"
+      }
+    ],
+    "env": {
+      "NEXT_PUBLIC_API_URL": "https://www.trendrove.shop/api",
+      "NEXT_PUBLIC_SOCKET_URL": "https://www.trendrove.shop",
+      "BACKEND_API_URL": "https://www.trendrove.shop"
+    }
+  }
+  
