@@ -9,7 +9,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://www.api.trendrove.shop/api/:path*",
+        destination: "https://api.trendrove.shop/api/:path*",
       },
     ];
   },
