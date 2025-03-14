@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const setupAxios = () => {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://www.api.trendrove.shop/api";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://www.api.trendrove.shop/api";
   
   // Set default configs
   axios.defaults.withCredentials = true;

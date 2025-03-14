@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://www.api.trendrove.shop/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://www.api.trendrove.shop/api";
 
 const axiosInstance = axios.create({
   baseURL: `${API_URL}/admin`,
