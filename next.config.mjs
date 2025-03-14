@@ -9,12 +9,12 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://www.trendrove.shop/api/:path*",
+        destination: "http://www.api.trendrove.shop/api/:path*",
       },
     ];
   },
   images: {
-    domains: ['www.trendrove.shop', 'res.cloudinary.com'],
+    domains: ['www.trendrove.shop','www.api.trendrove.shop','res.cloudinary.com'],
     unoptimized: true
   },
   webpack: (config) => {
