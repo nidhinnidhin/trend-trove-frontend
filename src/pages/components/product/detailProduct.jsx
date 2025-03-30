@@ -823,7 +823,6 @@ const DetailProduct = () => {
           <motion.div {...fadeIn}>
             <Box
               sx={{
-                padding: "2rem",
                 backgroundColor: "#f8f9fa",
                 borderRadius: "12px",
               }}
@@ -836,9 +835,9 @@ const DetailProduct = () => {
                   color: "#2c3e50",
                 }}
               >
-                {product?.title}
-              </Typography>
-
+                  {product?.title}
+                </Typography>
+                
               {/* Product Rating - New Addition */}
               <Box
                 sx={{
@@ -856,8 +855,8 @@ const DetailProduct = () => {
                 />
                 <Typography variant="body2" sx={{ color: "#757575" }}>
                   {averageRating} ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
-                </Typography>
-              </Box>
+                  </Typography>
+                </Box>
 
               {/* Coming Soon Banner */}
               {product?.isDeleted && (
@@ -888,7 +887,7 @@ const DetailProduct = () => {
                     This product is currently unavailable for purchase. We're
                     working on bringing it back soon!
                   </Typography>
-                </Box>
+              </Box>
               )}
 
               <Box
@@ -968,17 +967,17 @@ const DetailProduct = () => {
 
               {/* Improved Size Selection with Guide */}
               <Box sx={{ mb: 4 }}>
-                <Box sx={{ 
-                  display: 'flex',
+              <Box sx={{
+                display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                alignItems: 'center',
                   mb: 2
-                }}>
+              }}>
                   <Typography 
                     variant="h6" 
                     sx={{ 
                       color: theme.text.primary,
-                      fontWeight: 600,
+                  fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1
@@ -986,7 +985,7 @@ const DetailProduct = () => {
                   >
                     <StraightenIcon sx={{ color: theme.primary }} />
                     Select Size
-                  </Typography>
+                </Typography>
                   <Button
                     onClick={() => setOpenSizeGuide(true)}
                     startIcon={<InfoIcon />}
@@ -997,7 +996,7 @@ const DetailProduct = () => {
                   >
                     Size Guide
                   </Button>
-                </Box>
+              </Box>
 
                 <Box sx={{ 
                   display: 'flex', 
@@ -1038,7 +1037,7 @@ const DetailProduct = () => {
                           }}
                         >
                           {size.size}
-                        </Typography>
+                  </Typography>
                         {size.inStock && size.stockCount <= 5 && (
                           <Typography 
                             variant="caption" 
@@ -1304,7 +1303,7 @@ const DetailProduct = () => {
               sx={{
                 marginBottom: "2rem",
                 marginTop: "3rem",
-                fontWeight: 600,
+              fontWeight: 600,
                 color: "#2c3e50",
               }}
             >
@@ -1314,82 +1313,82 @@ const DetailProduct = () => {
             </Typography>
 
             {relatedProducts.length > 0 && (
-              <Box sx={{ position: "relative", width: "100%", px: 4 }}>
-                <IconButton
-                  sx={{
-                    position: "absolute",
-                    left: -40,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                    "&:hover": {
-                      backgroundColor: "rgba(255,255,255,1)",
-                    },
-                    zIndex: 2,
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                  }}
-                  onClick={() => sliderRef.current.slickPrev()}
-                >
-                  <ArrowBackIosNewIcon />
-                </IconButton>
+            <Box sx={{ position: "relative", width: "100%", px: 4 }}>
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  left: -40,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,1)",
+                  },
+                  zIndex: 2,
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                }}
+                onClick={() => sliderRef.current.slickPrev()}
+              >
+                <ArrowBackIosNewIcon />
+              </IconButton>
 
                 {/* Slider */}
-                <Slider ref={sliderRef} {...settings}>
-                  {relatedProducts.map((product) =>
-                    product.variants.map((variant) => (
-                      <Box key={variant._id} sx={{ padding: "0 10px" }}>
-                        <motion.div
-                          whileHover={{ y: -10 }}
-                          transition={{ duration: 0.3 }}
+              <Slider ref={sliderRef} {...settings}>
+                {relatedProducts.map((product) =>
+                  product.variants.map((variant) => (
+                    <Box key={variant._id} sx={{ padding: "0 10px" }}>
+                      <motion.div
+                        whileHover={{ y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Box
+                          sx={{
+                            height: "100%",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleProductDetail(product._id)}
                         >
-                          <Box
+                          <CardMedia
+                            component="img"
+                            image={variant.mainImage}
+                            alt={variant.name}
                             sx={{
-                              height: "100%",
-                              overflow: "hidden",
-                              cursor: "pointer",
+                              height: 400,
+                              padding: "10px 0px",
+                              objectFit: "contain",
+                              transition: "transform 0.3s ease",
+                              "&:hover": {
+                                transform: "scale(1.05)",
+                              },
                             }}
-                            onClick={() => handleProductDetail(product._id)}
-                          >
-                            <CardMedia
-                              component="img"
-                              image={variant.mainImage}
-                              alt={variant.name}
-                              sx={{
-                                height: 400,
-                                padding: "10px 0px",
-                                objectFit: "contain",
-                                transition: "transform 0.3s ease",
-                                "&:hover": {
-                                  transform: "scale(1.05)",
-                                },
-                              }}
-                            />
-                          </Box>
-                        </motion.div>
-                      </Box>
-                    ))
-                  )}
-                </Slider>
+                          />
+                        </Box>
+                      </motion.div>
+                    </Box>
+                  ))
+                )}
+              </Slider>
 
                 {/* Right Navigation Button */}
-                <IconButton
-                  sx={{
-                    position: "absolute",
-                    right: -40,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                    "&:hover": {
-                      backgroundColor: "rgba(255,255,255,1)",
-                    },
-                    zIndex: 2,
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                  }}
-                  onClick={() => sliderRef.current.slickNext()}
-                >
-                  <ArrowForwardIosIcon />
-                </IconButton>
-              </Box>
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  right: -40,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,1)",
+                  },
+                  zIndex: 2,
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                }}
+                onClick={() => sliderRef.current.slickNext()}
+              >
+                <ArrowForwardIosIcon />
+              </IconButton>
+            </Box>
             )}
           </motion.div>
         </Grid>

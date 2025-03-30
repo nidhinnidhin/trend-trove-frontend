@@ -130,7 +130,7 @@ const ProductCard = memo(
     };
 
     return (
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid item xs={12} sm={6} md={4} lg={3} sx={{ width: "100%" }}>
         <motion.div
           variants={cardVariants}
           initial="hidden"
@@ -483,9 +483,10 @@ const ListProducts = memo(
     return (
       <Box
         sx={{
-          width: "90%",
-          margin: "10 auto",
-          padding: "20px",
+          width: "100%",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: { xs: "10px", sm: "20px" },
           minHeight: "100vh",
           backgroundColor: "#f5f5f5",
         }}
@@ -535,7 +536,7 @@ const ListProducts = memo(
               />
             </StyledWrapper>
 
-            <Grid container spacing={1}>
+            <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
               {filteredAndSortedProducts.map((product, index) => (
                 <ProductCard
                   key={product.id}

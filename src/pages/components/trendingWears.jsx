@@ -15,31 +15,62 @@ import { useRouter } from "next/router";
 const CarouselContainer = styled(Box)`
   width: 100%;
   max-width: 1400px;
-  margin: 10px auto;
-  padding: 0;
+  margin: 20px auto;
+  padding: 20px;
   position: relative;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 `;
 
 const CarouselViewport = styled(Box)`
   position: relative;
   overflow: hidden;
   padding: 0 40px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 `;
 
 const ProductsWrapper = styled(Box)`
   display: flex;
   gap: 24px;
   transition: transform 0.5s ease;
+
+  @media (max-width: 768px) {
+    transform: none !important;
+    width: fit-content;
+  }
 `;
 
 const ProductCard = styled(Card)`
   min-width: 260px;
   border: none;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   background: white;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    min-width: 200px;
+  }
 `;
 
 const ProductImage = styled(CardMedia)`
@@ -62,6 +93,10 @@ const NavigationButton = styled(IconButton)`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 
   &:hover {
     background-color: #fff;
@@ -172,9 +207,24 @@ const TrendingWears = () => {
         sx={{
           textAlign: "center",
           marginBottom: 5,
-          fontWeight: 600,
-          color: "#333",
+          fontWeight: 700,
+          color: "#2d3436",
           fontFamily: "'Poppins', sans-serif",
+          fontSize: { xs: "1.5rem", md: "2rem" },
+          position: "relative",
+          display: "inline-block",
+          margin: "0 auto 40px",
+          padding: "0 20px",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: "-10px",
+            left: "50%",
+            width: "60px",
+            height: "3px",
+            background: "linear-gradient(90deg, #6c5ce7, #a8e6cf)",
+            transform: "translateX(-50%)"
+          }
         }}
       >
         Trending Wears

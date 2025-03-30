@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useFilter } from "@/context/filterContext";
 import {
   Box,
   Typography,
-  Slider,
   Checkbox,
   FormControlLabel,
   Accordion,
@@ -26,6 +25,185 @@ import axios from "axios";
 import axiosInstance from "@/utils/axiosInstance";
 import GenderFilter from "../components/genderFilter";
 
+// Custom Range Slider Component
+const RangeSlider = ({ min, max, value, onChange, step = 100 }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const [isDragging, setIsDragging] = useState(null); // 'min' or 'max' or null
+  const sliderRef = useRef(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const calculateValueFromPosition = (clientX) => {
+    if (!sliderRef.current) return 0;
+    
+    const rect = sliderRef.current.getBoundingClientRect();
+    const percentage = (clientX - rect.left) / rect.width;
+    let newValue = Math.round((percentage * (max - min) + min) / step) * step;
+    
+    // Ensure the value is within bounds
+    newValue = Math.max(min, Math.min(max, newValue));
+    return newValue;
+  };
+
+  const handleMouseDown = (e, handle) => {
+    e.preventDefault();
+    setIsDragging(handle);
+  };
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    
+    const newValue = calculateValueFromPosition(e.clientX);
+    const updatedValue = [...localValue];
+    
+    if (isDragging === 'min') {
+      updatedValue[0] = Math.min(newValue, localValue[1] - step);
+    } else if (isDragging === 'max') {
+      updatedValue[1] = Math.max(newValue, localValue[0] + step);
+    }
+    
+    setLocalValue(updatedValue);
+  }, [isDragging, localValue, min, max, step]);
+
+  const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      onChange(localValue);
+      setIsDragging(null);
+    }
+  }, [isDragging, localValue, onChange]);
+
+  // Add and remove event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    handleMouseMove({ clientX: touch.clientX });
+  }, [isDragging, handleMouseMove]);
+
+  // Calculate percentages for positioning
+  const minPosition = ((localValue[0] - min) / (max - min)) * 100;
+  const maxPosition = ((localValue[1] - min) / (max - min)) * 100;
+  const trackWidth = maxPosition - minPosition;
+
+  return (
+    <Box sx={{ padding: 2, position: 'relative', height: '40px' }}>
+      {/* Rail */}
+      <Box
+        ref={sliderRef}
+        sx={{
+          position: 'absolute',
+          height: '6px',
+          width: '100%',
+          backgroundColor: '#e0e0e0',
+          borderRadius: '3px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          cursor: 'pointer',
+        }}
+        onClick={(e) => {
+          const newValue = calculateValueFromPosition(e.clientX);
+          // Determine which handle to move based on which one is closer
+          const distToMin = Math.abs(newValue - localValue[0]);
+          const distToMax = Math.abs(newValue - localValue[1]);
+          const newLocalValue = [...localValue];
+          
+          if (distToMin <= distToMax) {
+            newLocalValue[0] = newValue;
+          } else {
+            newLocalValue[1] = newValue;
+          }
+          
+          setLocalValue(newLocalValue);
+          onChange(newLocalValue);
+        }}
+      />
+      
+      {/* Track (colored part) */}
+      <Box
+        sx={{
+          position: 'absolute',
+          height: '6px',
+          left: `${minPosition}%`,
+          width: `${trackWidth}%`,
+          backgroundColor: '#ff6f61',
+          borderRadius: '3px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }}
+      />
+      
+      {/* Min handle */}
+      <Box
+        sx={{
+          position: 'absolute',
+          height: '24px',
+          width: '24px',
+          borderRadius: '50%',
+          backgroundColor: '#fff',
+          border: '2px solid #ff6f61',
+          left: `${minPosition}%`,
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          cursor: 'pointer',
+          boxShadow: '0px 2px 3px rgba(0,0,0,0.1)',
+          '&:hover': {
+            boxShadow: '0 0 0 8px rgba(255, 111, 97, 0.16)',
+          },
+          zIndex: 2,
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'min')}
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          handleMouseDown({ preventDefault: () => {}, clientX: touch.clientX }, 'min');
+        }}
+      />
+      
+      {/* Max handle */}
+      <Box
+        sx={{
+          position: 'absolute',
+          height: '24px',
+          width: '24px',
+          borderRadius: '50%',
+          backgroundColor: '#fff',
+          border: '2px solid #ff6f61',
+          left: `${maxPosition}%`,
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          cursor: 'pointer',
+          boxShadow: '0px 2px 3px rgba(0,0,0,0.1)',
+          '&:hover': {
+            boxShadow: '0 0 0 8px rgba(255, 111, 97, 0.16)',
+          },
+          zIndex: 2,
+        }}
+        onMouseDown={(e) => handleMouseDown(e, 'max')}
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          handleMouseDown({ preventDefault: () => {}, clientX: touch.clientX }, 'max');
+        }}
+      />
+    </Box>
+  );
+};
+
 const Filter = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -34,32 +212,14 @@ const Filter = () => {
   const [categories, setCategories] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
   const [availableSizes, setAvailableSizes] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [localPriceRange, setLocalPriceRange] = useState(
-    filterState.priceRange
-  );
 
-  const handlePriceChange = (event, newValue) => {
-    setLocalPriceRange(newValue);
-    // Only update filter state when not dragging to prevent blinking
-    if (!isDragging) {
-      updateFilters({ priceRange: newValue });
-    }
+  const handlePriceChange = (newValue) => {
+    updateFilters({ priceRange: newValue });
   };
-  
-  const handleDragEnd = useCallback(() => {
-    setIsDragging(false);
-    updateFilters({ priceRange: localPriceRange });
-  }, [localPriceRange, updateFilters]);
-  
 
   const handleSortChange = (event) => {
     updateFilters({ sortBy: event.target.value });
   };
-
-  // const handlePriceChange = (event, newValue) => {
-  //   updateFilters({ priceRange: newValue });
-  // };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -202,52 +362,24 @@ const Filter = () => {
         
       </Box>
       <Typography variant="h6" gutterBottom sx={{mt:2}}>
-  Price Range
-</Typography>
-<Slider
-  value={localPriceRange}
-  onChange={handlePriceChange}
-  onMouseDown={() => setIsDragging(true)}
-  onMouseUp={handleDragEnd}
-  onTouchStart={() => setIsDragging(true)}
-  onTouchEnd={handleDragEnd}
-  valueLabelDisplay="auto"
-  valueLabelFormat={(value) => `₹${value}`}
-  min={0}
-  max={10000}
-  step={100}
-  disableSwap
-  sx={{
-    height: 6,
-    "& .MuiSlider-thumb": {
-      height: 24,
-      width: 24,
-      backgroundColor: "#fff",
-      border: "2px solid #ff6f61",
-      boxShadow: "0px 2px 3px rgba(0,0,0,0.1)",
-      "&:focus, &:hover, &.Mui-active, &.Mui-focusVisible": {
-        boxShadow: "0 0 0 8px rgba(255, 111, 97, 0.16)",
-      },
-    },
-    "& .MuiSlider-track": {
-      backgroundColor: "#ff6f61",
-      border: "none",
-      height: 6,
-    },
-    "& .MuiSlider-rail": {
-      backgroundColor: "#e0e0e0",
-      height: 6,
-    },
-    "& .MuiSlider-valueLabel": {
-      backgroundColor: "#ff6f61",
-    },
-  }}
-/>
-<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-  <Typography>₹{localPriceRange[0]}</Typography>
-  <Typography>₹{localPriceRange[1]}</Typography>
-</Box>
-      <Box sx={{ width: "100%", bgcolor: "background.paper", mb: 3 }}>
+        Price Range
+      </Typography>
+      
+      {/* Custom Range Slider */}
+      <RangeSlider
+        min={0}
+        max={10000}
+        step={100}
+        value={filterState.priceRange}
+        onChange={handlePriceChange}
+      />
+      
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+        <Typography>₹{filterState.priceRange[0]}</Typography>
+        <Typography>₹{filterState.priceRange[1]}</Typography>
+      </Box>
+      
+      <Box sx={{ width: "100%", bgcolor: "background.paper", mb: 3, mt: 3 }}>
         <Typography variant="h6" gutterBottom>
           Sort By
         </Typography>
@@ -417,6 +549,25 @@ const Filter = () => {
             position: "sticky",
             top: 0,
             overflowY: "auto",
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f5f5f5',
+              borderRadius: '4px',
+              '&:hover': {
+                background: '#eeeeee',
+              },
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#FF9800',
+              borderRadius: '4px',
+              '&:hover': {
+                background: '#F57C00',
+              },
+            },
+            scrollbarColor: '#FF9800 #f5f5f5',
+            scrollbarWidth: 'thin',
           }}
         >
           <FilterContent />

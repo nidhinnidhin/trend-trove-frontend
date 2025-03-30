@@ -35,21 +35,16 @@ const ProductsContainer = styled(Box)`
 
 const ProductGrid = styled(Box)`
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin-top: 30px;
 
-  // Mobile (1 column)
-  grid-template-columns: repeat(1, 1fr);
-  
-  // Small tablets (2 columns)
-  @media (min-width: 480px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
+  // Mobile (2 columns)
+  grid-template-columns: repeat(2, 1fr);
   
   // Tablets (3 columns)
   @media (min-width: 768px) {
     grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
   }
   
   // Small laptops (4 columns)
@@ -78,9 +73,13 @@ const ImageWrapper = styled(Box)`
   position: relative;
   width: 100%;
   padding-bottom: 133%; // 4:3 aspect ratio
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   overflow: hidden;
   background-color: #f5f5f5;
+
+  @media (min-width: 768px) {
+    margin-bottom: 12px;
+  }
 `;
 
 const ProductImage = styled(Image)`
@@ -90,30 +89,29 @@ const ProductImage = styled(Image)`
 const ProductTitle = styled(Typography)`
   font-weight: 500;
   color: #333;
-  font-size: 14px;
+  font-size: 12px;
   margin-bottom: 4px;
   font-family: 'Poppins', sans-serif;
   
-  // Line clamp for long titles
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 40px;
+  height: 32px;
 
-  @media (max-width: 480px) {
-    font-size: 13px;
-    height: 36px;
+  @media (min-width: 768px) {
+    font-size: 14px;
+    height: 40px;
   }
 `;
 
 const ProductPrice = styled(Typography)`
   color: #666;
-  font-size: 14px;
+  font-size: 12px;
   font-family: 'Poppins', sans-serif;
 
-  @media (max-width: 480px) {
-    font-size: 13px;
+  @media (min-width: 768px) {
+    font-size: 14px;
   }
 `;
 

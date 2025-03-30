@@ -7,7 +7,7 @@ export const setupAxios = () => {
   axios.defaults.withCredentials = true;
   axios.defaults.baseURL = API_URL;
   
-  // Add global request interceptor
+  // Add global request interceptor 
   axios.interceptors.request.use(
     async (config) => {
       if (config.method !== 'get') {

@@ -277,18 +277,10 @@ const Header = () => {
   const menuItems = [
     { text: "Home", icon: <HomeIcon size={20} />, path: "/" },
     {
-      text: "Men",
+      text: "Explore",
+      path: "/productListing/explore",
       icon: <ShirtIcon size={20} />,
-      category: { _id: "mensCategoryId", name: "men" }, 
     },
-    {
-      text: "Women",
-      icon: <ShirtIcon size={20} />,
-      category: { _id: "womensCategoryId", name: "women" }, 
-    },
-    { text: "Brands", icon: <TagIcon size={20} />, path: "/brands" },
-    { text: "Cart", icon: <ShoppingCartIcon size={20} />, path: "/cart" },
-    { text: "Wishlist", icon: <HeartIcon size={20} />, path: "/wishlist" },
   ];
 
   return (

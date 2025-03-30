@@ -48,20 +48,91 @@ import ResetPasswordModal from "@/components/modals/resetPasswordModal";
 import axiosInstance from "@/utils/axiosInstance";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-// Create a theme instance
+// Create a theme instance with enhanced styling
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
       main: '#FF9800',
+      light: '#FFB74D',
+      dark: '#F57C00',
+      contrastText: '#fff'
     },
     secondary: {
-      main: '#1a1a1a',
+      main: '#424242',
+      light: '#616161',
+      dark: '#212121',
+      contrastText: '#fff'
     },
     background: {
-      default: '#f8f9fa',
-      paper: '#ffffff',
+      default: '#121212',
+      paper: '#1E1E1E'
     },
+    text: {
+      primary: '#fff',
+      secondary: 'rgba(255, 255, 255, 0.7)'
+    },
+    divider: 'rgba(255, 255, 255, 0.12)'
   },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)',
+          transition: 'transform 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-4px)'
+          }
+        }
+      }
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 600
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 8px rgba(255, 152, 0, 0.25)'
+          }
+        }
+      }
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: '1px solid rgba(255, 255, 255, 0.12)'
+        },
+        head: {
+          fontWeight: 700,
+          backgroundColor: 'rgba(255, 152, 0, 0.08)'
+        }
+      }
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6
+        }
+      }
+    }
+  },
+  shape: {
+    borderRadius: 8
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h6: {
+      fontWeight: 600
+    },
+    subtitle1: {
+      fontWeight: 500
+    }
+  }
 });
 
 const UserProfilePage = () => {
@@ -271,11 +342,16 @@ const UserProfilePage = () => {
       case "profile":
         return (
           <Card
-            sx={{ bgcolor: "#1a1a1a", color: "white", borderRadius: 2, p: 3, marginTop:"50px"
-             }}
+            sx={{
+              bgcolor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              borderRadius: theme.shape.borderRadius,
+              p: 3,
+              marginTop: "50px",
+              boxShadow: theme.components.MuiCard.styleOverrides.root.boxShadow
+            }}
           >
             <CardContent>
-              {/* Existing Profile Header */}
               <Box
                 sx={{
                   display: "flex",
@@ -284,26 +360,37 @@ const UserProfilePage = () => {
                   mb: 3,
                 }}
               >
-                <Typography variant="h5">Profile Information</Typography>
+                <Typography variant="h5" sx={{ fontWeight: theme.typography.h6.fontWeight }}>
+                  Profile Information
+                </Typography>
                 <Box>
                   <IconButton
                     onClick={() => setIsProfileModalOpen(true)}
-                    sx={{ color: "white", mr: 1 }}
+                    sx={{ 
+                      color: theme.palette.primary.main,
+                      mr: 1,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 152, 0, 0.08)'
+                      }
+                    }}
                   >
                     <EditIcon />
                   </IconButton>
                   <IconButton
                     onClick={() => setIsResetPasswordModalOpen(true)}
-                    sx={{ color: "white" }}
+                    sx={{ 
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 152, 0, 0.08)'
+                      }
+                    }}
                   >
                     <LockReset />
                   </IconButton>
                 </Box>
               </Box>
 
-              {/* Profile Content */}
               <Grid container spacing={3}>
-                {/* Left side - Profile Image */}
                 <Grid item xs={12} md={4}>
                   <Box
                     sx={{
@@ -319,154 +406,53 @@ const UserProfilePage = () => {
                         width: 150,
                         height: 150,
                         mb: 2,
-                        border: "4px solid rgb(237, 161, 20)",
+                        border: `4px solid ${theme.palette.primary.main}`,
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.25)'
                       }}
                     />
                   </Box>
                 </Grid>
 
-                {/* Right side - User Details */}
                 <Grid item xs={12} md={8}>
-                  <Box sx={{ mb: 4 }}>
+                  <Box sx={{ p: 2, bgcolor: 'rgba(255, 152, 0, 0.05)', borderRadius: 2 }}>
                     <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
-                          First Name
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                          {user?.firstname}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
-                          Last Name
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                          {user?.lastname}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
-                          Username
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                          {user?.username}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
-                          Email
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                          {user?.email}
-                        </Typography>
-                      </Grid>
+                      {user && (
+                        <>
+                          <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Username
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              {user.username}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Email
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              {user.email}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              First Name
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              {user.firstName || "Not set"}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Last Name
+                            </Typography>
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              {user.lastName || "Not set"}
+                            </Typography>
+                          </Grid>
+                        </>
+                      )}
                     </Grid>
-                  </Box>
-
-                  {/* Referral Code Section */}
-                  <Box
-                    sx={{
-                      mt: 3,
-                      p: 3,
-                      bgcolor: "#262626",
-                      borderRadius: 2,
-                      border: "1px solid rgba(237, 161, 20, 0.2)",
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: "rgb(237, 161, 20)",
-                        mb: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <ShareIcon /> Referral Program
-                    </Typography>
-
-                    <Typography variant="body2" sx={{ color: "#ccc", mb: 2 }}>
-                      Share your referral code and earn ₹500 when friends sign
-                      up!
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        bgcolor: "#333",
-                        p: 2,
-                        borderRadius: 1,
-                      }}
-                    >
-                      <Box flexGrow={1}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ color: "#999", mb: 0.5 }}
-                        >
-                          Your Referral Code
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: "rgb(237, 161, 20)",
-                            letterSpacing: "2px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {user?.referralCode || "Loading..."}
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => {
-                          navigator.clipboard.writeText(user?.referralCode);
-                          setSnackbarMessage("Referral code copied!");
-                          setSnackbarSeverity("success");
-                          setSnackbarOpen(true);
-                        }}
-                        sx={{
-                          bgcolor: "rgb(237, 161, 20)",
-                          "&:hover": {
-                            bgcolor: "rgb(238, 169, 41)",
-                          },
-                          minWidth: "120px",
-                        }}
-                        startIcon={<ContentCopyIcon />}
-                      >
-                        Copy
-                      </Button>
-                    </Box>
-
-                    {/* Show referral earnings if any */}
-                    {walletData?.transactions?.some((t) =>
-                      t.description.includes("referral")
-                    ) && (
-                      <Box
-                        sx={{
-                          mt: 2,
-                          pt: 2,
-                          borderTop: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
-                        <Typography variant="subtitle2" sx={{ color: "#999" }}>
-                          Total Referral Earnings
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: "rgb(237, 161, 20)",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          ₹{walletData.referralEarnings || 0}
-                        </Typography>
-                      </Box>
-                    )}
                   </Box>
                 </Grid>
               </Grid>

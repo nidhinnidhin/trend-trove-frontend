@@ -62,60 +62,57 @@ export default function Home() {
   return (
     <Grid maxWidth="xl">
       <Head>
-        <title>E-Commerce Store</title>
-        <meta name="description" content="Shop the latest products" />
+        <title>Trend Trove - Your Fashion Destination</title>
+        <meta name="description" content="Discover the latest fashion trends and shop premium clothing at Trend Trove" />
       </Head>
 
       <FilterProvider>
         <Box
-          sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            backgroundColor: "#fafafa"
+          }}
         >
           <Header />
-          <Slider />
-          {/* <GenderFilter/> */}
-          <NewArrival />
-          <TrendingWears />
-          {/* <div
-            style={{
-              // marginTop:"100px",
-              width: "100%",
-              // height: "30vh",
-              margin: "0 auto", 
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center", 
+          <Box sx={{ backgroundColor: "#f5f5f5", py: 2 }}>
+            <Slider />
+          </Box>
+          
+          <Box sx={{ backgroundColor: "#ffffff", py: 4 }}>
+            <NewArrival />
+          </Box>
+          
+          <Box 
+            sx={{ 
+              backgroundColor: "#f8f9fa",
+              py: 4,
+              backgroundImage: "linear-gradient(to bottom right, #f8f9fa, #e9ecef)"
             }}
           >
-            <Image
-              src={bannerFashion}
-              width={1920}
-              // height={1080}
-              style={{ width: "100%", objectFit: "contain" }}
-              alt="Latest Products Banner"
-            />
-          </div> */}
-          <TopBrands />
-          {/* <div
-            style={{
-              width: "100%",
-              height: "100vh",
-              margin: "0 auto", 
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center", 
+            <TrendingWears />
+          </Box>
+          
+          <Box 
+            sx={{ 
+              backgroundColor: "#ffffff",
+              py: 4,
+              borderTop: "1px solid #eee",
+              borderBottom: "1px solid #eee"
             }}
           >
-            <Image
-              src={latestProductsBanner}
-              width={1920}
-              height={1080}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              alt="Latest Products Banner"
-            />
-          </div> */}
+            <TopBrands />
+          </Box>
 
-          <Box sx={{ display: "flex", flexGrow: 1 }}>
-            {/* <Filter /> */}
+          <Box 
+            sx={{ 
+              display: "flex", 
+              flexGrow: 1,
+              backgroundColor: "#f8f9fa",
+              py: 4
+            }}
+          >
             <Products products={products} loading={loading} />
           </Box>
 

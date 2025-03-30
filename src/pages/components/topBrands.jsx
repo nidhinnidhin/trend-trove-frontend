@@ -10,19 +10,30 @@ const CarouselContainer = styled(Box)`
   width: 100%;
   max-width: 1400px;
   margin: 20px auto;
-  padding: 0 20px;
+  padding: 20px;
   position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 
   @media (min-width: 600px) {
     margin: 40px auto;
-    padding: 0 40px;
+    padding: 40px;
   }
 `;
 
 const ProductsWrapper = styled(Box)`
   display: flex;
   gap: 10px;
-  transition: transform 0.5s ease;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 10px 0;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (min-width: 600px) {
     gap: 20px;
@@ -34,6 +45,9 @@ const BrandCard = styled(Box)`
   position: relative;
   cursor: pointer;
   height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
 
   @media (min-width: 600px) {
     flex: 0 0 calc(50% - 10px);
@@ -51,8 +65,9 @@ const BrandCard = styled(Box)`
   }
   
   &:hover {
+    transform: translateY(-5px);
     .overlay {
-      background-color: rgba(0, 0, 0, 0.4);
+      background-color: rgba(0, 0, 0, 0.3);
     }
   }
 `;
@@ -184,11 +199,7 @@ const TopBrands = () => {
         Top Brands
       </Typography>
       <Box sx={{ position: "relative", overflow: "hidden" }}>
-        <ProductsWrapper
-          sx={{
-            transform: `translateX(-${currentIndex * (100 / getVisibleItems())}%)`,
-          }}
-        >
+        <ProductsWrapper>
           {brands.map((brand) => (
             <BrandCard key={brand._id} onClick={() => handleBrandClick(brand._id)}>
               <ImageWrapper>
@@ -227,28 +238,6 @@ const TopBrands = () => {
             </BrandCard>
           ))}
         </ProductsWrapper>
-
-        <NavigationButton 
-          className="left"
-          onClick={handlePrev}
-          sx={{
-            width: { xs: '30px', sm: '35px', md: '40px' },
-            height: { xs: '30px', sm: '35px', md: '40px' }
-          }}
-        >
-          <ChevronLeft />
-        </NavigationButton>
-
-        <NavigationButton 
-          className="right"
-          onClick={handleNext}
-          sx={{
-            width: { xs: '30px', sm: '35px', md: '40px' },
-            height: { xs: '30px', sm: '35px', md: '40px' }
-          }}
-        >
-          <ChevronRight />
-        </NavigationButton>
       </Box>
     </CarouselContainer>
   );

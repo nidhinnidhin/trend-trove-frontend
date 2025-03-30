@@ -10,6 +10,7 @@ import {
   Chip,
   CircularProgress,
   Pagination,
+  Rating,
 } from "@mui/material";
 import axios from "axios";
 import Header from "../components/header";
@@ -32,18 +33,18 @@ const SearchResults = () => {
   useEffect(() => {
     if (search || brand || category || router.query.gender) {
       setLoading(true);
-      let endpoint = '';
-      
+      let endpoint = "";
+
       // Add filter parameters to the endpoint
       const filterParams = new URLSearchParams({
-        colors: filterState.selectedColors.join(','),
-        sizes: filterState.selectedSizes.join(','),
+        colors: filterState.selectedColors.join(","),
+        sizes: filterState.selectedSizes.join(","),
         minPrice: filterState.priceRange[0],
         maxPrice: filterState.priceRange[1],
         page,
-        limit
+        limit,
       }).toString();
-      
+
       if (brand) {
         endpoint = `/products/brand/${brand}?${filterParams}`;
       } else if (category) {
@@ -59,7 +60,7 @@ const SearchResults = () => {
         .then((response) => {
           let productsToTransform = [];
           let total = 0;
-          
+
           if (category) {
             productsToTransform = response.data.products || [];
             total = response.data.totalProducts || 0;
@@ -71,17 +72,17 @@ const SearchResults = () => {
           }
 
           const transformedProducts = productsToTransform.map((item) => {
-            const product = category || brand ? item : (item.product || item);
+            const product = category || brand ? item : item.product || item;
             const availableColors = [];
             const availableSizes = [];
 
             // Extract all colors and sizes
-            product.variants.forEach(variant => {
+            product.variants.forEach((variant) => {
               availableColors.push({
                 color: variant.color,
                 colorImage: variant.colorImage,
               });
-              variant.sizes.forEach(size => {
+              variant.sizes.forEach((size) => {
                 availableSizes.push(size.size);
               });
             });
@@ -99,6 +100,8 @@ const SearchResults = () => {
               gender: product.gender,
               colorImages: availableColors,
               availableSizes: [...new Set(availableSizes)],
+              discountPercentage: product.discountPercentage || 0,
+              reviewCount: product.reviewCount || 0,
             };
           });
 
@@ -116,38 +119,62 @@ const SearchResults = () => {
     return products.filter((product) => {
       // Price filter
       const price = product.price;
-      if (price < filterState.priceRange[0] || price > filterState.priceRange[1]) {
+      if (
+        price < filterState.priceRange[0] ||
+        price > filterState.priceRange[1]
+      ) {
         return false;
       }
 
       // Color filter
       if (filterState.selectedColors.length > 0) {
-        const productColors = product.colorImages.map(c => c.color);
-        if (!filterState.selectedColors.some(color => productColors.includes(color))) {
+        const productColors = product.colorImages.map((c) => c.color);
+        if (
+          !filterState.selectedColors.some((color) =>
+            productColors.includes(color)
+          )
+        ) {
           return false;
         }
       }
 
       // Size filter
       if (filterState.selectedSizes.length > 0) {
-        if (!filterState.selectedSizes.some(size => product.availableSizes.includes(size))) {
+        if (
+          !filterState.selectedSizes.some((size) =>
+            product.availableSizes.includes(size)
+          )
+        ) {
           return false;
         }
       }
 
       // Other existing filters...
-      if (filterState.categories.length > 0 && !filterState.categories.includes(product.category)) {
+      if (
+        filterState.categories.length > 0 &&
+        !filterState.categories.includes(product.category)
+      ) {
         return false;
       }
-      if (filterState.selectedGenders.length > 0 && !filterState.selectedGenders.includes(product.gender)) {
+      if (
+        filterState.selectedGenders.length > 0 &&
+        !filterState.selectedGenders.includes(product.gender)
+      ) {
         return false;
       }
-      if (filterState.selectedRatings.length > 0 && !filterState.selectedRatings.includes(Math.floor(product.rating))) {
+      if (
+        filterState.selectedRatings.length > 0 &&
+        !filterState.selectedRatings.includes(Math.floor(product.rating))
+      ) {
         return false;
       }
       if (filterState.selectedDiscounts.length > 0) {
-        const discount = ((product.originalPrice - product.price) / product.originalPrice) * 100;
-        return filterState.selectedDiscounts.some((d) => discount >= parseInt(d));
+        const discount =
+          ((product.originalPrice - product.price) / product.originalPrice) *
+          100;
+        return filterState.selectedDiscounts.some(
+          (d) => discount >= parseInt(d)
+        );
       }
       return true;
     });
@@ -184,7 +211,7 @@ const SearchResults = () => {
   const handleColorClick = (e, color) => {
     e.stopPropagation();
     const newColors = filterState.selectedColors.includes(color)
-      ? filterState.selectedColors.filter(c => c !== color)
+      ? filterState.selectedColors.filter((c) => c !== color)
       : [...filterState.selectedColors, color];
     updateFilters({ selectedColors: newColors });
   };
@@ -201,13 +228,21 @@ const SearchResults = () => {
           padding: "20px",
           minHeight: "100vh",
           backgroundColor: "#f5f5f5",
-          display: "flex"
+          display: "flex",
         }}
       >
-        <Filter/>
-        <Box sx={{ width: '100%' }}>
+        <Filter />
+        <Box
+          sx={{
+            flex: 1, 
+            maxWidth: "1200px", 
+            margin: "0 auto",
+            padding: "20px",
+            backgroundColor: "#f5f5f5",
+          }}
+        >
           <Typography
-            variant="h4"
+            variant="h5"
             align="center"
             gutterBottom
             sx={{
@@ -215,9 +250,10 @@ const SearchResults = () => {
               color: "#333",
               marginBottom: "30px",
               fontFamily: "'Poppins', sans-serif",
+              marginTop: "20px",
             }}
           >
-            All Products
+            Search Results
           </Typography>
 
           {loading ? (
@@ -231,156 +267,186 @@ const SearchResults = () => {
             >
               <CircularProgress sx={{ color: "#ff6f61" }} />
             </Box>
-          ) : filteredProducts.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "50vh",
-                textAlign: "center",
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{
-                  color: "#666",
-                  fontFamily: "'Poppins', sans-serif",
-                  marginBottom: 2,
-                }}
-              >
-                No Products Available
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: "#888",
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              >
-                We couldn't find any products matching your criteria.
-              </Typography>
-            </Box>
           ) : (
             <>
-              <Grid container spacing={2}>
+              <Grid container spacing={1}>
                 {filteredProducts.map((product, index) => (
-                  <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                     <motion.div
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
                       transition={{ delay: index * 0.1, duration: 0.5 }}
                     >
-                      <Grid
+                      <Box
                         sx={{
-                          margin:"0px 10px",
-                          height: "600px",
-                          width:"300px",
+                          height: "100%",
                           display: "flex",
                           flexDirection: "column",
                           transition: "transform 0.3s, box-shadow 0.3s",
+                          borderRadius: "2px",
+                          overflow: "hidden",
                           "&:hover": {
                             transform: "translateY(-5px)",
-                            boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+                            boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
                           },
                         }}
                       >
-                        <CardMedia
-                          component="img"
-                          image={product.image}
-                          alt={product.title}
-                          sx={{
-                            height: 450,
-                            padding: "10px",
-                            objectFit: "cover",
-                            cursor: "pointer",
-                            borderRadius: "10px 10px 0 0",
-                          }}
-                          onClick={() => handleProductDetail(product.id)}
-                        />
-
-                        <CardContent sx={{ flexGrow: 1, padding: "16px" }}>
-                          <Typography
-                            variant="h6"
-                            gutterBottom
+                        <Box sx={{ position: "relative" }}>
+                          <CardMedia
+                            component="img"
+                            image={product.image}
+                            alt={product.title}
                             sx={{
-                              fontWeight: "600",
-                              fontFamily: "'Poppins', sans-serif",
-                              color: "#333",
+                              height: 380,
+                              objectFit: "cover",
+                              transition: "transform 0.3s ease",
+                              "&:hover": {
+                                transform: "scale(1.05)",
+                              },
                             }}
-                          >
-                            {product.title.slice(0, 30)}...
-                          </Typography>
-                          <Chip
-                            label={`${product.rating || "No"} Rating`}
-                            size="small"
-                            sx={{
-                              backgroundColor: "#ff6f61",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              margin: "5px 0",
-                              borderRadius: "4px",
-                              fontFamily: "'Poppins', sans-serif",
-                            }}
+                            onClick={() => handleProductDetail(product.id)}
                           />
+                          {product.discountPercentage > 0 && (
+                            <Chip
+                              label={`${product.discountPercentage}% OFF`}
+                              sx={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                backgroundColor: "#ff6b6b",
+                                color: "white",
+                                fontWeight: "bold",
+                                fontSize: "0.85rem",
+                              }}
+                            />
+                          )}
+                        </Box>
+
+                        <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                          <Box sx={{ mb: 2 }}>
+                            <Typography
+                              variant="subtitle1"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: "1rem",
+                                color: "#2d3436",
+                                mb: 1,
+                                height: "48px",
+                                overflow: "hidden",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                              }}
+                            >
+                              {product.title}
+                            </Typography>
+
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                mb: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontWeight: 700,
+                                  color: "#2d3436",
+                                  fontSize: "1.1rem",
+                                }}
+                              >
+                                ₹{product.price.toLocaleString()}
+                              </Typography>
+                              {product.originalPrice > product.price && (
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#636e72",
+                                    textDecoration: "line-through",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  ₹{product.originalPrice.toLocaleString()}
+                                </Typography>
+                              )}
+                            </Box>
+
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                mb: 2,
+                              }}
+                            >
+                            </Box>
+                          </Box>
+
                           <Box
                             sx={{
                               display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              marginTop: "10px",
+                              gap: "4px",
+                              flexWrap: "wrap",
                             }}
                           >
-                            <Typography
-                              variant="h6"
-                              sx={{ fontWeight: "bold", color: "#333" }}
-                            >
-                              ₹{product.price}
-                            </Typography>
-                            <Box sx={{ display: "flex", gap: "5px" }}>
-                              {product.colorImages.map((colorVariant) => (
+                            {product.colorImages
+                              .slice(0, 4)
+                              .map((colorVariant) => (
                                 <Box
                                   key={colorVariant.color}
-                                  onClick={(e) => handleColorClick(e, colorVariant.color)}
                                   sx={{
                                     width: 30,
                                     height: 30,
-                                    borderRadius: '50%',
-                                    cursor: 'pointer',
-                                    border: filterState.selectedColors.includes(colorVariant.color)
-                                      ? '2px solid #ff6f61'
-                                      : '1px solid #ddd',
-                                    overflow: 'hidden',
-                                    '&:hover': {
-                                      transform: 'scale(1.1)',
+                                    borderRadius: "50%",
+                                    border: "1px solid #ddd",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    transition: "transform 0.2s",
+                                    "&:hover": {
+                                      transform: "scale(1.1)",
+                                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                                     },
                                   }}
+                                  onClick={(e) =>
+                                    handleColorClick(e, colorVariant.color)
+                                  }
                                 >
                                   <img
                                     src={colorVariant.colorImage}
                                     alt={colorVariant.color}
                                     style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
                                     }}
                                     title={colorVariant.color}
                                   />
                                 </Box>
                               ))}
-                            </Box>
+                            {product.colorImages.length > 4 && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  ml: 0.5,
+                                  color: "#636e72",
+                                  alignSelf: "center",
+                                }}
+                              >
+                                +{product.colorImages.length - 4}
+                              </Typography>
+                            )}
                           </Box>
                         </CardContent>
-                      </Grid>
+                      </Box>
                     </motion.div>
                   </Grid>
                 ))}
               </Grid>
 
-              {/* Add Pagination */}
-              {category && (
+              {totalPages > 1 && (
                 <Box
                   sx={{
                     display: "flex",
@@ -394,16 +460,16 @@ const SearchResults = () => {
                     page={page}
                     onChange={handlePageChange}
                     color="primary"
-                    size="large"
                     sx={{
-                      '& .MuiPaginationItem-root': {
-                        color: '#333',
-                        '&.Mui-selected': {
-                          bgcolor: '#ff6f61',
-                          color: '#fff',
-                          '&:hover': {
-                            bgcolor: '#ff5f50',
-                          },
+                      "& .MuiPaginationItem-root": {
+                        color: "#333",
+                        "&.Mui-selected": {
+                          backgroundColor: "#ff6f61",
+                          color: "white",
+                        },
+                        "&:hover": {
+                          backgroundColor: "#ff6f61",
+                          color: "white",
                         },
                       },
                     }}
