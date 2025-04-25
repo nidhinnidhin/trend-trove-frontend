@@ -51,28 +51,28 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 // Create a theme instance with enhanced styling
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
       main: '#FF9800',
-      light: '#FFB74D',
-      dark: '#F57C00',
+      light: '#4a90e2',
+      dark: '#1e5bb0',
       contrastText: '#fff'
     },
     secondary: {
-      main: '#424242',
-      light: '#616161',
-      dark: '#212121',
+      main: '#ff9f00',
+      light: '#ffb333',
+      dark: '#cc7f00',
       contrastText: '#fff'
     },
     background: {
-      default: '#121212',
-      paper: '#1E1E1E'
+      default: '#f1f3f6',
+      paper: '#ffffff'
     },
     text: {
-      primary: '#fff',
-      secondary: 'rgba(255, 255, 255, 0.7)'
+      primary: '#212121',
+      secondary: '#878787'
     },
-    divider: 'rgba(255, 255, 255, 0.12)'
+    divider: 'rgba(0, 0, 0, 0.12)'
   },
   components: {
     MuiCard: {
@@ -183,8 +183,11 @@ const UserProfilePage = () => {
         ]);
 
         if (userResponse.status === "fulfilled" && userResponse.value.data) {
+        
           setUser(userResponse.value.data.user);
+          console.log("user",userResponse.value.data.user);
         }
+        
 
         if (
           addressesResponse.status === "fulfilled" &&
@@ -345,10 +348,10 @@ const UserProfilePage = () => {
             sx={{
               bgcolor: theme.palette.background.paper,
               color: theme.palette.text.primary,
-              borderRadius: theme.shape.borderRadius,
+              borderRadius: 0,
               p: 3,
-              marginTop: "50px",
-              boxShadow: theme.components.MuiCard.styleOverrides.root.boxShadow
+              marginTop: "20px",
+              boxShadow: '0 1px 1px 0 rgba(0,0,0,.16)'
             }}
           >
             <CardContent>
@@ -358,97 +361,181 @@ const UserProfilePage = () => {
                   justifyContent: "space-between",
                   alignItems: "center",
                   mb: 3,
+                  borderBottom: '1px solid #f0f0f0',
+                  pb: 2
                 }}
               >
-                <Typography variant="h5" sx={{ fontWeight: theme.typography.h6.fontWeight }}>
-                  Profile Information
+                <Typography variant="h6" sx={{ fontWeight: 500, color: '#212121' }}>
+                  Personal Information
                 </Typography>
                 <Box>
-                  <IconButton
+                  <Button
+                    startIcon={<EditIcon />}
                     onClick={() => setIsProfileModalOpen(true)}
                     sx={{ 
-                      color: theme.palette.primary.main,
-                      mr: 1,
+                      color: '#FF9800',
+                      textTransform: 'none',
                       '&:hover': {
-                        backgroundColor: 'rgba(255, 152, 0, 0.08)'
+                        backgroundColor: 'rgba(255, 152, 0, 0.04)'
                       }
                     }}
                   >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
+                    Edit
+                  </Button>
+                  <Button
+                    startIcon={<LockReset />}
                     onClick={() => setIsResetPasswordModalOpen(true)}
                     sx={{ 
-                      color: theme.palette.primary.main,
+                      color: '#FF9800',
+                      textTransform: 'none',
+                      ml: 1,
                       '&:hover': {
-                        backgroundColor: 'rgba(255, 152, 0, 0.08)'
+                        backgroundColor: 'rgba(255, 152, 0, 0.04)'
                       }
                     }}
                   >
-                    <LockReset />
-                  </IconButton>
+                    Change Password
+                  </Button>
                 </Box>
               </Box>
 
               <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Avatar
-                      src={user?.image}
-                      alt={user?.username}
-                      sx={{
-                        width: 150,
-                        height: 150,
-                        mb: 2,
-                        border: `4px solid ${theme.palette.primary.main}`,
-                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.25)'
-                      }}
-                    />
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} md={8}>
-                  <Box sx={{ p: 2, bgcolor: 'rgba(255, 152, 0, 0.05)', borderRadius: 2 }}>
-                    <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Box sx={{ p: 2, bgcolor: '#fff' }}>
+                    <Grid container spacing={3}>
                       {user && (
                         <>
                           <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                              Username
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                              {user.username}
-                            </Typography>
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                                First Name
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#212121', fontWeight: 500 }}>
+                                {user.firstname || "Not set"}
+                              </Typography>
+                            </Box>
                           </Grid>
                           <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                              Email
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                              {user.email}
-                            </Typography>
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                                Last Name
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#212121', fontWeight: 500 }}>
+                                {user.lastname || "Not set"}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Divider sx={{ my: 2 }} />
                           </Grid>
                           <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                              First Name
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                              {user.firstName || "Not set"}
-                            </Typography>
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                                Email Address
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#212121', fontWeight: 500 }}>
+                                {user.email}
+                              </Typography>
+                            </Box>
                           </Grid>
                           <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" color="text.secondary">
-                              Last Name
-                            </Typography>
-                            <Typography variant="body1" sx={{ mb: 2 }}>
-                              {user.lastName || "Not set"}
-                            </Typography>
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                                User name
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#212121', fontWeight: 500 }}>
+                                {user.username || "Not set"}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Divider sx={{ my: 2 }} />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Box sx={{ mt: 3, p: 3, bgcolor: '#fff', borderRadius: 1, border: '1px solid #f0f0f0' }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6" sx={{ color: '#212121', fontWeight: 500 }}>
+                                  Referral Program
+                                </Typography>
+                                <Button
+                                  startIcon={<ShareIcon />}
+                                  sx={{ 
+                                    color: '#FF9800',
+                                    textTransform: 'none',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(255, 152, 0, 0.04)'
+                                    }
+                                  }}
+                                  onClick={() => {
+                                    if (user.referralCode) {
+                                      navigator.share({
+                                        title: 'Join me on Trend Trove',
+                                        text: `Use my referral code ${user.referralCode} to get started!`,
+                                        url: window.location.origin
+                                      }).catch(() => {
+                                        navigator.clipboard.writeText(`Join me on Trend Trove! Use my referral code: ${user.referralCode}`);
+                                        setSnackbarMessage('Referral link copied to clipboard!');
+                                        setSnackbarSeverity('success');
+                                        setSnackbarOpen(true);
+                                      });
+                                    }
+                                  }}
+                                >
+                                  Share
+                                </Button>
+                              </Box>
+                              <Box sx={{ p: 2, bgcolor: 'rgba(40, 116, 240, 0.04)', borderRadius: 1 }}>
+                                <Typography variant="subtitle2" sx={{ color: '#212121', mb: 1 }}>
+                                  Your Referral Code
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <Typography variant="h6" sx={{ 
+                                    fontFamily: 'monospace', 
+                                    letterSpacing: 1,
+                                    color: '#FF9800',
+                                    fontWeight: 600
+                                  }}>
+                                    {user.referralCode || 'No referral code available'}
+                                  </Typography>
+                                  {user.referralCode && (
+                                    <IconButton
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(user.referralCode);
+                                        setSnackbarMessage('Referral code copied!');
+                                        setSnackbarSeverity('success');
+                                        setSnackbarOpen(true);
+                                      }}
+                                      sx={{ 
+                                        color: '#FF9800',
+                                        '&:hover': {
+                                          backgroundColor: 'rgba(40, 116, 240, 0.08)'
+                                        }
+                                      }}
+                                    >
+                                      <ContentCopyIcon />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                              </Box>
+                              <Box sx={{ mt: 2, display: 'flex', gap: 3 }}>
+                                <Box>
+                                  <Typography variant="subtitle2" sx={{ color: '#878787' }}>
+                                    Total Referrals
+                                  </Typography>
+                                  <Typography variant="h6" sx={{ color: '#212121' }}>
+                                    {walletData.transactions.filter(t => t.description.toLowerCase().includes('referral')).length}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="subtitle2" sx={{ color: '#878787' }}>
+                                    Earnings
+                                  </Typography>
+                                  <Typography variant="h6" sx={{ color: '#212121' }}>
+                                    ₹{walletData.referralEarnings}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
                           </Grid>
                         </>
                       )}
@@ -779,6 +866,63 @@ const UserProfilePage = () => {
           </TableContainer>
         );
       case "wallet":
+        return (
+          <Box sx={{ mt: 3 }}>
+            <Card sx={{ mb: 3, p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Wallet Balance</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <AccountBalanceWalletIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+                <Typography variant="h4">₹{walletData.balance}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary">Total Referral Earnings</Typography>
+                  <Typography variant="h6" color="primary.main">₹{walletData.referralEarnings}</Typography>
+                </Box>
+              </Box>
+            </Card>
+
+            <Card sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>Transaction History</Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {walletData.transactions.map((transaction, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={transaction.type}
+                            color={transaction.type === 'credit' ? 'success' : 'error'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography
+                            color={transaction.type === 'credit' ? 'success.main' : 'error.main'}
+                            fontWeight="medium"
+                          >
+                            {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          </Box>
+        );
+
         const allTransactions = [
           // Regular wallet transactions
           ...walletData.transactions.map((transaction) => ({
@@ -1079,7 +1223,14 @@ const UserProfilePage = () => {
               <ListItem
                 button
                 onClick={() => setSelectedSection("profile")}
-                sx={{ cursor: "pointer", color: "#ffffff" }}
+                sx={{
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  bgcolor: selectedSection === "profile" ? 'primary.light' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedSection === "profile" ? 'primary.main' : 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <ListItemIcon sx={{ color: "#ffffff" }}>
                   <PersonIcon />
@@ -1089,7 +1240,13 @@ const UserProfilePage = () => {
               <ListItem
                 button
                 onClick={() => setSelectedSection("addresses")}
-                sx={{ cursor: "pointer" }}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: selectedSection === "addresses" ? 'primary.light' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedSection === "addresses" ? 'primary.main' : 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <ListItemIcon sx={{ color: "#ffffff" }}>
                   <LocationOnIcon />
@@ -1099,7 +1256,13 @@ const UserProfilePage = () => {
               <ListItem
                 button
                 onClick={() => setSelectedSection("orders")}
-                sx={{ cursor: "pointer" }}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: selectedSection === "orders" ? 'primary.light' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedSection === "orders" ? 'primary.main' : 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <ListItemIcon sx={{ color: "#ffffff" }}>
                   <ReceiptIcon />
@@ -1109,7 +1272,13 @@ const UserProfilePage = () => {
               <ListItem
                 button
                 onClick={() => setSelectedSection("cart")}
-                sx={{ cursor: "pointer" }}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: selectedSection === "cart" ? 'primary.light' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedSection === "cart" ? 'primary.main' : 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <ListItemIcon sx={{ color: "#ffffff" }}>
                   <ShoppingCartIcon />
@@ -1119,7 +1288,13 @@ const UserProfilePage = () => {
               <ListItem
                 button
                 onClick={() => setSelectedSection("wallet")}
-                sx={{ cursor: "pointer" }}
+                sx={{
+                  cursor: "pointer",
+                  bgcolor: selectedSection === "wallet" ? 'primary.light' : 'transparent',
+                  '&:hover': {
+                    bgcolor: selectedSection === "wallet" ? 'primary.main' : 'rgba(255, 255, 255, 0.08)'
+                  }
+                }}
               >
                 <ListItemIcon sx={{ color: "#ffffff" }}>
                   <AccountBalanceWalletIcon />

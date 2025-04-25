@@ -60,7 +60,7 @@ export default function Home() {
   }, []);
 
   return (
-    <Grid maxWidth="xl">
+    <Grid container maxWidth="xl" sx={{ margin: '0 auto' }}>
       <Head>
         <title>Trend Trove - Your Fashion Destination</title>
         <meta name="description" content="Discover the latest fashion trends and shop premium clothing at Trend Trove" />
@@ -69,53 +69,55 @@ export default function Home() {
       <FilterProvider>
         <Box
           sx={{
-            minHeight: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            backgroundColor: "#fafafa"
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#fafafa',
+            width: '100%'
           }}
         >
           <Header />
-          <Box sx={{ backgroundColor: "#f5f5f5", py: 2 }}>
-            <Slider />
-          </Box>
-          
-          <Box sx={{ backgroundColor: "#ffffff", py: 4 }}>
-            <NewArrival />
-          </Box>
-          
-          <Box 
-            sx={{ 
-              backgroundColor: "#f8f9fa",
-              py: 4,
-              backgroundImage: "linear-gradient(to bottom right, #f8f9fa, #e9ecef)"
-            }}
-          >
-            <TrendingWears />
-          </Box>
-          
-          <Box 
-            sx={{ 
-              backgroundColor: "#ffffff",
-              py: 4,
-              borderTop: "1px solid #eee",
-              borderBottom: "1px solid #eee"
-            }}
-          >
-            <TopBrands />
-          </Box>
+          <Container maxWidth="xl" disableGutters>
+            <Box sx={{ backgroundColor: '#f5f5f5', py: 2 }}>
+              <Slider />
+            </Box>
+            
+            <Box sx={{ backgroundColor: '#ffffff', py: { xs: 4, md: 6 } }}>
+              <NewArrival />
+            </Box>
+            
+            <Box 
+              sx={{ 
+                backgroundColor: '#f8f9fa',
+                py: { xs: 4, md: 6 },
+                backgroundImage: 'linear-gradient(to bottom right, #f8f9fa, #e9ecef)'
+              }}
+            >
+              <TrendingWears />
+            </Box>
+            
+            <Box 
+              sx={{ 
+                backgroundColor: '#ffffff',
+                py: { xs: 4, md: 6 },
+                borderTop: '1px solid #eee',
+                borderBottom: '1px solid #eee'
+              }}
+            >
+              <TopBrands />
+            </Box>
 
-          <Box 
-            sx={{ 
-              display: "flex", 
-              flexGrow: 1,
-              backgroundColor: "#f8f9fa",
-              py: 4
-            }}
-          >
-            <Products products={products} loading={loading} />
-          </Box>
-
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                flexGrow: 1,
+                backgroundColor: '#f8f9fa',
+                py: { xs: 4, md: 6 }
+              }}
+            >
+              <Products products={products} loading={loading} />
+            </Box>
+          </Container>
           <Footer />
         </Box>
       </FilterProvider>

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.trendrove.shop/api";
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api";
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.trendrove.shop/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

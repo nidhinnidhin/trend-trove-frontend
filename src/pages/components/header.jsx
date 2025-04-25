@@ -310,8 +310,8 @@ const Header = () => {
             <Link href="/">
               <Image
                 src={logo}
-                height={isMobile ? 25 : 50}
-                width={isMobile ? 80 : 150}
+                height={isMobile ? 50 : 50}
+                width={isMobile ? 150 : 200}
                 alt="Logo"
                 priority
               />
@@ -327,7 +327,7 @@ const Header = () => {
                 alignItems: "center",
               }}
             >
-              {["Explore", "Category", "Brands", "Cart", "Wishlist"].map(
+              {["Explore"].map(
                 (item, index) => (
                   <Typography
                     key={index}

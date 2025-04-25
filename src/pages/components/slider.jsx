@@ -54,30 +54,29 @@ const Slider = () => {
     <Box
       sx={{
         position: "relative",
-        height: { xs: "60vh", sm: "70vh", md: "85vh" },
+        height: { xs: "60vh", sm: "70vh", md: "80vh", lg: "90vh", xl: "95vh" },
         width: "100%",
-        backgroundColor: "#000",
+        backgroundColor: "#ffffff",
         overflow: "hidden",
-        marginTop:"50px"
+        marginTop: { xs: "50px", md: "60px", lg: "70px" }
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {banners.map((banner, index) => (
-        <AnimatePresence key={banner._id}>
+        <AnimatePresence key={banner._id} mode="wait">
           {currentSlide === index && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, x: 300 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -300 }}
+              transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
               style={{
                 position: "relative",
                 width: "100%",
                 height: "100%",
               }}
             >
-              {/* Background Image with Overlay */}
               <Box
                 sx={{
                   position: "absolute",
@@ -91,9 +90,7 @@ const Slider = () => {
                     top: 0,
                     left: 0,
                     width: "100%",
-                    height: "100%",
-                    background: "linear-gradient(45deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)",
-                  },
+                    height: "100%",                  },
                 }}
               >
                 <Image
@@ -106,187 +103,204 @@ const Slider = () => {
                 />
               </Box>
 
-              {/* Content */}
               <Box
                 sx={{
                   position: "relative",
                   height: "100%",
                   display: "flex",
                   alignItems: "center",
-                  px: { xs: 3, sm: 6, md: 10 },
-                  maxWidth: "1400px",
+                  px: { xs: 3, sm: 6, md: 10, lg: 12, xl: 14 },
+                  maxWidth: { xs: "100%", sm: "90%", md: "1400px", lg: "1600px", xl: "1800px" },
                   margin: "0 auto",
                 }}
               >
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.8 }}
+                  transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
                 >
                   <Box sx={{ maxWidth: { xs: "100%", md: "60%" } }}>
-                    <Typography
-                      variant="overline"
-                      sx={{
-                        color: "#FFA726",
-                        fontSize: { xs: "0.8rem", md: "1rem" },
-                        letterSpacing: "4px",
-                        mb: 2,
-                        display: "block",
-                      }}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 0.6 }}
                     >
-                      SPECIAL OFFER
-                    </Typography>
-
-                    <Typography
-                      variant="h1"
-                      sx={{
-                        color: "white",
-                        fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4.5rem" },
-                        fontWeight: 700,
-                        lineHeight: 1.2,
-                        mb: 2,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {banner.title}
-                    </Typography>
-
-                    <Typography
-                      variant="h4"
-                      sx={{
-                        color: "#FFA726",
-                        fontWeight: 600,
-                        mb: 3,
-                      }}
-                    >
-                      UP TO {banner.discount}% OFF
-                    </Typography>
-
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: "rgba(255,255,255,0.8)",
-                        fontSize: { xs: "1rem", md: "1.2rem" },
-                        mb: 4,
-                        maxWidth: "600px",
-                      }}
-                    >
-                      {banner.description}
-                    </Typography>
-
-                    <Link href="/productListing/explore">
-                      <Button
-                        variant="contained"
+                      <Typography
+                        variant="overline"
                         sx={{
-                          backgroundColor: "#FFA726",
-                          color: "black",
-                          padding: "15px 40px",
-                          fontSize: { xs: "1rem", md: "1.1rem" },
-                          fontWeight: 600,
-                          borderRadius: "4px",
-                          textTransform: "uppercase",
-                          "&:hover": {
-                            backgroundColor: "#FF9800",
-                          },
+                          color: "#FF6B6B",
+                          fontSize: { xs: "0.9rem", md: "1.1rem" },
+                          letterSpacing: "4px",
+                          mb: 2,
+                          display: "block",
+                          textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+                          fontWeight: 600
                         }}
                       >
-                        Shop Now
-                      </Button>
-                    </Link>
+                        SPECIAL OFFER
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8, duration: 0.6 }}
+                    >
+                      <Typography
+                        variant="h1"
+                        sx={{
+                          color: "#2D3748",
+                          fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4.5rem" },
+                          fontWeight: 800,
+                          lineHeight: 1.1,
+                          mb: 2,
+                          textTransform: "uppercase",
+                          textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
+                          letterSpacing: "-1px"
+                        }}
+                      >
+                        {banner.title}
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1, duration: 0.6 }}
+                    >
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          color: "#FF6B6B",
+                          fontWeight: 700,
+                          mb: 3,
+                          textShadow: "1px 1px 2px rgba(0,0,0,0.1)"
+                        }}
+                      >
+                        UP TO {banner.discount}% OFF
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2, duration: 0.6 }}
+                    >
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#4A5568",
+                          fontSize: { xs: "1.1rem", md: "1.3rem" },
+                          mb: 4,
+                          maxWidth: "600px",
+                          lineHeight: 1.6,
+                          fontWeight: 500
+                        }}
+                      >
+                        {banner.description}
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.4, duration: 0.6 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      
+                    </motion.div>
+                    <Link href="/productListing/explore">
+                        <Button
+                          variant="contained"
+                          sx={{
+                            background: "linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)",
+                            color: "white",
+                            padding: "15px 40px",
+                            fontSize: { xs: "1rem", md: "1.1rem" },
+                            fontWeight: 600,
+                            borderRadius: "30px",
+                            textTransform: "uppercase",
+                            boxShadow: "0 3px 5px 2px rgba(255, 105, 135, .3)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              transform: "translateY(-2px)",
+                              boxShadow: "0 6px 10px 4px rgba(255, 105, 135, .4)",
+                              background: "linear-gradient(45deg, #FF8E53 30%, #FF6B6B 90%)"
+                            }
+                          }}
+                        >
+                          Shop Now
+                        </Button>
+                      </Link>
                   </Box>
                 </motion.div>
+                
               </Box>
             </motion.div>
           )}
         </AnimatePresence>
       ))}
 
+  
       {/* Navigation Arrows */}
       <Box
         sx={{
           position: "absolute",
-          bottom: { xs: "20px", md: "40px" },
-          right: { xs: "20px", md: "40px" },
-          display: "flex",
-          gap: 2,
-        }}
-      >
-        <IconButton
-          onClick={() => handleNavigation('prev')}
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.1)",
-            backdropFilter: "blur(10px)",
-            color: "white",
-            "&:hover": {
-              backgroundColor: "#FFA726",
-            },
-          }}
-        >
-          <ChevronLeft />
-        </IconButton>
-        <IconButton
-          onClick={() => handleNavigation('next')}
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.1)",
-            backdropFilter: "blur(10px)",
-            color: "white",
-            "&:hover": {
-              backgroundColor: "#FFA726",
-            },
-          }}
-        >
-          <ChevronRight />
-        </IconButton>
-      </Box>
-
-      {/* Slide Indicators */}
-      {/* <Box
-        sx={{
-          position: "absolute",
-          bottom: { xs: "20px", md: "40px" },
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: 1,
-        }}
-      >
-        {banners.map((_, index) => (
-          <Box
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            sx={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: currentSlide === index ? "#FFA726" : "rgba(255,255,255,0.3)",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-          />
-        ))}
-      </Box> */}
-
-      {/* Progress Bar */}
-      {/* <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
           width: "100%",
-          height: "4px",
-          backgroundColor: "rgba(255,255,255,0.1)",
+          display: "flex",
+          justifyContent: "space-between",
+          px: { xs: 2, md: 4 },
+          pointerEvents: "none",
+          zIndex: 2
         }}
       >
         <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 5, repeat: Infinity }}
-          style={{
-            height: "100%",
-            backgroundColor: "#FFA726",
-          }}
-        />
-      </Box> */}
+          whileHover={{ scale: 1.1 }}
+          style={{ pointerEvents: "auto" }}
+        >
+          <IconButton
+            onClick={() => handleNavigation('prev')}
+            sx={{
+              backgroundColor: "rgba(255,255,255,0.9)",
+              backdropFilter: "blur(10px)",
+              color: "#FF6B6B",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#FF6B6B",
+                color: "white",
+                transform: "scale(1.1)"
+              },
+            }}
+          >
+            <ChevronLeft />
+          </IconButton>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          style={{ pointerEvents: "auto" }}
+        >
+          <IconButton
+            onClick={() => handleNavigation('next')}
+            sx={{
+              backgroundColor: "rgba(255,255,255,0.9)",
+              backdropFilter: "blur(10px)",
+              color: "#FF6B6B",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                backgroundColor: "#FF6B6B",
+                color: "white",
+                transform: "scale(1.1)"
+              },
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
+        </motion.div>
+      </Box>
     </Box>
   );
 };
